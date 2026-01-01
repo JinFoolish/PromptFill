@@ -1,0 +1,40 @@
+{
+  "$schema": "https://wails.io/schemas/config.v2.json",
+  "name": "ai-image-generation",
+  "outputfilename": "ai-image-generation",
+  "frontend:install": "npm install",
+  "frontend:build": "npm run build",
+  "frontend:dev:watcher": "npm run dev",
+  "frontend:dev:serverUrl": "auto",
+  "author": {
+    "name": "AI Image Generation Team",
+    "email": "team@example.com"
+  },
+  "info": {
+    "companyName": "AI Image Generation",
+    "productName": "AI Image Generation",
+    "productVersion": "1.0.0",
+    "copyright": "Copyright © 2024",
+    "comments": "AI Image Generation with Wails"
+  },
+  "wailsjsdir": "./wailsjs",
+  "build": {
+    "appargs": "",
+    "assetdir": "./dist",
+    "beforeBuildHooks": [],
+    "afterBuildHooks": [],
+    "garbleargs": "",
+    "upx": false,
+    "upxflags": "",
+    "ldflags": ""
+  },
+  "dev": {
+    "assetdir": "./dist",
+    "reloaddirs": "",
+    "debounce": 100
+  },
+  "nsis": {
+    "languages": ["english", "chinese"],
+    "difxdriverinstallation": false
+  }
+}

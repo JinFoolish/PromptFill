@@ -1,0 +1,53 @@
+{
+  "providers": {
+    "dashscope": {
+      "id": "dashscope",
+      "name": "阿里云百炼",
+      "apiKey": "",
+      "baseUrl": "https://dashscope.aliyuncs.com",
+      "models": ["z-image-turbo"],
+      "defaultModel": "z-image-turbo",
+      "sizeOptions": [
+        "1536*1536",
+        "1296*1728",
+        "1728*1296",
+        "1152*2048",
+        "864*2016",
+        "2048*1152",
+        "2016*864"
+      ],
+      "requestTemplate": {
+        "model": "{{.Model}}",
+        "input": {
+          "messages": [
+            {
+              "role": "user",
+              "content": [
+                {
+                  "text": "{{.Prompt}}"
+                }
+              ]
+            }
+          ]
+        },
+        "parameters": {
+          "prompt_extend": false,
+          "size": "{{.Size}}"
+        }
+      },
+      "responseMapping": {
+        "successIndicator": "output",
+        "imagesPath": "output.choices[0].message.content",
+        "imageUrlField": "image",
+        "usagePath": "usage",
+        "widthField": "width",
+        "heightField": "height",
+        "errorCodePath": "code",
+        "errorMessagePath": "message",
+        "requestIdPath": "request_id"
+      }
+    }
+  },
+  "activeProvider": "dashscope",
+  "updatedAt": "2024-01-01T00:00:00Z"
+}
