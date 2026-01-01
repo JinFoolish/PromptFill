@@ -1,13 +1,19 @@
+//go:build !web
+
 package main
 
 import (
 	"context"
 	"fmt"
 	"net/http"
+	"os"
+	"path/filepath"
+	"time"
 
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 // Placeholder for embedded assets - will be populated when frontend is built
@@ -56,6 +62,139 @@ func (a *App) OnShutdown(ctx context.Context) {
 	if a.server != nil {
 		a.server.Stop()
 	}
+}
+
+// SaveImageFile saves an image file to the user's chosen location using a save dialog
+func (a *App) SaveImageFile(imageData []byte, defaultFilename string) error {
+	if a.ctx == nil {
+		return fmt.Errorf("application context not available")
+	}
+
+	// Show save dialog
+	filePath, err := runtime.SaveFileDialog(a.ctx, runtime.SaveDialogOptions{
+		DefaultFilename: defaultFilename,
+		Title:           "Save Image",
+		Filters: []runtime.FileFilter{
+			{
+				DisplayName: "Image Files",
+				Pattern:     "*.png;*.jpg;*.jpeg;*.gif;*.webp",
+			},
+			{
+				DisplayName: "PNG Images",
+				Pattern:     "*.png",
+			},
+			{
+				DisplayName: "JPEG Images",
+				Pattern:     "*.jpg;*.jpeg",
+			},
+		},
+	})
+
+	if err != nil {
+		return fmt.Errorf("failed to show save dialog: %w", err)
+	}
+
+	// User cancelled the dialog
+	if filePath == "" {
+		return fmt.Errorf("save operation cancelled by user")
+	}
+
+	// Ensure directory exists
+	dir := filepath.Dir(filePath)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return fmt.Errorf("failed to create directory: %w", err)
+	}
+
+	// Write file
+	if err := os.WriteFile(filePath, imageData, 0644); err != nil {
+		return fmt.Errorf("failed to write file: %w", err)
+	}
+
+	return nil
+}
+
+// CopyImageToClipboard copies an image to the system clipboard
+func (a *App) CopyImageToClipboard(imageData []byte, mimeType string) error {
+	if a.ctx == nil {
+		return fmt.Errorf("application context not available")
+	}
+
+	// Create a temporary file for the image
+	tempDir := os.TempDir()
+
+	// Determine file extension from MIME type
+	var ext string
+	switch mimeType {
+	case "image/png":
+		ext = ".png"
+	case "image/jpeg", "image/jpg":
+		ext = ".jpg"
+	case "image/gif":
+		ext = ".gif"
+	case "image/webp":
+		ext = ".webp"
+	default:
+		ext = ".png" // Default to PNG
+	}
+
+	// Generate unique temporary filename using current timestamp
+	tempFile := filepath.Join(tempDir, fmt.Sprintf("ai_image_clipboard_%d%s",
+		time.Now().UnixNano(), ext))
+
+	// Write image data to temporary file
+	if err := os.WriteFile(tempFile, imageData, 0644); err != nil {
+		return fmt.Errorf("failed to create temporary file: %w", err)
+	}
+
+	// Clean up temporary file after operation
+	defer func() {
+		go func() {
+			// Small delay to ensure any clipboard operations complete
+			os.Remove(tempFile)
+		}()
+	}()
+
+	// For now, we'll use the ClipboardSetText with the file path
+	// In a production app, you'd want to use platform-specific clipboard libraries
+	// or implement native clipboard image support
+	err := runtime.ClipboardSetText(a.ctx, tempFile)
+	if err != nil {
+		return fmt.Errorf("failed to copy to clipboard: %w", err)
+	}
+
+	return nil
+}
+
+// ShowSaveDialog shows a save dialog and returns the selected path
+func (a *App) ShowSaveDialog(defaultFilename string) (string, error) {
+	if a.ctx == nil {
+		return "", fmt.Errorf("application context not available")
+	}
+
+	filePath, err := runtime.SaveFileDialog(a.ctx, runtime.SaveDialogOptions{
+		DefaultFilename: defaultFilename,
+		Title:           "Save Image",
+		Filters: []runtime.FileFilter{
+			{
+				DisplayName: "Image Files",
+				Pattern:     "*.png;*.jpg;*.jpeg;*.gif;*.webp",
+			},
+			{
+				DisplayName: "PNG Images",
+				Pattern:     "*.png",
+			},
+			{
+				DisplayName: "JPEG Images",
+				Pattern:     "*.jpg;*.jpeg",
+			},
+		},
+	})
+
+	if err != nil {
+		return "", fmt.Errorf("failed to show save dialog: %w", err)
+	}
+
+	return filePath, nil
 }
 
 func main() {

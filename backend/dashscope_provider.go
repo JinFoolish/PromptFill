@@ -136,7 +136,8 @@ func (d *DashScopeProvider) makeAPICall(ctx context.Context, config *ProviderCon
 	// Set headers
 	httpReq.Header.Set("Content-Type", "application/json")
 	httpReq.Header.Set("Authorization", "Bearer "+config.APIKey)
-	httpReq.Header.Set("X-DashScope-Async", "enable")
+	// Remove async header as it's not supported by all API keys
+	// httpReq.Header.Set("X-DashScope-Async", "enable")
 
 	// Make request
 	resp, err := d.client.Do(httpReq)

@@ -20,7 +20,7 @@ import { SCENE_WORDS, STYLE_WORDS } from './constants/slogan';
 import { useStickyState } from './hooks/useStickyState';
 
 // ====== 导入 UI 组件 ======
-import { Variable, VisualEditor, PremiumButton, EditorToolbar, Lightbox, TemplatePreview, TemplatesSidebar, BanksSidebar, CategoryManager, InsertVariableModal, AddBankModal, DiscoveryView, MobileSettingsView, SettingsView, Sidebar } from './components';
+import { Variable, VisualEditor, PremiumButton, EditorToolbar, Lightbox, TemplatePreview, TemplatesSidebar, BanksSidebar, CategoryManager, InsertVariableModal, AddBankModal, DiscoveryView, MobileSettingsView, SettingsView, Sidebar, AIImageGenerator, ImageModal } from './components';
 import MobileTabBar from './components/MobileTabBar';
 
 // --- 组件：图片 3D 预览弹窗 (优化性能，状态局部化) ---
@@ -647,6 +647,10 @@ const App = () => {
   const [currentImageEditIndex, setCurrentImageEditIndex] = useState(0);
   const [showImageUrlInput, setShowImageUrlInput] = useState(false);
   const [showImageActionMenu, setShowImageActionMenu] = useState(false);
+  
+  // AI Image Generation State
+  const [generatedImages, setGeneratedImages] = useState([]);
+  const [showImageModal, setShowImageModal] = useState(false);
   
   // File System Access API State
   const [storageMode, setStorageMode] = useState(() => {
@@ -2545,6 +2549,12 @@ const App = () => {
     }
   };
 
+  // AI Image Generation Handler
+  const handleImageGenerated = (images) => {
+    setGeneratedImages(images);
+    setShowImageModal(true);
+  };
+
   // 移动端模拟拖拽处理器
   const onTouchDragStart = (key, x, y) => {
     setTouchDraggingVar({ key, x, y });
@@ -2975,43 +2985,49 @@ const App = () => {
                               />
                           </div>
                       ) : (
-                          <TemplatePreview 
-                              activeTemplate={activeTemplate}
-                              banks={banks}
-                              defaults={defaults}
-                              categories={categories}
-                              activePopover={activePopover}
-                              setActivePopover={setActivePopover}
-                              handleSelect={handleSelect}
-                              handleAddCustomAndSelect={handleAddCustomAndSelect}
-                              popoverRef={popoverRef}
-                              t={t}
-                              displayTag={displayTag}
-                              TAG_STYLES={TAG_STYLES}
-                              setZoomedImage={setZoomedImage}
-                              fileInputRef={fileInputRef}
-                              setShowImageUrlInput={setShowImageUrlInput}
-                              handleResetImage={handleResetImage}
-                              language={templateLanguage}
-                              setLanguage={setTemplateLanguage}
-                              // 标签编辑相关
-                              TEMPLATE_TAGS={TEMPLATE_TAGS}
-                              handleUpdateTemplateTags={handleUpdateTemplateTags}
-                              editingTemplateTags={editingTemplateTags}
-                              setEditingTemplateTags={setEditingTemplateTags}
-                              // 多图编辑相关
-                              setImageUpdateMode={setImageUpdateMode}
-                              setCurrentImageEditIndex={setCurrentImageEditIndex}
-                              // 标题编辑相关
-                              editingTemplateNameId={editingTemplateNameId}
-                              tempTemplateName={tempTemplateName}
-                              setTempTemplateName={setTempTemplateName}
-                              saveTemplateName={saveTemplateName}
-                              startRenamingTemplate={startRenamingTemplate}
-                              setEditingTemplateNameId={setEditingTemplateNameId}
-                              globalContainerStyle={globalContainerStyle}
-                              isDarkMode={isDarkMode}
-                          />
+                          <><TemplatePreview
+                                  activeTemplate={activeTemplate}
+                                  banks={banks}
+                                  defaults={defaults}
+                                  categories={categories}
+                                  activePopover={activePopover}
+                                  setActivePopover={setActivePopover}
+                                  handleSelect={handleSelect}
+                                  handleAddCustomAndSelect={handleAddCustomAndSelect}
+                                  popoverRef={popoverRef}
+                                  t={t}
+                                  displayTag={displayTag}
+                                  TAG_STYLES={TAG_STYLES}
+                                  setZoomedImage={setZoomedImage}
+                                  fileInputRef={fileInputRef}
+                                  setShowImageUrlInput={setShowImageUrlInput}
+                                  handleResetImage={handleResetImage}
+                                  language={templateLanguage}
+                                  setLanguage={setTemplateLanguage}
+                                  // 标签编辑相关
+                                  TEMPLATE_TAGS={TEMPLATE_TAGS}
+                                  handleUpdateTemplateTags={handleUpdateTemplateTags}
+                                  editingTemplateTags={editingTemplateTags}
+                                  setEditingTemplateTags={setEditingTemplateTags}
+                                  // 多图编辑相关
+                                  setImageUpdateMode={setImageUpdateMode}
+                                  setCurrentImageEditIndex={setCurrentImageEditIndex}
+                                  // 标题编辑相关
+                                  editingTemplateNameId={editingTemplateNameId}
+                                  tempTemplateName={tempTemplateName}
+                                  setTempTemplateName={setTempTemplateName}
+                                  saveTemplateName={saveTemplateName}
+                                  startRenamingTemplate={startRenamingTemplate}
+                                  setEditingTemplateNameId={setEditingTemplateNameId}
+                                  globalContainerStyle={globalContainerStyle}
+                                  isDarkMode={isDarkMode} /><div className={`p-4 border-t ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+                                    <AIImageGenerator
+                                      prompt={getLocalized(activeTemplate.content, templateLanguage)}
+                                      onImageGenerated={handleImageGenerated}
+                                      isDarkMode={isDarkMode}
+                                      t={t}
+                                      className="w-full" />
+                                  </div></>
                       )}
                     </>
                   )}
@@ -3501,6 +3517,23 @@ const App = () => {
         }}
         t={t}
         isDarkMode={isDarkMode}
+      />
+
+      {/* --- AI Generated Images Modal --- */}
+      <ImageModal
+        images={generatedImages}
+        isOpen={showImageModal}
+        onClose={() => {
+          setShowImageModal(false);
+          setGeneratedImages([]);
+        }}
+        onSave={(image, action) => {
+          // Handle save actions (download, copy, history)
+          console.log('Save action:', action, image);
+          // This will be implemented in later tasks
+        }}
+        isDarkMode={isDarkMode}
+        t={t}
       />
 
       {/* --- 数据更新提示 (模板和词库) --- */}

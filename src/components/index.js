@@ -13,3 +13,5 @@ export { DiscoveryView } from './DiscoveryView';
 export { MobileSettingsView } from './MobileSettingsView';
 export { SettingsView } from './SettingsView';
 export { Sidebar } from './Sidebar';
+export { AIImageGenerator } from './AIImageGenerator';
+export { ImageModal } from './ImageModal';

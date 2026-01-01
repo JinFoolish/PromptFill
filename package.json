@@ -9,7 +9,7 @@
     "build": "vite build",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
-    "backend:dev": "cd backend && go run .",
+    "backend:dev": "cd backend && go run -tags web web_main.go api_server.go config_service.go dashscope_provider.go error_handler.go example_provider.go handlers.go image_service.go interfaces.go types.go adapter_registry.go",
     "backend:build": "cd backend && go build -o ../build/backend .",
     "desktop:dev": "wails dev",
     "desktop:build": "wails build",
