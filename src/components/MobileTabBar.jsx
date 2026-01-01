@@ -1,7 +1,7 @@
 import React from 'react';
 import { Home, List, Edit3, Database, Sun, Moon } from 'lucide-react';
 
-const MobileTabBar = ({ activeTab, onTabChange, t, isDarkMode, themeMode, setThemeMode }) => {
+const MobileTabBar = ({ activeTab, onTabChange, t, isDarkMode, onToggleDarkMode }) => {
   const tabs = [
     { id: 'home', icon: Home, label: t('home') || '主页' },
     { id: 'templates', icon: List, label: t('templates') || '模版列表' },
@@ -40,29 +40,17 @@ const MobileTabBar = ({ activeTab, onTabChange, t, isDarkMode, themeMode, setThe
           );
         })}
 
-        {/* Dark Mode Toggle (Cycle: Light -> Dark -> System) */}
+        {/* Dark Mode Toggle */}
         <button
-          onClick={() => {
-            if (themeMode === 'light') setThemeMode('dark');
-            else if (themeMode === 'dark') setThemeMode('system');
-            else setThemeMode('light');
-          }}
-          className={`flex flex-col items-center justify-center w-full h-full gap-1 transition-all duration-300 relative ${isDarkMode ? 'text-gray-400 hover:text-gray-200' : 'text-gray-500 hover:text-gray-700'}`}
+          onClick={onToggleDarkMode}
+          className={`flex flex-col items-center justify-center w-full h-full gap-1 transition-all duration-300 ${isDarkMode ? 'text-gray-400 hover:text-gray-200' : 'text-gray-500 hover:text-gray-700'}`}
         >
           <div className="relative p-1.5 rounded-xl transition-all duration-300">
-            {themeMode === 'system' ? (
-              <div className="relative">
-                <Sun size={20} className="opacity-50" />
-                <Moon size={12} className="absolute -bottom-1 -right-1" />
-              </div>
-            ) : (themeMode === 'dark' ? <Moon size={20} /> : <Sun size={20} />)}
+            {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
           </div>
           <span className="text-[10px] font-bold tracking-wide opacity-80">
-            {themeMode === 'system' ? (language === 'cn' ? '自动' : 'Auto') : (isDarkMode ? 'Dark' : 'Light')}
+            {isDarkMode ? 'Light' : 'Dark'}
           </span>
-          {themeMode === 'system' && (
-            <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-orange-500 rounded-full"></span>
-          )}
         </button>
       </div>
     </div>

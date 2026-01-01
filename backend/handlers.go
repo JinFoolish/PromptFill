@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -20,12 +21,12 @@ func (s *APIServer) handleGenerate(c *gin.Context) {
 		})
 		return
 	}
-	
+
 	// Set default count if not specified
 	if req.Count == 0 {
 		req.Count = 1
 	}
-	
+
 	// Generate images
 	response, err := s.imageService.GenerateImage(c.Request.Context(), &req)
 	if err != nil {
@@ -39,7 +40,7 @@ func (s *APIServer) handleGenerate(c *gin.Context) {
 		})
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, response)
 }
 
@@ -47,12 +48,12 @@ func (s *APIServer) handleGenerate(c *gin.Context) {
 func (s *APIServer) handleGetConfig(c *gin.Context) {
 	providers := s.configService.GetAllProviders()
 	activeProvider := s.configService.GetActiveProvider()
-	
+
 	response := ConfigResponse{
 		Providers:      providers,
 		ActiveProvider: activeProvider,
 	}
-	
+
 	c.JSON(http.StatusOK, response)
 }
 
@@ -66,7 +67,7 @@ func (s *APIServer) handleSetConfig(c *gin.Context) {
 		})
 		return
 	}
-	
+
 	// Update provider configuration
 	if err := s.configService.SetProviderConfig(req.Provider, req.Config); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -75,7 +76,7 @@ func (s *APIServer) handleSetConfig(c *gin.Context) {
 		})
 		return
 	}
-	
+
 	// Set as active provider if specified
 	if activeProvider, ok := req.Config["setActive"].(bool); ok && activeProvider {
 		if err := s.configService.SetActiveProvider(req.Provider); err != nil {
@@ -86,7 +87,7 @@ func (s *APIServer) handleSetConfig(c *gin.Context) {
 			return
 		}
 	}
-	
+
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 	})
@@ -95,11 +96,11 @@ func (s *APIServer) handleSetConfig(c *gin.Context) {
 // handleGetProviders handles provider information requests
 func (s *APIServer) handleGetProviders(c *gin.Context) {
 	providers := s.imageService.GetProviders()
-	
+
 	response := ProvidersResponse{
 		Providers: providers,
 	}
-	
+
 	c.JSON(http.StatusOK, response)
 }
 
@@ -113,7 +114,7 @@ func (s *APIServer) handleSaveFile(c *gin.Context) {
 		})
 		return
 	}
-	
+
 	// For now, just return success
 	// File saving will be implemented in later tasks
 	c.JSON(http.StatusOK, gin.H{
@@ -131,10 +132,93 @@ func (s *APIServer) handleGetFile(c *gin.Context) {
 		})
 		return
 	}
-	
+
 	// For now, just return not found
 	// File retrieval will be implemented in later tasks
 	c.JSON(http.StatusNotFound, gin.H{
 		"error": "File retrieval functionality will be implemented in later tasks",
+	})
+}
+
+// handleReloadConfig handles configuration reload requests
+func (s *APIServer) handleReloadConfig(c *gin.Context) {
+	if err := s.configService.ReloadConfig(); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"success": false,
+			"error":   fmt.Sprintf("Failed to reload configuration: %v", err),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "Configuration reloaded successfully",
+	})
+}
+
+// handleCreateBackup handles configuration backup creation
+func (s *APIServer) handleCreateBackup(c *gin.Context) {
+	if err := s.configService.createBackup(); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"success": false,
+			"error":   fmt.Sprintf("Failed to create backup: %v", err),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success":    true,
+		"message":    "Configuration backup created successfully",
+		"backupPath": s.configService.GetBackupPath(),
+	})
+}
+
+// handleRestoreBackup handles configuration restoration from backup
+func (s *APIServer) handleRestoreBackup(c *gin.Context) {
+	config, err := s.configService.RestoreFromBackup()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"success": false,
+			"error":   fmt.Sprintf("Failed to restore from backup: %v", err),
+		})
+		return
+	}
+
+	if err := s.configService.SaveConfig(config); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"success": false,
+			"error":   fmt.Sprintf("Failed to save restored configuration: %v", err),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "Configuration restored from backup successfully",
+	})
+}
+
+// handleValidateConfig handles configuration validation requests
+func (s *APIServer) handleValidateConfig(c *gin.Context) {
+	var config Configuration
+	if err := c.ShouldBindJSON(&config); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"error":   fmt.Sprintf("Invalid configuration format: %v", err),
+		})
+		return
+	}
+
+	if err := s.configService.ValidateConfig(&config); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"error":   fmt.Sprintf("Configuration validation failed: %v", err),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "Configuration is valid",
 	})
 }

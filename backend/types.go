@@ -4,19 +4,19 @@ import "time"
 
 // GenerateRequest represents an image generation request
 type GenerateRequest struct {
-	Prompt     string                 `json:"prompt" binding:"required"`
-	Provider   string                 `json:"provider" binding:"required"`
-	Model      string                 `json:"model"`
-	Count      int                    `json:"count" validate:"min=1,max=10"`
-	Size       string                 `json:"size"`
-	Parameters map[string]interface{} `json:"parameters"`
+	Prompt     string         `json:"prompt" binding:"required"`
+	Provider   string         `json:"provider" binding:"required"`
+	Model      string         `json:"model"`
+	Count      int            `json:"count" validate:"min=1,max=10"`
+	Size       string         `json:"size"`
+	Parameters map[string]any `json:"parameters"`
 }
 
 // GenerateResponse represents an image generation response
 type GenerateResponse struct {
-	Success bool              `json:"success"`
-	Images  []GeneratedImage  `json:"images,omitempty"`
-	Error   *APIError         `json:"error,omitempty"`
+	Success bool             `json:"success"`
+	Images  []GeneratedImage `json:"images,omitempty"`
+	Error   *APIError        `json:"error,omitempty"`
 }
 
 // GeneratedImage represents a generated image
@@ -43,8 +43,8 @@ type ConfigResponse struct {
 
 // ConfigRequest represents configuration update request
 type ConfigRequest struct {
-	Provider string                 `json:"provider"`
-	Config   map[string]interface{} `json:"config"`
+	Provider string         `json:"provider"`
+	Config   map[string]any `json:"config"`
 }
 
 // ProvidersResponse represents available providers response
@@ -62,15 +62,15 @@ type ProviderInfo struct {
 
 // ProviderConfig represents provider configuration
 type ProviderConfig struct {
-	ID              string                 `json:"id"`
-	Name            string                 `json:"name"`
-	APIKey          string                 `json:"apiKey"`
-	BaseURL         string                 `json:"baseUrl,omitempty"`
-	Models          []string               `json:"models"`
-	DefaultModel    string                 `json:"defaultModel"`
-	SizeOptions     []string               `json:"sizeOptions"`
-	RequestTemplate map[string]interface{} `json:"requestTemplate"`
-	ResponseMapping ResponseMapping        `json:"responseMapping"`
+	ID              string          `json:"id"`
+	Name            string          `json:"name"`
+	APIKey          string          `json:"apiKey"`
+	BaseURL         string          `json:"baseUrl,omitempty"`
+	Models          []string        `json:"models"`
+	DefaultModel    string          `json:"defaultModel"`
+	SizeOptions     []string        `json:"sizeOptions"`
+	RequestTemplate map[string]any  `json:"requestTemplate"`
+	ResponseMapping ResponseMapping `json:"responseMapping"`
 }
 
 // ResponseMapping defines how to parse provider responses

@@ -64,9 +64,14 @@ func main() {
 
 	// Create application with options
 	err := wails.Run(&options.App{
-		Title:  "AI Image Generation",
-		Width:  1024,
-		Height: 768,
+		Title:            "AI Image Generation",
+		Width:            1024,
+		Height:           768,
+		MinWidth:         800,
+		MinHeight:        600,
+		MaxWidth:         0, // 0 means no limit
+		MaxHeight:        0, // 0 means no limit
+		WindowStartState: options.Maximised, // Start maximized
 		AssetServer: &assetserver.Options{
 			Assets: assets,
 		},
