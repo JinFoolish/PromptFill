@@ -15,6 +15,7 @@ import (
 type DashScopeProvider struct {
 	configService *ConfigService
 	client        *http.Client
+	errorHandler  *ErrorHandler
 }
 
 // NewDashScopeProvider creates a new DashScope provider
@@ -24,6 +25,7 @@ func NewDashScopeProvider(configService *ConfigService) *DashScopeProvider {
 		client: &http.Client{
 			Timeout: 60 * time.Second,
 		},
+		errorHandler: NewErrorHandler(),
 	}
 }
 
@@ -41,7 +43,7 @@ func (d *DashScopeProvider) GenerateImage(ctx context.Context, req *GenerateRequ
 			},
 		}, nil
 	}
-	
+
 	if config.APIKey == "" {
 		return &GenerateResponse{
 			Success: false,
@@ -52,39 +54,36 @@ func (d *DashScopeProvider) GenerateImage(ctx context.Context, req *GenerateRequ
 			},
 		}, nil
 	}
-	
+
 	// Prepare request data
 	model := req.Model
 	if model == "" {
 		model = config.DefaultModel
 	}
-	
+
 	size := req.Size
 	if size == "" {
-		size = "1536*1536" // Default size
+		// Get default size from config - use first available size for the model
+		if sizeOptions := d.GetSizeOptions(model); len(sizeOptions[model]) > 0 {
+			size = sizeOptions[model][0]
+		} else {
+			size = "1536*1536" // Fallback default
+		}
 	}
-	
-	// Build request payload
-	requestData := map[string]interface{}{
-		"model": model,
-		"input": map[string]interface{}{
-			"messages": []map[string]interface{}{
-				{
-					"role": "user",
-					"content": []map[string]interface{}{
-						{
-							"text": req.Prompt,
-						},
-					},
-				},
+
+	// Build request payload using template
+	requestData, err := d.buildRequestFromTemplate(config, req)
+	if err != nil {
+		return &GenerateResponse{
+			Success: false,
+			Error: &APIError{
+				Code:     "TEMPLATE_ERROR",
+				Message:  fmt.Sprintf("Failed to build request from template: %v", err),
+				Provider: "dashscope",
 			},
-		},
-		"parameters": map[string]interface{}{
-			"prompt_extend": false,
-			"size":          size,
-		},
+		}, nil
 	}
-	
+
 	// Generate multiple images if requested
 	responses := make([]*GenerateResponse, 0, req.Count)
 	for i := 0; i < req.Count; i++ {
@@ -101,7 +100,7 @@ func (d *DashScopeProvider) GenerateImage(ctx context.Context, req *GenerateRequ
 		}
 		responses = append(responses, response)
 	}
-	
+
 	// Combine all successful responses
 	var allImages []GeneratedImage
 	for _, resp := range responses {
@@ -112,7 +111,7 @@ func (d *DashScopeProvider) GenerateImage(ctx context.Context, req *GenerateRequ
 			return resp, nil
 		}
 	}
-	
+
 	return &GenerateResponse{
 		Success: true,
 		Images:  allImages,
@@ -126,58 +125,62 @@ func (d *DashScopeProvider) makeAPICall(ctx context.Context, config *ProviderCon
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
-	
+
 	// Create HTTP request
-	url := config.BaseURL + "/api/v1/services/aigc/text2image/image-synthesis"
+	url := config.BaseURL + config.Endpoint
 	httpReq, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
-	
+
 	// Set headers
 	httpReq.Header.Set("Content-Type", "application/json")
 	httpReq.Header.Set("Authorization", "Bearer "+config.APIKey)
 	httpReq.Header.Set("X-DashScope-Async", "enable")
-	
+
 	// Make request
 	resp, err := d.client.Do(httpReq)
 	if err != nil {
 		return nil, fmt.Errorf("failed to make request: %w", err)
 	}
 	defer resp.Body.Close()
-	
+
 	// Read response body
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read response: %w", err)
 	}
-	
+
+	// Handle HTTP errors
+	if resp.StatusCode != http.StatusOK {
+		// Use error handler to create appropriate error response
+		apiError := d.errorHandler.HandleProviderError("dashscope", body, resp.StatusCode)
+		return &GenerateResponse{
+			Success: false,
+			Error:   apiError,
+		}, nil
+	}
+
 	// Parse response
 	return d.ParseResponse(body)
 }
 
 // ParseResponse parses DashScope API response
 func (d *DashScopeProvider) ParseResponse(body []byte) (*GenerateResponse, error) {
-	// Try to parse as error response first
-	var errorResp DashScopeError
-	if json.Unmarshal(body, &errorResp) == nil && errorResp.Code != "" {
+	// Use the error handler to parse provider-specific errors
+	if apiError := d.errorHandler.extractDashScopeError(body); apiError != nil {
 		return &GenerateResponse{
 			Success: false,
-			Error: &APIError{
-				Code:      errorResp.Code,
-				Message:   errorResp.Message,
-				Provider:  "dashscope",
-				RequestID: errorResp.RequestID,
-			},
+			Error:   apiError,
 		}, nil
 	}
-	
+
 	// Parse as success response
 	var successResp DashScopeResponse
 	if err := json.Unmarshal(body, &successResp); err != nil {
 		return nil, fmt.Errorf("failed to parse response: %w", err)
 	}
-	
+
 	// Extract images
 	var images []GeneratedImage
 	for _, choice := range successResp.Output.Choices {
@@ -192,7 +195,7 @@ func (d *DashScopeProvider) ParseResponse(body []byte) (*GenerateResponse, error
 			}
 		}
 	}
-	
+
 	if len(images) == 0 {
 		return &GenerateResponse{
 			Success: false,
@@ -203,7 +206,7 @@ func (d *DashScopeProvider) ParseResponse(body []byte) (*GenerateResponse, error
 			},
 		}, nil
 	}
-	
+
 	return &GenerateResponse{
 		Success: true,
 		Images:  images,
@@ -212,20 +215,31 @@ func (d *DashScopeProvider) ParseResponse(body []byte) (*GenerateResponse, error
 
 // GetModels returns available models
 func (d *DashScopeProvider) GetModels() []string {
-	return []string{"z-image-turbo"}
+	config, err := d.configService.GetProviderConfig("dashscope")
+	if err != nil {
+		return []string{} // Return empty slice if config unavailable
+	}
+	return config.Models
 }
 
 // GetSizeOptions returns available size options
-func (d *DashScopeProvider) GetSizeOptions() []string {
-	return []string{
-		"1536*1536",
-		"1296*1728",
-		"1728*1296",
-		"1152*2048",
-		"864*2016",
-		"2048*1152",
-		"2016*864",
+// If model is provided, returns model-specific options; otherwise returns all options
+func (d *DashScopeProvider) GetSizeOptions(model ...string) map[string][]string {
+	config, err := d.configService.GetProviderConfig("dashscope")
+	if err != nil {
+		return map[string][]string{} // Return empty map if config unavailable
 	}
+
+	if len(model) > 0 && model[0] != "" {
+		// Return options for specific model
+		if options, exists := config.SizeOptions[model[0]]; exists {
+			return map[string][]string{model[0]: options}
+		}
+		return map[string][]string{}
+	}
+
+	// Return all options
+	return config.SizeOptions
 }
 
 // ValidateConfig validates the provider configuration
@@ -239,11 +253,22 @@ func (d *DashScopeProvider) ValidateConfig(config map[string]interface{}) error 
 
 // GetProviderInfo returns provider information
 func (d *DashScopeProvider) GetProviderInfo() ProviderInfo {
+	config, err := d.configService.GetProviderConfig("dashscope")
+	if err != nil {
+		// Return basic info if config unavailable
+		return ProviderInfo{
+			ID:          "dashscope",
+			Name:        "DashScope",
+			Models:      []string{},
+			SizeOptions: map[string][]string{},
+		}
+	}
+
 	return ProviderInfo{
-		ID:          "dashscope",
-		Name:        "阿里云百炼",
-		Models:      d.GetModels(),
-		SizeOptions: d.GetSizeOptions(),
+		ID:          config.ID,
+		Name:        config.Name,
+		Models:      config.Models,
+		SizeOptions: config.SizeOptions,
 	}
 }
 
@@ -259,8 +284,8 @@ type DashScopeOutput struct {
 }
 
 type DashScopeChoice struct {
-	FinishReason string                    `json:"finish_reason"`
-	Message      DashScopeResponseMessage  `json:"message"`
+	FinishReason string                   `json:"finish_reason"`
+	Message      DashScopeResponseMessage `json:"message"`
 }
 
 type DashScopeResponseMessage struct {
@@ -287,6 +312,99 @@ type DashScopeError struct {
 	RequestID string `json:"request_id"`
 	Code      string `json:"code"`
 	Message   string `json:"message"`
+}
+
+// buildRequestFromTemplate builds the API request using the configured template
+func (d *DashScopeProvider) buildRequestFromTemplate(config *ProviderConfig, req *GenerateRequest) (map[string]interface{}, error) {
+	// Prepare template variables
+	model := req.Model
+	if model == "" {
+		model = config.DefaultModel
+	}
+
+	size := req.Size
+	if size == "" {
+		// Get default size from config - use first available size for the model
+		if sizeOptions := d.GetSizeOptions(model); len(sizeOptions[model]) > 0 {
+			size = sizeOptions[model][0]
+		} else {
+			size = "1536*1536" // Fallback default
+		}
+	}
+
+	templateVars := map[string]interface{}{
+		"Prompt": req.Prompt,
+		"Size":   size,
+	}
+
+	// Get model-specific request template
+	var requestTemplate map[string]any
+	if modelTemplate, exists := config.RequestTemplate[model]; exists {
+		requestTemplate = modelTemplate
+	} else {
+		// Fallback to default model template if current model template doesn't exist
+		if defaultTemplate, exists := config.RequestTemplate[config.DefaultModel]; exists {
+			requestTemplate = defaultTemplate
+		} else {
+			return nil, fmt.Errorf("no request template found for model %s", model)
+		}
+	}
+
+	// Process the request template
+	processed, err := d.processTemplate(requestTemplate, templateVars)
+	if err != nil {
+		return nil, err
+	}
+
+	// Type assert to map[string]interface{}
+	result, ok := processed.(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("template processing did not result in a map")
+	}
+
+	return result, nil
+}
+
+// processTemplate recursively processes template placeholders
+func (d *DashScopeProvider) processTemplate(template interface{}, vars map[string]interface{}) (interface{}, error) {
+	switch t := template.(type) {
+	case string:
+		// Replace template placeholders like {{.Model}}, {{.Prompt}}, {{.Size}}
+		result := t
+		for key, value := range vars {
+			placeholder := fmt.Sprintf("{{.%s}}", key)
+			if strings.Contains(result, placeholder) {
+				result = strings.ReplaceAll(result, placeholder, fmt.Sprintf("%v", value))
+			}
+		}
+		return result, nil
+
+	case map[string]interface{}:
+		processed := make(map[string]interface{})
+		for key, value := range t {
+			processedValue, err := d.processTemplate(value, vars)
+			if err != nil {
+				return nil, err
+			}
+			processed[key] = processedValue
+		}
+		return processed, nil
+
+	case []interface{}:
+		processed := make([]interface{}, len(t))
+		for i, value := range t {
+			processedValue, err := d.processTemplate(value, vars)
+			if err != nil {
+				return nil, err
+			}
+			processed[i] = processedValue
+		}
+		return processed, nil
+
+	default:
+		// Return as-is for other types (numbers, booleans, etc.)
+		return template, nil
+	}
 }
 
 // generateImageID generates a unique ID for an image

@@ -5,36 +5,41 @@
       "name": "阿里云百炼",
       "apiKey": "test-api-key-123",
       "baseUrl": "https://dashscope.aliyuncs.com",
+      "endpoint": "/api/v1/services/aigc/multimodal-generation/generation",
       "models": [
         "z-image-turbo"
       ],
       "defaultModel": "z-image-turbo",
-      "sizeOptions": [
-        "1536*1536",
-        "1296*1728",
-        "1728*1296",
-        "1152*2048",
-        "864*2016",
-        "2048*1152",
-        "2016*864"
-      ],
+      "sizeOptions": {
+        "z-image-turbo": [
+          "1536*1536",
+          "1296*1728",
+          "1728*1296",
+          "1152*2048",
+          "864*2016",
+          "2048*1152",
+          "2016*864"
+        ]
+      },
       "requestTemplate": {
-        "input": {
-          "messages": [
-            {
-              "content": [
-                {
-                  "text": "{{.Prompt}}"
-                }
-              ],
-              "role": "user"
-            }
-          ]
-        },
-        "model": "{{.Model}}",
-        "parameters": {
-          "prompt_extend": false,
-          "size": "{{.Size}}"
+        "z-image-turbo": {
+          "input": {
+            "messages": [
+              {
+                "content": [
+                  {
+                    "text": "{{.Prompt}}"
+                  }
+                ],
+                "role": "user"
+              }
+            ]
+          },
+          "model": "z-image-turbo",
+          "parameters": {
+            "prompt_extend": false,
+            "size": "{{.Size}}"
+          }
         }
       },
       "responseMapping": {
@@ -51,5 +56,5 @@
     }
   },
   "activeProvider": "dashscope",
-  "updatedAt": "2026-01-01T22:18:58.4867426+08:00"
+  "updatedAt": "2026-01-01T23:40:17.6304429+08:00"
 }

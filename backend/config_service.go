@@ -134,11 +134,17 @@ func (c *ConfigService) SetProviderConfig(providerID string, config map[string]a
 	if parameters, ok := config["parameters"].(map[string]any); ok {
 		// Merge parameters instead of replacing
 		if providerConfig.RequestTemplate == nil {
-			providerConfig.RequestTemplate = make(map[string]any)
+			providerConfig.RequestTemplate = make(map[string]map[string]any)
 		}
-		if templateParams, exists := providerConfig.RequestTemplate["parameters"].(map[string]any); exists {
-			for k, v := range parameters {
-				templateParams[k] = v
+		// For now, apply parameters to the default model template
+		defaultModel := providerConfig.DefaultModel
+		if defaultModel != "" {
+			if templateParams, exists := providerConfig.RequestTemplate[defaultModel]; exists {
+				if params, hasParams := templateParams["parameters"].(map[string]any); hasParams {
+					for k, v := range parameters {
+						params[k] = v
+					}
+				}
 			}
 		}
 	}
@@ -192,34 +198,64 @@ func (c *ConfigService) createDefaultConfig() *Configuration {
 				Name:         "阿里云百炼",
 				APIKey:       "",
 				BaseURL:      "https://dashscope.aliyuncs.com",
-				Models:       []string{"z-image-turbo"},
+				Models:       []string{"z-image-turbo", "z-image-pro"},
 				DefaultModel: "z-image-turbo",
-				SizeOptions: []string{
-					"1536*1536",
-					"1296*1728",
-					"1728*1296",
-					"1152*2048",
-					"864*2016",
-					"2048*1152",
-					"2016*864",
+				SizeOptions: map[string][]string{
+					"z-image-turbo": {
+						"1536*1536",
+						"1296*1728",
+						"1728*1296",
+						"1152*2048",
+						"864*2016",
+						"2048*1152",
+						"2016*864",
+					},
+					"z-image-pro": {
+						"1024*1024",
+						"1536*1536",
+						"2048*2048",
+					},
 				},
-				RequestTemplate: map[string]any{
-					"model": "{{.Model}}",
-					"input": map[string]any{
-						"messages": []map[string]any{
-							{
-								"role": "user",
-								"content": []map[string]any{
-									{
-										"text": "{{.Prompt}}",
+				RequestTemplate: map[string]map[string]any{
+					"z-image-turbo": {
+						"model": "{{.Model}}",
+						"input": map[string]any{
+							"messages": []map[string]any{
+								{
+									"role": "user",
+									"content": []map[string]any{
+										{
+											"text": "{{.Prompt}}",
+										},
 									},
 								},
 							},
 						},
+						"parameters": map[string]any{
+							"prompt_extend": false,
+							"size":          "{{.Size}}",
+						},
 					},
-					"parameters": map[string]any{
-						"prompt_extend": false,
-						"size":          "{{.Size}}",
+					"z-image-pro": {
+						"model": "{{.Model}}",
+						"input": map[string]any{
+							"messages": []map[string]any{
+								{
+									"role": "user",
+									"content": []map[string]any{
+										{
+											"text": "{{.Prompt}}",
+										},
+									},
+								},
+							},
+						},
+						"parameters": map[string]any{
+							"prompt_extend": true,
+							"size":          "{{.Size}}",
+							"quality":       "high",
+							"style":         "realistic",
+						},
 					},
 				},
 				ResponseMapping: ResponseMapping{

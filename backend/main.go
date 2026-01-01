@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"embed"
 	"fmt"
 	"net/http"
 
@@ -11,12 +10,13 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
 )
 
-//go:embed all:dist
-var assets embed.FS
+// Placeholder for embedded assets - will be populated when frontend is built
+// //go:embed all:dist
+// var assets embed.FS
 
 // App struct
 type App struct {
-	ctx context.Context
+	ctx    context.Context
 	server *APIServer
 }
 
@@ -28,10 +28,10 @@ func NewApp() *App {
 // OnStartup is called when the app starts up
 func (a *App) OnStartup(ctx context.Context) {
 	a.ctx = ctx
-	
+
 	// Initialize API server
 	a.server = NewAPIServer()
-	
+
 	// Start HTTP server for web version in a separate goroutine
 	go func() {
 		if err := a.server.Start(":8080"); err != nil && err != http.ErrServerClosed {
@@ -69,11 +69,11 @@ func main() {
 		Height:           768,
 		MinWidth:         800,
 		MinHeight:        600,
-		MaxWidth:         0, // 0 means no limit
-		MaxHeight:        0, // 0 means no limit
+		MaxWidth:         0,                 // 0 means no limit
+		MaxHeight:        0,                 // 0 means no limit
 		WindowStartState: options.Maximised, // Start maximized
-		AssetServer: &assetserver.Options{
-			Assets: assets,
+		AssetServer:      &assetserver.Options{
+			// Assets: assets, // Commented out until frontend is built
 		},
 		BackgroundColour: &options.RGBA{R: 27, G: 38, B: 54, A: 1},
 		OnStartup:        app.OnStartup,

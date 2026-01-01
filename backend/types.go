@@ -54,23 +54,24 @@ type ProvidersResponse struct {
 
 // ProviderInfo represents provider information
 type ProviderInfo struct {
-	ID          string   `json:"id"`
-	Name        string   `json:"name"`
-	Models      []string `json:"models"`
-	SizeOptions []string `json:"sizeOptions"`
+	ID          string              `json:"id"`
+	Name        string              `json:"name"`
+	Models      []string            `json:"models"`
+	SizeOptions map[string][]string `json:"sizeOptions"` // Model-specific size options
 }
 
 // ProviderConfig represents provider configuration
 type ProviderConfig struct {
-	ID              string          `json:"id"`
-	Name            string          `json:"name"`
-	APIKey          string          `json:"apiKey"`
-	BaseURL         string          `json:"baseUrl,omitempty"`
-	Models          []string        `json:"models"`
-	DefaultModel    string          `json:"defaultModel"`
-	SizeOptions     []string        `json:"sizeOptions"`
-	RequestTemplate map[string]any  `json:"requestTemplate"`
-	ResponseMapping ResponseMapping `json:"responseMapping"`
+	ID              string                    `json:"id"`
+	Name            string                    `json:"name"`
+	APIKey          string                    `json:"apiKey"`
+	BaseURL         string                    `json:"baseUrl,omitempty"`
+	Endpoint        string                    `json:"endpoint,omitempty"`
+	Models          []string                  `json:"models"`
+	DefaultModel    string                    `json:"defaultModel"`
+	SizeOptions     map[string][]string       `json:"sizeOptions"`     // Model-specific size options
+	RequestTemplate map[string]map[string]any `json:"requestTemplate"` // Model-specific request templates
+	ResponseMapping ResponseMapping           `json:"responseMapping"`
 }
 
 // ResponseMapping defines how to parse provider responses
