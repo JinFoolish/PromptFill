@@ -267,7 +267,6 @@ type GenerateRequest struct {
     Prompt     string            `json:"prompt" binding:"required"`
     Provider   string            `json:"provider" binding:"required"`
     Model      string            `json:"model"`
-    Count      int               `json:"count" validate:"min=1,max=10"`
     Size       string            `json:"size"`
     Parameters map[string]interface{} `json:"parameters"`
 }

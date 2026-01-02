@@ -2,7 +2,7 @@ import React from 'react';
 import { 
   Search, RotateCcw, 
   ChevronRight, ChevronDown, ImageIcon, ArrowUpRight, Plus,
-  Pencil, Copy as CopyIcon, Download, Trash2
+  Pencil, Copy as CopyIcon, Download, Trash2, ListFilter // [新增] 引入 ListFilter 图标
 } from 'lucide-react';
 import { PremiumButton } from './PremiumButton';
 import { getLocalized } from '../utils/helpers';
@@ -24,7 +24,6 @@ export const TemplatesSidebar = React.memo(({
   setSelectedTags,
   TEMPLATE_TAGS,
   displayTag,
-  handleRefreshSystemData,
   language,
   setLanguage,
   setIsSettingsOpen,
@@ -86,36 +85,77 @@ export const TemplatesSidebar = React.memo(({
                   </h1>
              </div>
              
-             {/* 仅在移动端显示顶部操作按钮，桌面端已迁移至全局 Sidebar */}
+             {/* 仅在移动端显示顶部操作按钮 */}
              <div className="hidden md:hidden items-center gap-1.5">
-                  {/* 移动端按钮暂时隐藏，因为用户要求不需要了 */}
+                  {/* 移动端按钮暂时隐藏 */}
              </div>
          </div>
 
          <div className="flex flex-col gap-4">
-            {/* 极简搜索框 */}
-            <div className="relative group">
-                <Search className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors pointer-events-none ${isDarkMode ? 'text-gray-600 group-focus-within:text-orange-500' : 'text-gray-400 group-focus-within:text-orange-500'}`} size={16} />
-                <input 
-                  type="text" 
-                  placeholder={t('search_templates')} 
-                  value={searchQuery} 
-                  onChange={(e) => setSearchQuery(e.target.value)} 
-                  style={isDarkMode ? {
-                    background: '#2A2726',
-                    border: '1px solid transparent',
-                    backgroundImage: 'linear-gradient(#2A2726, #2A2726), linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 100%)',
-                    backgroundOrigin: 'border-box',
-                    backgroundClip: 'padding-box, border-box',
-                  } : {
-                    background: '#E8E3DD',
-                    border: '1px solid transparent',
-                    backgroundImage: 'linear-gradient(#E8E3DD, #E8E3DD), linear-gradient(0deg, #FFFFFF 0%, rgba(255, 255, 255, 0) 100%)',
-                    backgroundOrigin: 'border-box',
-                    backgroundClip: 'padding-box, border-box',
-                  }}
-                  className={`w-full pl-11 pr-4 py-3 rounded-2xl text-[14px] font-medium transition-all outline-none focus:ring-4 focus:ring-orange-500/5 ${isDarkMode ? 'text-gray-200 placeholder-gray-600' : 'text-gray-700 placeholder-gray-400'}`} 
-                />
+            {/* Search & Controls Row (合并为一行) */}
+            <div className="flex items-center gap-2">
+                {/* 极简搜索框 - 添加 flex-1 占据剩余空间 */}
+                <div className="relative group flex-1">
+                    <Search className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors pointer-events-none ${isDarkMode ? 'text-gray-600 group-focus-within:text-orange-500' : 'text-gray-400 group-focus-within:text-orange-500'}`} size={16} />
+                    <input 
+                      type="text" 
+                      placeholder={t('search_templates')} 
+                      value={searchQuery} 
+                      onChange={(e) => setSearchQuery(e.target.value)} 
+                      style={isDarkMode ? {
+                        background: '#2A2726',
+                        border: '1px solid transparent',
+                        backgroundImage: 'linear-gradient(#2A2726, #2A2726), linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 100%)',
+                        backgroundOrigin: 'border-box',
+                        backgroundClip: 'padding-box, border-box',
+                      } : {
+                        background: '#E8E3DD',
+                        border: '1px solid transparent',
+                        backgroundImage: 'linear-gradient(#E8E3DD, #E8E3DD), linear-gradient(0deg, #FFFFFF 0%, rgba(255, 255, 255, 0) 100%)',
+                        backgroundOrigin: 'border-box',
+                        backgroundClip: 'padding-box, border-box',
+                      }}
+                      className={`w-full pl-11 pr-4 py-3 rounded-2xl text-[14px] font-medium transition-all outline-none focus:ring-4 focus:ring-orange-500/5 ${isDarkMode ? 'text-gray-200 placeholder-gray-600' : 'text-gray-700 placeholder-gray-400'}`} 
+                    />
+                </div>
+
+                {/* Sort Button (PremiumButton) */}
+                <div className="relative">
+                  <PremiumButton
+                    onClick={() => setIsSortMenuOpen(!isSortMenuOpen)}
+                    active={isSortMenuOpen}
+                    isDarkMode={isDarkMode}
+                    icon={ListFilter} // 使用 Lucide 图标
+                    color="gray" // 未选中时为灰色，选中时(active=true)会自动变色
+                    title={t('sort')}
+                    className="!p-0 w-[46px] h-[46px] flex items-center justify-center rounded-2xl" // 设置固定宽高以匹配搜索框高度
+                  />
+                  
+                  {isSortMenuOpen && (
+                    <div className={`absolute top-full right-0 mt-2 backdrop-blur-xl rounded-2xl shadow-2xl border py-2 min-w-[160px] z-[110] animate-in slide-in-from-top-2 duration-200 ${isDarkMode ? 'bg-black/80 border-white/10' : 'bg-white/95 border-white/60'}`}>
+                      {[
+                        { value: 'newest', label: t('sort_newest') },
+                        { value: 'oldest', label: t('sort_oldest') },
+                        { value: 'a-z', label: t('sort_az') },
+                        { value: 'z-a', label: t('sort_za') },
+                        { value: 'random', label: t('sort_random') }
+                      ].map(option => (
+                        <button
+                          key={option.value}
+                          onClick={() => {
+                            setSortOrder(option.value);
+                            if (option.value === 'random') setRandomSeed(Date.now());
+                            setIsSortMenuOpen(false);
+                          }}
+                          className={`w-full text-left px-5 py-2.5 text-sm transition-colors ${sortOrder === option.value ? 'text-orange-600 font-semibold' : (isDarkMode ? 'text-gray-400 hover:bg-white/10' : 'text-gray-700 hover:bg-orange-50')}`}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
             </div>
             
             {/* 极简标签选择 */}

@@ -1,22 +1,15 @@
 import React from 'react';
-import { Github, Moon, Sun } from 'lucide-react';
+import { Github, Moon, Sun, Clock } from 'lucide-react';
 
 /**
  * Sidebar 组件 - 通用侧边导航栏
  */
 export const Sidebar = ({
-  activeTab = 'home', // 'home' | 'details' | 'settings'
+  activeTab = 'home', // 'home' | 'details' | 'settings' | 'history'
   onHome,
   onDetail,
+  onHistory,
   onSettings,
-  // Sort props
-  isSortMenuOpen,
-  setIsSortMenuOpen,
-  sortOrder,
-  setSortOrder,
-  setRandomSeed,
-  // Actions
-  onRefresh,
   // I18n
   language,
   setLanguage,
@@ -124,53 +117,17 @@ export const Sidebar = ({
             />
           </button>
           
-          <div className="relative">
-            <button 
-              onClick={() => setIsSortMenuOpen(!isSortMenuOpen)}
-              className="p-2 group"
-              title={t('sort')}
-            >
-              <div 
-                style={{ '--mask-url': 'url(/order.svg)', ...getIconStyle() }}
-                className={`group-hover:bg-[#F97316] ${isSortMenuOpen ? (isDarkMode ? 'bg-[#FB923C]' : 'bg-[#EA580C]') : (isDarkMode ? 'bg-[#8E9196]' : 'bg-[#6B7280]')}`}
-              />
-            </button>
-            
-            {isSortMenuOpen && (
-              <div className={`absolute left-full ml-4 bottom-0 backdrop-blur-xl rounded-2xl shadow-2xl border py-2 min-w-[160px] z-[110] animate-in slide-in-from-left-2 duration-200 ${isDarkMode ? 'bg-black/80 border-white/10' : 'bg-white/95 border-white/60'}`}>
-                {[
-                  { value: 'newest', label: t('sort_newest') },
-                  { value: 'oldest', label: t('sort_oldest') },
-                  { value: 'a-z', label: t('sort_az') },
-                  { value: 'z-a', label: t('sort_za') },
-                  { value: 'random', label: t('sort_random') }
-                ].map(option => (
-                  <button
-                    key={option.value}
-                    onClick={() => {
-                      setSortOrder(option.value);
-                      if (option.value === 'random') setRandomSeed(Date.now());
-                      setIsSortMenuOpen(false);
-                    }}
-                    className={`w-full text-left px-5 py-2.5 text-sm transition-colors ${sortOrder === option.value ? 'text-orange-600 font-semibold' : (isDarkMode ? 'text-gray-400 hover:bg-white/10' : 'text-gray-700 hover:bg-orange-50')}`}
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
           <button 
-            onClick={onRefresh}
+            onClick={onHistory}
             className="p-2 group"
-            title={t('refresh_desc')}
+            title={t('history_title') || '历史记录'}
           >
-            <div 
-              style={{ '--mask-url': 'url(/refresh.svg)', ...getIconStyle() }}
-              className={`${isDarkMode ? 'bg-[#8E9196]' : 'bg-[#6B7280]'} group-hover:bg-[#F97316]`}
-            />
+            <div className={`${isDarkMode ? 'text-gray-400' : 'text-gray-400'} group-hover:text-[#F97316] transition-colors ${activeTab === 'history' ? 'text-[#EA580C]' : ''}`}>
+              <Clock size={24} style={{ filter: isDarkMode ? 'none' : 'drop-shadow(0px 2px 0px rgba(255, 255, 255, 0.5))' }} />
+            </div>
           </button>
+          
+
         </div>
       </div>
 

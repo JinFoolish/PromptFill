@@ -18,7 +18,6 @@ type ConfigService struct {
 
 // NewConfigService creates a new configuration service
 func NewConfigService() *ConfigService {
-	// Create config directory if it doesn't exist
 	configDir := filepath.Join(".", "config")
 	os.MkdirAll(configDir, 0755)
 
@@ -175,7 +174,22 @@ func (c *ConfigService) SetActiveProvider(providerID string) error {
 	return c.SaveConfig(c.config)
 }
 
-// GetAllProviders returns all configured providers
+// maskAPIKey masks an API key for security purposes
+func (c *ConfigService) maskAPIKey(apiKey string) string {
+	if apiKey == "" {
+		return ""
+	}
+
+	// For other keys, show first 4 chars + "xxxxx" + last 4 chars if long enough
+	if len(apiKey) > 12 {
+		return apiKey[:4] + "xxxxx" + apiKey[len(apiKey)-4:]
+	}
+
+	// For shorter keys, just show "xxxxx"
+	return "xxxxx"
+}
+
+// GetAllProviders returns all configured providers with masked API keys
 func (c *ConfigService) GetAllProviders() []ProviderConfig {
 	if c.config == nil {
 		return nil
@@ -183,7 +197,10 @@ func (c *ConfigService) GetAllProviders() []ProviderConfig {
 
 	providers := make([]ProviderConfig, 0, len(c.config.Providers))
 	for _, provider := range c.config.Providers {
-		providers = append(providers, provider)
+		// Create a copy of the provider with masked API key
+		maskedProvider := provider
+		maskedProvider.APIKey = c.maskAPIKey(provider.APIKey)
+		providers = append(providers, maskedProvider)
 	}
 
 	return providers
@@ -198,7 +215,8 @@ func (c *ConfigService) createDefaultConfig() *Configuration {
 				Name:         "阿里云百炼",
 				APIKey:       "",
 				BaseURL:      "https://dashscope.aliyuncs.com",
-				Models:       []string{"z-image-turbo", "z-image-pro"},
+				Endpoint:     "/api/v1/services/aigc/multimodal-generation/generation",
+				Models:       []string{"z-image-turbo"},
 				DefaultModel: "z-image-turbo",
 				SizeOptions: map[string][]string{
 					"z-image-turbo": {
@@ -209,11 +227,6 @@ func (c *ConfigService) createDefaultConfig() *Configuration {
 						"864*2016",
 						"2048*1152",
 						"2016*864",
-					},
-					"z-image-pro": {
-						"1024*1024",
-						"1536*1536",
-						"2048*2048",
 					},
 				},
 				RequestTemplate: map[string]map[string]any{
@@ -234,27 +247,6 @@ func (c *ConfigService) createDefaultConfig() *Configuration {
 						"parameters": map[string]any{
 							"prompt_extend": false,
 							"size":          "{{.Size}}",
-						},
-					},
-					"z-image-pro": {
-						"model": "{{.Model}}",
-						"input": map[string]any{
-							"messages": []map[string]any{
-								{
-									"role": "user",
-									"content": []map[string]any{
-										{
-											"text": "{{.Prompt}}",
-										},
-									},
-								},
-							},
-						},
-						"parameters": map[string]any{
-							"prompt_extend": true,
-							"size":          "{{.Size}}",
-							"quality":       "high",
-							"style":         "realistic",
 						},
 					},
 				},

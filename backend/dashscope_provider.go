@@ -61,16 +61,6 @@ func (d *DashScopeProvider) GenerateImage(ctx context.Context, req *GenerateRequ
 		model = config.DefaultModel
 	}
 
-	size := req.Size
-	if size == "" {
-		// Get default size from config - use first available size for the model
-		if sizeOptions := d.GetSizeOptions(model); len(sizeOptions[model]) > 0 {
-			size = sizeOptions[model][0]
-		} else {
-			size = "1536*1536" // Fallback default
-		}
-	}
-
 	// Build request payload using template
 	requestData, err := d.buildRequestFromTemplate(config, req)
 	if err != nil {
@@ -84,38 +74,20 @@ func (d *DashScopeProvider) GenerateImage(ctx context.Context, req *GenerateRequ
 		}, nil
 	}
 
-	// Generate multiple images if requested
-	responses := make([]*GenerateResponse, 0, req.Count)
-	for i := 0; i < req.Count; i++ {
-		response, err := d.makeAPICall(ctx, config, requestData)
-		if err != nil {
-			return &GenerateResponse{
-				Success: false,
-				Error: &APIError{
-					Code:     "API_CALL_ERROR",
-					Message:  err.Error(),
-					Provider: "dashscope",
-				},
-			}, nil
-		}
-		responses = append(responses, response)
+	// Generate single image
+	response, err := d.makeAPICall(ctx, config, requestData)
+	if err != nil {
+		return &GenerateResponse{
+			Success: false,
+			Error: &APIError{
+				Code:     "API_CALL_ERROR",
+				Message:  err.Error(),
+				Provider: "dashscope",
+			},
+		}, nil
 	}
 
-	// Combine all successful responses
-	var allImages []GeneratedImage
-	for _, resp := range responses {
-		if resp.Success {
-			allImages = append(allImages, resp.Images...)
-		} else {
-			// Return first error encountered
-			return resp, nil
-		}
-	}
-
-	return &GenerateResponse{
-		Success: true,
-		Images:  allImages,
-	}, nil
+	return response, nil
 }
 
 // makeAPICall makes a single API call to DashScope

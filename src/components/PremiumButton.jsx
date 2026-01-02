@@ -1,5 +1,6 @@
 // PremiumButton 组件 - 带渐变效果的高级按钮
 import React, { useState } from 'react';
+import { Loader2 } from 'lucide-react';
 import { PREMIUM_STYLES } from '../constants/styles';
 
 export const PremiumButton = ({ 
@@ -51,7 +52,7 @@ export const PremiumButton = ({
       style={style}
       title={title}
     >
-      {Icon && <Icon size={16} />}
+      {Icon && <Icon size={16} className={Icon === Loader2 ? 'animate-spin' : ''} />}
       {children && <span>{children}</span>}
     </button>
   );

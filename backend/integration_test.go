@@ -18,7 +18,6 @@ func TestDashScopeAPI_Integration(t *testing.T) {
 		Provider: "dashscope",
 		Model:    "z-image-turbo",
 		Size:     "1536*1536",
-		Count:    1,
 	}
 
 	reqBody, err := json.Marshal(generateReq)

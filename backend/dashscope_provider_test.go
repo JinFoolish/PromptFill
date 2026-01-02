@@ -23,7 +23,6 @@ func TestDashScopeProvider_TemplateProcessing(t *testing.T) {
 		Prompt: "A beautiful sunset over mountains",
 		Model:  "z-image-turbo",
 		Size:   "1536*1536",
-		Count:  1,
 	}
 
 	requestData, err := provider.buildRequestFromTemplate(config, req)
@@ -154,7 +153,6 @@ func TestDashScopeProvider_GenerateImage_MissingAPIKey(t *testing.T) {
 
 	req := &GenerateRequest{
 		Prompt: "Test prompt",
-		Count:  1,
 	}
 
 	response, err := provider.GenerateImage(context.Background(), req)

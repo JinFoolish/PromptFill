@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { Variable } from './Variable';
+import { AIImageGenerator } from './AIImageGenerator';
 import { ImageIcon, ArrowUpRight, Upload, Globe, RotateCcw, Pencil, Check, X, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { getLocalized } from '../utils/helpers';
 
@@ -40,6 +41,8 @@ export const TemplatePreview = React.memo(({
   saveTemplateName, 
   startRenamingTemplate, 
   setEditingTemplateNameId,
+  // AI图像生成相关
+  onImageGenerated,
   isDarkMode
 }) => {
   const [editImageIndex, setEditImageIndex] = React.useState(0);
@@ -100,6 +103,41 @@ export const TemplatePreview = React.memo(({
       };
     }
     return { baseKey: varName, groupId: null };
+  };
+
+  // 生成填充后的完整提示词
+  const generateFilledPrompt = (templateContent) => {
+    if (!templateContent) return '';
+    
+    const counters = {};
+    
+    // 替换所有变量为实际值
+    return templateContent.replace(/{{([^}]+)}}/g, (match, fullKey) => {
+      const parsed = parseVariableName(fullKey.trim());
+      const baseKey = parsed.baseKey;
+      
+      // 使用完整的 fullKey 作为计数器的 key
+      const varIndex = counters[fullKey] || 0;
+      counters[fullKey] = varIndex + 1;
+      
+      const uniqueKey = `${fullKey}-${varIndex}`;
+      
+      // 获取当前选择的值
+      let currentValue = activeTemplate.selections[uniqueKey];
+      
+      // 如果没有选择值，使用默认值
+      if (!currentValue) {
+        currentValue = defaults[baseKey];
+      }
+      
+      // 处理多语言值
+      if (typeof currentValue === 'object' && currentValue !== null) {
+        return currentValue[language] || currentValue.cn || currentValue.en || fullKey;
+      }
+      
+      // 返回字符串值或原变量名（如果没有找到值）
+      return typeof currentValue === 'string' ? currentValue : fullKey;
+    });
   };
 
   const parseLineWithVariables = (text, lineKeyPrefix, counters) => {
@@ -400,6 +438,17 @@ export const TemplatePreview = React.memo(({
                         <p className={`text-sm font-medium mt-1 ${isDarkMode ? 'text-gray-600' : 'text-gray-400'}`}>
                             {t('made_by')}
                         </p>
+
+                        {/* AI Image Generator */}
+                        <div className="mt-4">
+                            <AIImageGenerator
+                                prompt={generateFilledPrompt(getLocalized(activeTemplate.content, language))}
+                                onImageGenerated={onImageGenerated}
+                                isDarkMode={isDarkMode}
+                                t={t}
+                                className="w-full max-w-md"
+                            />
+                        </div>
                     </div>
 
                     {/* Right: Image (Overhanging) */}

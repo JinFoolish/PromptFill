@@ -45,13 +45,6 @@ func (s *ImageService) GenerateImage(ctx context.Context, req *GenerateRequest) 
 		}, nil
 	}
 
-	if req.Count < 1 || req.Count > 10 {
-		return &GenerateResponse{
-			Success: false,
-			Error:   s.errorHandler.HandleValidationError("count", "Count must be between 1 and 10"),
-		}, nil
-	}
-
 	// Use active provider if not specified
 	providerID := req.Provider
 	if providerID == "" {

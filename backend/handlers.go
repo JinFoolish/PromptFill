@@ -22,11 +22,6 @@ func (s *APIServer) handleGenerate(c *gin.Context) {
 		return
 	}
 
-	// Set default count if not specified
-	if req.Count == 0 {
-		req.Count = 1
-	}
-
 	// Generate images
 	response, err := s.imageService.GenerateImage(c.Request.Context(), &req)
 	if err != nil {

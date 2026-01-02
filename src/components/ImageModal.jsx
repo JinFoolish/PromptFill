@@ -1,7 +1,8 @@
 // 图像显示模态框组件
-import React, { useState } from 'react';
-import { X, Download, Copy, Save, ChevronLeft, ChevronRight } from 'lucide-react';
+import React from 'react';
+import { Download, Copy, Save } from 'lucide-react';
 import { PremiumButton } from './PremiumButton';
+import ImagePopup from './ImagePopup';
 
 export const ImageModal = ({ 
   images = [], 
@@ -9,166 +10,140 @@ export const ImageModal = ({
   onClose, 
   onSave, 
   isDarkMode = false, 
-  t = (key) => key 
+  t = (key) => key,
+  language = 'cn' // 添加语言参数
 }) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-
   if (!isOpen || !images.length) return null;
 
-  const currentImage = images[currentIndex];
+  // 将生成的图片转换为 ImagePopup 可以使用的格式
+  const imageUrls = images.map(img => img.url);
+  const firstImage = images[0];
 
-  const handlePrev = () => {
-    setCurrentIndex(prev => (prev - 1 + images.length) % images.length);
+  // 创建一个虚拟的模板对象来显示图片信息
+  const virtualTemplate = {
+    name: `${t('generated_image') || '生成的图片'}`,
+    // author: `${firstImage.provider} · ${firstImage.model}`,
+    content: firstImage.prompt || `${t('no_prompt_available') || '暂无提示词信息'}`,
+    tags: [
+      firstImage.provider,
+      firstImage.model,
+      firstImage.width && firstImage.height ? `${firstImage.width}×${firstImage.height}` : 'unknown-size'
+    ].filter(Boolean)
   };
 
-  const handleNext = () => {
-    setCurrentIndex(prev => (prev + 1) % images.length);
-  };
-
-  const handleSaveAction = (action) => {
-    if (onSave) {
-      onSave(currentImage, action);
-    }
-  };
-
-  const handleDownload = () => {
-    const link = document.createElement('a');
-    link.href = currentImage.url;
-    link.download = `ai-generated-${currentImage.id}.png`;
-    link.click();
-  };
-
-  const handleCopyImage = async () => {
-    try {
-      const response = await fetch(currentImage.url);
-      const blob = await response.blob();
-      
-      if (navigator.clipboard && window.ClipboardItem) {
-        await navigator.clipboard.write([
-          new ClipboardItem({
-            [blob.type]: blob
-          })
-        ]);
-        // 可以添加成功提示
-      } else {
-        // 降级方案：复制图片URL
-        await navigator.clipboard.writeText(currentImage.url);
+  // 自定义操作按钮
+  const customActions = (currentImageUrl, currentIndex) => {
+    const currentImage = images.find(img => img.url === currentImageUrl) || firstImage;
+    
+    const handleSaveAction = (action) => {
+      if (onSave) {
+        onSave(currentImage, action);
       }
-    } catch (error) {
-      console.error('Failed to copy image:', error);
-      // 降级方案：复制图片URL
-      try {
-        await navigator.clipboard.writeText(currentImage.url);
-      } catch (urlError) {
-        console.error('Failed to copy image URL:', urlError);
-      }
-    }
+    };
+
+    return (
+      <>
+        {/* 图像信息 */}
+        <div className={`px-4 py-2 rounded-xl mb-3 ${isDarkMode ? 'bg-gray-800/50' : 'bg-white/10'} backdrop-blur-sm`}>
+          <div className="text-white/90 text-sm">
+            <div className="flex items-center justify-between gap-4">
+              <span className="font-medium">{currentImage.provider}</span>
+              <span className="text-white/70">{currentImage.model}</span>
+              {currentImage.width && currentImage.height && (
+                <span className="text-white/70">{currentImage.width}×{currentImage.height}</span>
+              )}
+              {images.length > 1 && (
+                <span className="text-white/70">{currentIndex + 1}/{images.length}</span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* 操作按钮 */}
+        <div className="flex gap-3 justify-center">
+          <PremiumButton
+            onClick={() => handleSaveAction('download')}
+            icon={Download}
+            color="blue"
+            isDarkMode={true}
+            className="px-6 py-3"
+          >
+            {/* {t('download') || '另存为'} */}
+          </PremiumButton>
+
+          <PremiumButton
+            onClick={() => handleSaveAction('copy')}
+            icon={Copy}
+            color="emerald"
+            isDarkMode={true}
+            className="px-6 py-3"
+          >
+            {/* {t('copy') || '复制图片'} */}
+          </PremiumButton>
+
+          <PremiumButton
+            onClick={() => handleSaveAction('history')}
+            icon={Save}
+            color="orange"
+            isDarkMode={true}
+            className="px-6 py-3"
+          >
+            {/* {t('save_to_history') || '保存到历史记录'} */}
+          </PremiumButton>
+        </div>
+
+        {/* 多图片提示 */}
+        {images.length > 1 && (
+          <div className="text-center mt-2">
+            <p className="text-white/60 text-xs">
+              {t('navigation_tip') || '使用左右箭头键或按钮浏览图像'}
+            </p>
+          </div>
+        )}
+      </>
+    );
   };
 
   return (
-    <div className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-      {/* 关闭按钮 */}
-      <button
-        onClick={onClose}
-        className="absolute top-6 right-6 text-white/70 hover:text-white transition-colors p-2 rounded-full hover:bg-white/10 z-10"
-      >
-        <X size={24} />
-      </button>
-
-      {/* 主要内容 */}
-      <div className="max-w-4xl w-full h-full flex flex-col items-center justify-center">
-        {/* 图像显示区域 */}
-        <div className="relative flex-1 flex items-center justify-center w-full">
-          <img
-            src={currentImage.url}
-            alt={`Generated image ${currentIndex + 1}`}
-            className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
-          />
-
-          {/* 导航按钮 */}
-          {images.length > 1 && (
-            <>
-              <button
-                onClick={handlePrev}
-                className="absolute left-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
-              >
-                <ChevronLeft size={24} />
-              </button>
-              <button
-                onClick={handleNext}
-                className="absolute right-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
-              >
-                <ChevronRight size={24} />
-              </button>
-            </>
-          )}
-        </div>
-
-        {/* 底部信息和操作区域 */}
-        <div className="w-full max-w-2xl mt-6">
-          {/* 图像信息 */}
-          <div className={`p-4 rounded-xl mb-4 ${isDarkMode ? 'bg-gray-800/50' : 'bg-white/10'} backdrop-blur-sm`}>
-            <div className="text-white/90 text-sm space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="font-medium">{t('provider') || '服务商'}: {currentImage.provider}</span>
-                <span className="text-white/70">{currentImage.model}</span>
-              </div>
-              {currentImage.width && currentImage.height && (
-                <div className="text-white/70">
-                  {t('size') || '尺寸'}: {currentImage.width} × {currentImage.height}
-                </div>
-              )}
-              {images.length > 1 && (
-                <div className="text-white/70 text-center">
-                  {currentIndex + 1} / {images.length}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* 操作按钮 */}
-          <div className="flex gap-3 justify-center">
-            <PremiumButton
-              onClick={handleDownload}
-              icon={Download}
-              color="blue"
-              isDarkMode={true}
-              className="px-6 py-3"
-            >
-              {t('download') || '下载'}
-            </PremiumButton>
-
-            <PremiumButton
-              onClick={handleCopyImage}
-              icon={Copy}
-              color="green"
-              isDarkMode={true}
-              className="px-6 py-3"
-            >
-              {t('copy') || '复制'}
-            </PremiumButton>
-
-            <PremiumButton
-              onClick={() => handleSaveAction('history')}
-              icon={Save}
-              color="orange"
-              isDarkMode={true}
-              className="px-6 py-3"
-            >
-              {t('save_to_history') || '保存到历史'}
-            </PremiumButton>
-          </div>
-
-          {/* 批量操作提示 */}
-          {images.length > 1 && (
-            <div className="text-center mt-4">
-              <p className="text-white/60 text-sm">
-                {t('batch_operations_tip') || '使用左右箭头键或按钮浏览所有生成的图像'}
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
+    <ImagePopup
+      isOpen={isOpen}
+      onClose={onClose}
+      imageUrl={firstImage.url}
+      imageUrls={imageUrls}
+      template={virtualTemplate}
+      language={language}
+      t={t}
+      displayTag={(tag) => {
+        // 如果是尺寸信息（包含×符号）
+        if (tag.includes('×')) {
+          return `${t('size') || '尺寸'}: ${tag}`;
+        }
+        
+        // 如果是已知的提供商
+        const providerMap = {
+          'dashscope': 'DashScope',
+          'openai': 'OpenAI',
+          'midjourney': 'Midjourney',
+          'stable-diffusion': 'Stable Diffusion'
+        };
+        
+        if (providerMap[tag]) {
+          return providerMap[tag];
+        }
+        
+        // 如果是模型名称（通常包含特定模式）
+        if (tag.includes('turbo') || tag.includes('xl') || tag.includes('v') || tag.includes('-')) {
+          return `${t('model') || '模型'}: ${tag}`;
+        }
+        
+        // 默认返回原标签
+        return tag;
+      }}
+      onUseTemplate={null}
+      isDarkMode={isDarkMode}
+      showTemplateInfo={true}
+      className="ai-image-modal"
+      customActions={customActions}
+    />
   );
 };

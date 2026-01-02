@@ -15,3 +15,5 @@ export { SettingsView } from './SettingsView';
 export { Sidebar } from './Sidebar';
 export { AIImageGenerator } from './AIImageGenerator';
 export { ImageModal } from './ImageModal';
+export { default as ImagePopup } from './ImagePopup';
+export { HistoryManager } from './HistoryManager';

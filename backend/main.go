@@ -4,6 +4,7 @@ package main
 
 import (
 	"context"
+	"embed"
 	"fmt"
 	"net/http"
 	"os"
@@ -12,13 +13,13 @@ import (
 
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
-	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
+
+	// "github.com/wailsapp/wails/v2/pkg/options/assetserver"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
-// Placeholder for embedded assets - will be populated when frontend is built
-// //go:embed all:dist
-// var assets embed.FS
+// Embed the frontend assets
+var assets embed.FS
 
 // App struct
 type App struct {
@@ -211,9 +212,9 @@ func main() {
 		MaxWidth:         0,                 // 0 means no limit
 		MaxHeight:        0,                 // 0 means no limit
 		WindowStartState: options.Maximised, // Start maximized
-		AssetServer:      &assetserver.Options{
-			// Assets: assets, // Commented out until frontend is built
-		},
+		// AssetServer: &assetserver.Options{
+		// 	Assets: assets, ts, // Commented out until frontend is built
+		// },
 		BackgroundColour: &options.RGBA{R: 27, G: 38, B: 54, A: 1},
 		OnStartup:        app.OnStartup,
 		OnDomReady:       app.OnDomReady,

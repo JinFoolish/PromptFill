@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, List, Edit3, Database, Sun, Moon } from 'lucide-react';
+import { Home, List, Edit3, Database, Clock, Sun, Moon } from 'lucide-react';
 
 const MobileTabBar = ({ activeTab, onTabChange, t, isDarkMode, onToggleDarkMode }) => {
   const tabs = [
@@ -7,6 +7,7 @@ const MobileTabBar = ({ activeTab, onTabChange, t, isDarkMode, onToggleDarkMode 
     { id: 'templates', icon: List, label: t('templates') || '模版列表' },
     { id: 'editor', icon: Edit3, label: t('editor') || '模版编辑' },
     { id: 'banks', icon: Database, label: t('banks') || '词库' },
+    { id: 'history', icon: Clock, label: t('history') || '历史' },
   ];
 
   return (
