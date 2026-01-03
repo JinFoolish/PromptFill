@@ -1,18 +1,19 @@
 import React from 'react';
-import { Github, Moon, Sun, Clock } from 'lucide-react';
+import { Github, Moon, Sun, Clock, Database } from 'lucide-react';
 
 /**
  * Sidebar 组件 - 通用侧边导航栏
  */
 export const Sidebar = ({
-  activeTab = 'home', // 'home' | 'details' | 'settings' | 'history'
+  activeTab = 'home', // 'home' | 'details' | 'settings' | 'history' | 'banks'
   onHome,
   onDetail,
   onHistory,
+  onBanks,
   onSettings,
   // I18n
-  language,
-  setLanguage,
+  // language,
+  // setLanguage,
   // Theme
   isDarkMode,
   setIsDarkMode,
@@ -71,7 +72,7 @@ export const Sidebar = ({
       className="relative flex flex-col justify-between items-center py-8 mr-4 flex-shrink-0"
     >
       {/* 圣诞帽 - 仅限桌面端显示 */}
-      <img 
+      {/* <img 
         src="/XmasHat.png" 
         alt="Christmas Hat"
         className="hidden lg:block pointer-events-none z-[100]"
@@ -84,7 +85,7 @@ export const Sidebar = ({
           transform: 'rotate(-27.44deg)',
           opacity: 1,
         }}
-      />
+      /> */}
       
       {/* 上部分：Logo + 导航按钮 */}
       <div className="flex flex-col items-center gap-8 w-full">
@@ -127,13 +128,23 @@ export const Sidebar = ({
             </div>
           </button>
           
+          <button 
+            onClick={onBanks}
+            className="p-2 group"
+            title={t('banks_title') || '词库管理'}
+          >
+            <div className={`${isDarkMode ? 'text-gray-400' : 'text-gray-400'} group-hover:text-[#F97316] transition-colors ${activeTab === 'banks' ? 'text-[#EA580C]' : ''}`}>
+              <Database size={24} style={{ filter: isDarkMode ? 'none' : 'drop-shadow(0px 2px 0px rgba(255, 255, 255, 0.5))' }} />
+            </div>
+          </button>
+          
 
         </div>
       </div>
 
       {/* 下部分：设置组 */}
       <div className="flex flex-col items-center gap-6 w-full">
-        <button 
+        {/* <button 
           onClick={() => setLanguage(language === 'cn' ? 'en' : 'cn')}
           className="p-2 group"
           title={t('language')}
@@ -142,7 +153,7 @@ export const Sidebar = ({
             style={{ '--mask-url': 'url(/translate.svg)', ...getIconStyle() }}
             className={`${isDarkMode ? 'bg-[#8E9196]' : 'bg-[#6B7280]'} group-hover:bg-[#F97316]`}
           />
-        </button>
+        </button> */}
 
         <button 
           onClick={() => setIsDarkMode(!isDarkMode)}

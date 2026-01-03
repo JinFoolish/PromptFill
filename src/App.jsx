@@ -20,7 +20,8 @@ import { SCENE_WORDS, STYLE_WORDS } from './constants/slogan';
 import { useStickyState } from './hooks/useStickyState';
 
 // ====== 导入 UI 组件 ======
-import { Variable, VisualEditor, PremiumButton, EditorToolbar, Lightbox, TemplatePreview, TemplatesSidebar, BanksSidebar, CategoryManager, InsertVariableModal, AddBankModal, DiscoveryView, MobileSettingsView, SettingsView, Sidebar, ImageModal, ImagePopup, HistoryManager } from './components';
+// 移除了 BanksSidebar, CategoryManager, InsertVariableModal, AddBankModal
+import { Variable, VisualEditor, PremiumButton, EditorToolbar, Lightbox, InsertVariableModal ,TemplatePreview, TemplatesSidebar, BanksView, DiscoveryView, MobileSettingsView, SettingsView, Sidebar, ImageModal, ImagePopup, HistoryManager } from './components';
 import MobileTabBar from './components/MobileTabBar';
 
 // ====== 核心组件区 (已提取至独立文件) ======
@@ -32,7 +33,6 @@ const AnimatedSlogan = React.memo(({ isActive, language, isDarkMode }) => {
 
   const currentScenes = SCENE_WORDS[language] || SCENE_WORDS.cn;
   const currentStyles = STYLE_WORDS[language] || STYLE_WORDS.cn;
-
   useEffect(() => {
     if (!isActive) return;
     
@@ -149,14 +149,6 @@ const MobileAnimatedSlogan = React.memo(({ isActive, language, isDarkMode }) => 
     );
 });
 
-// ====== 以下组件保留在此文件中 ======
-// CategorySection, BankGroup, CategoryManager, InsertVariableModal, App
-
-// --- 组件：可折叠的分类区块 (New Component) ---
-// ====== 核心组件区 (已提取至独立文件) ======
-
-// Poster View Animated Slogan Constants - 已移至 constants/slogan.js
-
 const App = () => {
   // 当前应用代码版本 (必须与 package.json 和 version.json 一致)
   const APP_VERSION = "0.6.2";
@@ -183,38 +175,28 @@ const App = () => {
   const [showAppUpdateNotice, setShowAppUpdateNotice] = useState(false);
   
   // UI State
-  const [bankSidebarWidth, setBankSidebarWidth] = useStickyState(420, "app_bank_sidebar_width_v1"); // Default width increased to 420px for 2-column layout
-  const [isResizing, setIsResizing] = useState(false);
+  // 移除了 bankSidebarWidth, isResizing 相关状态
   
   // 检测是否为移动设备
   const isMobileDevice = typeof window !== 'undefined' && window.innerWidth < 768;
   const [mobileTab, setMobileTab] = useState(isMobileDevice ? "home" : "editor"); // 'home', 'editor', 'history', 'settings'
   const [isTemplatesDrawerOpen, setIsTemplatesDrawerOpen] = useState(false);
-  const [isBanksDrawerOpen, setIsBanksDrawerOpen] = useState(false);
-  const [touchDraggingVar, setTouchDraggingVar] = useState(null); // { key, x, y } 用于移动端模拟拖拽
-  const touchDragRef = useRef(null);
+  // 移除了 isBanksDrawerOpen, touchDraggingVar
 
   const [isEditing, setIsEditing] = useState(false);
   const [activePopover, setActivePopover] = useState(null);
   const [copied, setCopied] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
-  const [isCategoryManagerOpen, setIsCategoryManagerOpen] = useState(false); // New UI state
-  const [isInsertModalOpen, setIsInsertModalOpen] = useState(false); // New UI state for Insert Picker
-  const [isImagePreviewOpen, setIsImagePreviewOpen] = useState(false); // New UI state for Lightbox
+  const [isInsertModalOpen, setIsInsertModalOpen] = useState(false);
 
-  // Add Bank State
-  const [isAddingBank, setIsAddingBank] = useState(false);
-  const [newBankLabel, setNewBankLabel] = useState("");
-  const [newBankKey, setNewBankKey] = useState("");
-  const [newBankCategory, setNewBankCategory] = useState("other");
+  // 移除了 isCategoryManagerOpen, isInsertModalOpen, isAddingBank 及其相关表单状态
 
   // Template Management UI State
   const [editingTemplateNameId, setEditingTemplateNameId] = useState(null);
   const [tempTemplateName, setTempTemplateName] = useState("");
   const [tempTemplateAuthor, setTempTemplateAuthor] = useState("");
   const [zoomedImage, setZoomedImage] = useState(null);
-  // 移除这一行，将状态移入独立的 Modal 组件
-  // const [modalMousePos, setModalMousePos] = useState({ x: 0, y: 0 });
+  
   const [imageUrlInput, setImageUrlInput] = useState("");
   const [imageUpdateMode, setImageUpdateMode] = useState('replace'); // 'replace' or 'add'
   const [currentImageEditIndex, setCurrentImageEditIndex] = useState(0);
@@ -251,9 +233,8 @@ const App = () => {
   
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [isBanksViewOpen, setIsBanksViewOpen] = useState(false);
   
-  // 移动端：首页是否展示完全由 mobileTab 控制，避免 isDiscoveryView 残留导致其它 Tab 白屏
-  // 桌面端：保持现有 isDiscoveryView 行为（不影响已正常的桌面端）
   const showDiscoveryOverlay = isMobileDevice ? mobileTab === "home" : isDiscoveryView;
   
   // Template Sort State
@@ -287,7 +268,6 @@ const App = () => {
   
   const [updateNoticeType, setUpdateNoticeType] = useState(null); // 'app' | 'data' | null
   
-  // 检查系统模版更新
   // 检测数据版本更新 (模板与词库)
   useEffect(() => {
     if (SYSTEM_DATA_VERSION && lastAppliedDataVersion !== SYSTEM_DATA_VERSION) {
@@ -347,7 +327,7 @@ const App = () => {
 
   const popoverRef = useRef(null);
   const textareaRef = useRef(null);
-  const sidebarRef = useRef(null);
+  // 移除了 sidebarRef
   const posterScrollRef = useRef(null);
   
   // Poster Mode Auto Scroll State
@@ -563,41 +543,7 @@ const App = () => {
     };
   }, [masonryStyleKey, isPosterAutoScrollPaused, isDiscoveryView]);
 
-  // Resizing Logic
-  useEffect(() => {
-      const handleMouseMove = (e) => {
-          if (!isResizing) return;
-          // New Layout: Bank Sidebar is on the Right.
-          // Width = Window Width - Mouse X
-          const newWidth = window.innerWidth - e.clientX;
-          
-          if (newWidth > 280 && newWidth < 800) { // Min/Max constraints
-              setBankSidebarWidth(newWidth);
-          }
-      };
-
-      const handleMouseUp = () => {
-          setIsResizing(false);
-          document.body.style.cursor = 'default';
-          document.body.style.userSelect = 'auto';
-      };
-
-      if (isResizing) {
-          document.addEventListener('mousemove', handleMouseMove);
-          document.addEventListener('mouseup', handleMouseUp);
-          document.body.style.cursor = 'col-resize';
-          document.body.style.userSelect = 'none'; // Prevent text selection while resizing
-      }
-
-      return () => {
-          document.removeEventListener('mousemove', handleMouseMove);
-          document.removeEventListener('mouseup', handleMouseUp);
-      };
-  }, [isResizing, setBankSidebarWidth]);
-
-  const startResizing = () => {
-      setIsResizing(true);
-  };
+  // 移除了 sidebar resizing 逻辑
 
   // --- Template Actions ---
 
@@ -1474,18 +1420,6 @@ const App = () => {
   }, [cursorInVariable, currentVariableName, currentGroupId, parseVariableName, activeTemplate.content, templateLanguage, updateActiveTemplateContent, detectCursorInVariable]);
 
   // 查找模板中所有需要联动的变量
-  // 规则：如果变量有 groupId，找到所有相同 baseKey 且有相同 groupId 的变量
-  // 例如：{{fruit}}_1 和 {{fruit}}_2 如果 groupId 都是 "1"，则联动
-  // 但更常见的用法是：{{fruit}}_1 和 {{fruit}}_2 应该联动（因为它们都是同一组）
-  // 我们使用一个更简单的规则：所有相同 baseKey 且有 groupId 的变量都联动（无论 groupId 是否相同）
-  // 或者更精确：相同 baseKey 且 groupId 相同的变量联动
-  // 为了灵活性，我们采用：相同 baseKey 且都有 groupId 的变量都联动（简化版）
-  // 但用户可能想要：{{fruit}}_1 和 {{fruit}}_2 联动，{{fruit}}_3 和 {{fruit}}_4 联动
-  // 这意味着我们需要一个更智能的规则
-  // 
-  // 重新理解需求：用户说 "_1的成组联动，_2的成组联动"
-  // 这意味着：所有带 _1 后缀的变量联动，所有带 _2 后缀的变量联动
-  // 所以规则应该是：相同 baseKey 且相同 groupId 的变量联动
   const findLinkedVariables = React.useCallback((template, baseKey, groupId) => {
     if (!groupId) return []; // 没有 groupId 的变量不联动
     
@@ -1503,7 +1437,6 @@ const App = () => {
       const parsed = parseVariableName(fullKey);
       
       // 匹配相同 baseKey 且相同 groupId 的变量
-      // 例如：{{fruit}}_1 和 {{fruit}}_1 会联动，但 {{fruit}}_1 和 {{fruit}}_2 不会
       if (parsed.baseKey === baseKey && parsed.groupId === groupId) {
         const idx = counters[fullKey] || 0;
         counters[fullKey] = idx + 1;
@@ -1593,34 +1526,7 @@ const App = () => {
     }));
   }, [setBanks]);
 
-  const handleStartAddBank = (catId) => {
-    setNewBankCategory(catId);
-    setIsAddingBank(true);
-  };
-
-  const handleAddBank = () => {
-    if (!newBankLabel.trim() || !newBankKey.trim()) return;
-    const safeKey = newBankKey.trim().replace(/[^a-zA-Z0-9_]/g, '_').toLowerCase();
-    
-    if (banks[safeKey]) {
-      alert(t('alert_id_exists'));
-      return;
-    }
-
-    setBanks(prev => ({
-      ...prev,
-      [safeKey]: {
-        label: newBankLabel,
-        category: newBankCategory,
-        options: []
-      }
-    }));
-    setDefaults(prev => ({ ...prev, [safeKey]: "" }));
-    setNewBankLabel("");
-    setNewBankKey("");
-    setNewBankCategory("other");
-    setIsAddingBank(false);
-  };
+  // 移除了 handleStartAddBank 和 handleAddBank
 
   const handleDeleteBank = (key) => {
     const bankLabel = getLocalized(banks[key].label, language);
@@ -1668,28 +1574,6 @@ const App = () => {
 
     let start = textarea.selectionStart;
     let end = textarea.selectionEnd;
-
-    // 移动端模拟拖拽的特殊处理：计算落点位置
-    if (dropPoint) {
-      const { x, y } = dropPoint;
-      let range;
-      if (document.caretRangeFromPoint) {
-        range = document.caretRangeFromPoint(x, y);
-      } else if (document.caretPositionFromPoint) {
-        const pos = document.caretPositionFromPoint(x, y);
-        if (pos) {
-          range = document.createRange();
-          range.setStart(pos.offsetNode, pos.offset);
-          range.collapse(true);
-        }
-      }
-      
-      if (range && range.startContainer) {
-        // 对于 textarea，我们需要手动计算偏移，这很困难
-        // 简化方案：如果在 textarea 区域内释放，则插入到最后或保持当前光标
-        // 但如果是在编辑器内，我们通常已经聚焦了
-      }
-    }
 
     const safeText = String(text);
     const before = safeText.substring(0, start);
@@ -1746,9 +1630,6 @@ const App = () => {
 
     setIsExporting(true);
     
-    // --- 关键修复：预处理图片为 Base64 ---
-    // 这能彻底解决 html2canvas 的跨域 (CORS) 和图片加载不全问题
-    // 我们手动 fetch 图片 blob 并转为 base64，绕过 canvas 的跨域限制
     const templateDefault = INITIAL_TEMPLATES_CONFIG.find(t => t.id === activeTemplateId);
     const originalImageSrc = activeTemplate.imageUrl || templateDefault?.imageUrl || "";
     let tempBase64Src = null;
@@ -1777,15 +1658,12 @@ const App = () => {
             await waitForImageLoad(imgElement);
         } catch (e) {
             console.warn("图片 Base64 转换失败，尝试直接导出", e);
-            // 如果 fetch 失败（比如彻底的 CORS 封锁），我们只能尝试允许 canvas 污染
-            // 但通常 fetch 失败意味着 canvas 也会失败
         }
     } else if (imgElement) {
-        // 即便没转 base64，也要确保当前展示图已加载完成
         await waitForImageLoad(imgElement);
     }
 
-    // 预加载二维码（使用本地文件并转换为 base64）
+    // 预加载二维码
     const websiteUrl = 'https://promptfill.tanshilong.com/';
     const localQrCodePath = '/QRCode.png';
     let qrCodeBase64 = null;
@@ -1805,7 +1683,6 @@ const App = () => {
         });
     } catch (e) {
         console.error("本地二维码加载失败", e);
-        // 即使失败也继续，会显示占位符
     }
 
     try {
@@ -1815,9 +1692,9 @@ const App = () => {
         exportContainer.style.position = 'fixed';
         exportContainer.style.left = '-99999px';
         exportContainer.style.top = '0';
-        exportContainer.style.width = '900px'; // 修改宽度：860px卡片 + 20px*2边距
+        exportContainer.style.width = '900px'; 
         exportContainer.style.minHeight = '800px';
-        exportContainer.style.padding = '20px'; // 橙色背景距离卡片四周各20px
+        exportContainer.style.padding = '20px'; 
         exportContainer.style.background = '#fafafa';
         exportContainer.style.display = 'flex';
         exportContainer.style.alignItems = 'center';
@@ -1838,18 +1715,18 @@ const App = () => {
         clonedCard.style.zIndex = '10';
         clonedCard.style.background = 'rgba(255, 255, 255, 0.98)';
         clonedCard.style.borderRadius = '24px';
-        clonedCard.style.boxShadow = '0 8px 32px -4px rgba(0, 0, 0, 0.12), 0 4px 16px -2px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.05)'; // 更细腻的多层阴影
+        clonedCard.style.boxShadow = '0 8px 32px -4px rgba(0, 0, 0, 0.12), 0 4px 16px -2px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.05)'; 
         clonedCard.style.border = '1px solid rgba(255, 255, 255, 0.8)';
         clonedCard.style.padding = '40px 45px';
         clonedCard.style.margin = '0 auto';
-        clonedCard.style.width = '860px'; // 修改宽度：固定卡片宽度为860px
+        clonedCard.style.width = '860px'; 
         clonedCard.style.boxSizing = 'border-box';
         clonedCard.style.fontFamily = '"PingFang SC", "Microsoft YaHei", sans-serif';
         clonedCard.style.webkitFontSmoothing = 'antialiased';
         exportContainer.appendChild(clonedCard);
         
         const canvas = await html2canvas(exportContainer, {
-            scale: 2.0, // 适中的分辨率，640px容器输出1280px宽度
+            scale: 2.0, 
             useCORS: true,
             allowTaint: true,
             backgroundColor: '#ffffff',
@@ -1868,8 +1745,6 @@ const App = () => {
                    const contentElement = card.querySelector('#final-prompt-content');
                    const contentHTML = contentElement ? contentElement.innerHTML : '';
                    
-                   console.log('正文内容获取:', contentHTML ? '成功' : '失败', contentHTML.length);
-                   
                    // 获取版本号（动态从原始DOM）
                    const metaContainer = card.querySelector('.flex.flex-wrap.gap-2');
                    const versionElement = metaContainer ? metaContainer.querySelector('.bg-orange-50') : null;
@@ -1878,7 +1753,7 @@ const App = () => {
                    // 清空卡片内容
                    card.innerHTML = '';
                    
-                   // --- 1. 图片区域（顶部，保持原始宽高比不裁切）---
+                   // --- 1. 图片区域 ---
                    if (imgSrc) {
                        const imgContainer = clonedDoc.createElement('div');
                        imgContainer.style.width = '100%';
@@ -1889,10 +1764,10 @@ const App = () => {
                        
                        const img = clonedDoc.createElement('img');
                        img.src = imgSrc;
-                       img.style.width = '100%'; // 充分利用卡片宽度
-                       img.style.height = 'auto'; // 高度自动，保持原始宽高比
-                       img.style.objectFit = 'contain'; // 包含模式，不裁切图片
-                       img.style.borderRadius = '12px'; // 加入圆角
+                       img.style.width = '100%'; 
+                       img.style.height = 'auto'; 
+                       img.style.objectFit = 'contain'; 
+                       img.style.borderRadius = '12px'; 
                        img.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
                        img.style.boxSizing = 'border-box';
                        
@@ -1900,13 +1775,13 @@ const App = () => {
                        card.appendChild(imgContainer);
                    }
                    
-                   // --- 2. 标题区域（无版本号、无标签）---
+                   // --- 2. 标题区域 ---
                    const titleContainer = clonedDoc.createElement('div');
                    titleContainer.style.marginBottom = '25px';
                    
                    const title = clonedDoc.createElement('h2');
                    title.textContent = titleText;
-                   title.style.fontSize = '32px'; // 恢复原状
+                   title.style.fontSize = '32px'; 
                    title.style.fontWeight = '700';
                    title.style.color = '#1f2937';
                    title.style.margin = '0';
@@ -1915,44 +1790,42 @@ const App = () => {
                    titleContainer.appendChild(title);
                    card.appendChild(titleContainer);
                    
-                   // --- 3. 正文区域（不重复标题）---
+                   // --- 3. 正文区域 ---
                    if (contentHTML) {
                        const contentContainer = clonedDoc.createElement('div');
                        contentContainer.innerHTML = contentHTML;
-                       contentContainer.style.fontSize = '18px'; // 恢复原状
+                       contentContainer.style.fontSize = '18px'; 
                        contentContainer.style.lineHeight = '1.8';
                        contentContainer.style.color = '#374151';
                        contentContainer.style.marginBottom = '40px';
                        
-                       // 修复胶囊样式 - 使用更精确的属性选择器
+                       // 修复胶囊样式
                        const variables = contentContainer.querySelectorAll('[data-export-pill="true"]');
                        variables.forEach(v => {
-                           // 优化父级容器（如果是 Variable 组件的 wrapper）
                            if (v.parentElement && v.parentElement.classList.contains('inline-block')) {
                                v.parentElement.style.display = 'inline';
                                v.parentElement.style.margin = '0';
                            }
 
-                           // 保留原有的背景色和文字颜色，只优化布局
                            v.style.display = 'inline-flex';
                            v.style.alignItems = 'center';
                            v.style.justifyContent = 'center';
-                           v.style.padding = '4px 12px'; // 恢复原状
+                           v.style.padding = '4px 12px'; 
                            v.style.margin = '2px 4px';
-                           v.style.borderRadius = '6px'; // 恢复原状
-                           v.style.fontSize = '17px'; // 恢复原状
+                           v.style.borderRadius = '6px'; 
+                           v.style.fontSize = '17px'; 
                            v.style.fontWeight = '600';
                            v.style.lineHeight = '1.5';
                            v.style.verticalAlign = 'middle';
                            v.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
-                           v.style.color = '#ffffff'; // 确保文字是白色
-                           v.style.border = 'none'; // 导出时去掉半透明边框，减少干扰
+                           v.style.color = '#ffffff'; 
+                           v.style.border = 'none'; 
                        });
                        
                        card.appendChild(contentContainer);
                    }
                    
-                   // --- 4. 底部水印区域（增加版本号）---
+                   // --- 4. 底部水印区域 ---
                    const footer = clonedDoc.createElement('div');
                    footer.style.marginTop = '40px';
                    footer.style.paddingTop = '25px';
@@ -1991,29 +1864,23 @@ const App = () => {
                    `;
                    
                    card.appendChild(footer);
-                   console.log('新布局已应用');
                 }
             }
         });
 
-        // 使用 JPG 格式，质量 0.92（高质量同时节省空间）
         const image = canvas.toDataURL('image/jpeg', 0.92);
         const activeTemplateName = getLocalized(activeTemplate.name, language);
         const filename = `${activeTemplateName.replace(/\s+/g, '_')}_prompt.jpg`;
         
-        // 检测是否为移动设备和iOS
         const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
         const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
         
         if (isMobileDevice) {
-            // 移动端：尝试使用 Web Share API 保存到相册
             try {
-                // 将 base64 转换为 blob
                 const base64Response = await fetch(image);
                 const blob = await base64Response.blob();
                 const file = new File([blob], filename, { type: 'image/jpeg' });
                 
-                // 检查是否支持 Web Share API（iOS 13+支持）
                 if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
                     await navigator.share({
                         files: [file],
@@ -2022,9 +1889,7 @@ const App = () => {
                     });
                     showToastMessage('✅ 图片已分享，请选择"存储图像"保存到相册');
                 } else {
-                    // 降级方案：对于iOS，打开新标签页显示图片
                     if (isIOS) {
-                        // iOS特殊处理：在新窗口打开图片，用户可以长按保存
                         const newWindow = window.open();
                         if (newWindow) {
                             newWindow.document.write(`
@@ -2046,7 +1911,6 @@ const App = () => {
                             `);
                             showToastMessage('✅ 请在新页面长按图片保存');
                         } else {
-                            // 如果无法打开新窗口，尝试下载
                             const link = document.createElement('a');
                             link.href = image;
                             link.download = filename;
@@ -2057,7 +1921,6 @@ const App = () => {
                             showToastMessage('✅ 图片已导出，请在新页面保存');
                         }
                     } else {
-                        // 安卓等其他移动设备：触发下载
                         const link = document.createElement('a');
                         link.href = image;
                         link.download = filename;
@@ -2069,9 +1932,7 @@ const App = () => {
                 }
             } catch (shareError) {
                 console.log('Share failed:', shareError);
-                // 最终降级方案
                 if (isIOS) {
-                    // iOS最终方案：打开新标签页
                     const newWindow = window.open();
                     if (newWindow) {
                         newWindow.document.write(`
@@ -2096,7 +1957,6 @@ const App = () => {
                 }
             }
         } else {
-            // 桌面端：直接下载
             const link = document.createElement('a');
             link.href = image;
             link.download = filename;
@@ -2109,13 +1969,10 @@ const App = () => {
         console.error("Export failed:", err);
         showToastMessage('❌ 导出失败，请重试');
     } finally {
-        // 清理临时容器
         const tempContainer = document.getElementById('export-container-temp');
         if (tempContainer) {
             document.body.removeChild(tempContainer);
         }
-        
-        // 恢复原始图片 src
         if (imgElement && originalImageSrc) {
             imgElement.src = originalImageSrc;
         }
@@ -2129,24 +1986,7 @@ const App = () => {
     setShowImageModal(true);
   };
 
-  // 移动端模拟拖拽处理器
-  const onTouchDragStart = (key, x, y) => {
-    setTouchDraggingVar({ key, x, y });
-    setIsBanksDrawerOpen(false); // 开始拖拽立刻收起抽屉
-  };
-
-  const onTouchDragMove = (x, y) => {
-    if (touchDraggingVar) {
-      setTouchDraggingVar(prev => ({ ...prev, x, y }));
-    }
-  };
-
-  const onTouchDragEnd = (x, y) => {
-    if (touchDraggingVar) {
-      insertVariableToTemplate(touchDraggingVar.key, { x, y });
-      setTouchDraggingVar(null);
-    }
-  };
+  // 移除了 onTouchDragStart, onTouchDragMove, onTouchDragEnd
 
   // --- Renderers ---
 
@@ -2173,35 +2013,44 @@ const App = () => {
         background: 'linear-gradient(180deg, #323131 0%, #181716 100%)',
         padding: isMobileDevice ? '0' : '16px'
       } : {}}
-      onTouchMove={(e) => touchDraggingVar && onTouchDragMove(e.touches[0].clientX, e.touches[0].clientY)}
-      onTouchEnd={(e) => touchDraggingVar && onTouchDragEnd(e.changedTouches[0].clientX, e.changedTouches[0].clientY)}
+      // 移除了 onTouchMove, onTouchEnd
     >
       {/* 桌面端全局侧边栏 - 位置固定不动 */}
       {!isMobileDevice && (
         <>
           <Sidebar 
-            activeTab={isSettingsOpen ? 'settings' : (isHistoryOpen ? 'history' : (showDiscoveryOverlay ? 'home' : 'details'))}
+            activeTab={isSettingsOpen ? 'settings' : (isHistoryOpen ? 'history' : (isBanksViewOpen ? 'banks' : (showDiscoveryOverlay ? 'home' : 'details')))}
             onHome={() => {
               setIsSettingsOpen(false);
               setIsHistoryOpen(false);
+              setIsBanksViewOpen(false);
               handleSetDiscoveryView(true);
             }}
             onDetail={() => {
               setIsSettingsOpen(false);
               setIsHistoryOpen(false);
+              setIsBanksViewOpen(false);
               handleSetDiscoveryView(false);
             }}
             onHistory={() => {
               setIsSettingsOpen(false);
+              setIsBanksViewOpen(false);
               setIsHistoryOpen(true);
+              handleSetDiscoveryView(false);
+            }}
+            onBanks={() => {
+              setIsSettingsOpen(false);
+              setIsHistoryOpen(false);
+              setIsBanksViewOpen(true);
               handleSetDiscoveryView(false);
             }}
             onSettings={() => {
               setIsHistoryOpen(false);
+              setIsBanksViewOpen(false);
               setIsSettingsOpen(true);
             }}
-            language={language}
-            setLanguage={setLanguage}
+            // language={language}
+            // setLanguage={setLanguage}
             isDarkMode={isDarkMode}
             setIsDarkMode={setIsDarkMode}
             t={t}
@@ -2257,20 +2106,7 @@ const App = () => {
         </>
       )}
 
-      {/* 移动端拖拽浮层 */}
-      {touchDraggingVar && (
-        <div 
-          className="fixed z-[9999] pointer-events-none px-3 py-1.5 bg-orange-500 text-white rounded-lg shadow-2xl text-xs font-bold font-mono animate-in zoom-in-50 duration-200"
-          style={{ 
-            left: touchDraggingVar.x, 
-            top: touchDraggingVar.y, 
-            transform: 'translate(-50%, -150%)',
-            boxShadow: '0 0 20px rgba(249,115,22,0.4)'
-          }}
-        >
-          {` {{${touchDraggingVar.key}}} `}
-        </div>
-      )}
+      {/* 移除了 touchDraggingVar 拖拽浮层 */}
       
       {/* 主视图区域 */}
       <div className="flex-1 relative flex overflow-hidden">
@@ -2302,6 +2138,22 @@ const App = () => {
               className="flex-1"
             />
           </div>
+        ) : isBanksViewOpen && !isMobileDevice ? (
+          <BanksView
+            categories={categories}
+            banks={banks}
+            setCategories={setCategories}
+            setBanks={setBanks}
+            handleDeleteOption={handleDeleteOption}
+            handleAddOption={handleAddOption}
+            handleDeleteBank={handleDeleteBank}
+            handleUpdateBankCategory={handleUpdateBankCategory}
+            insertVariableToTemplate={insertVariableToTemplate}
+            t={t}
+            language={language}
+            isDarkMode={isDarkMode}
+            globalContainerStyle={globalContainerStyle}
+          />
         ) : showDiscoveryOverlay ? (
           <DiscoveryView 
             filteredTemplates={discoveryTemplates}
@@ -2389,14 +2241,7 @@ const App = () => {
                         <ChevronRight size={20} />
                       </button>
                     </div>
-                    <div className={`md:hidden absolute right-0 top-1/2 -translate-y-1/2 z-40 transition-all duration-300 ${mobileTab === 'editor' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-                      <button 
-                        onClick={() => setIsBanksDrawerOpen(true)}
-                        className={`p-3 backdrop-blur-md rounded-l-2xl shadow-lg border border-r-0 active:scale-95 transition-all ${isDarkMode ? 'bg-black/40 border-white/5 text-gray-600' : 'bg-white/60 border-white/40 text-gray-400'}`}
-                      >
-                        <ChevronLeft size={20} />
-                      </button>
-                    </div>
+                    {/* 移除了 Mobile Right Drawer Trigger (BanksSidebar) */}
                   </>
                 )}
               
@@ -2663,46 +2508,12 @@ const App = () => {
             </div>
           </div>
 
-            <BanksSidebar 
-              mobileTab={mobileTab}
-              isBanksDrawerOpen={isBanksDrawerOpen}
-              setIsBanksDrawerOpen={setIsBanksDrawerOpen}
-              bankSidebarWidth={bankSidebarWidth}
-              sidebarRef={sidebarRef}
-              startResizing={startResizing}
-              setIsCategoryManagerOpen={setIsCategoryManagerOpen}
-              categories={categories}
-              banks={banks}
-              insertVariableToTemplate={insertVariableToTemplate}
-              handleDeleteOption={handleDeleteOption}
-              handleAddOption={handleAddOption}
-              handleDeleteBank={handleDeleteBank}
-              handleUpdateBankCategory={handleUpdateBankCategory}
-              handleStartAddBank={handleStartAddBank}
-              t={t}
-              language={templateLanguage}
-              isDarkMode={isDarkMode}
-              onTouchDragStart={onTouchDragStart}
-              globalContainerStyle={globalContainerStyle}
-            />
+            {/* 移除了 BanksSidebar */}
           </div>
         )}
       </div>
-      {/* --- Add Bank Modal --- */}
-      <AddBankModal
-        isOpen={isAddingBank}
-        onClose={() => setIsAddingBank(false)}
-        t={t}
-        categories={categories}
-        newBankLabel={newBankLabel}
-        setNewBankLabel={setNewBankLabel}
-        newBankKey={newBankKey}
-        setNewBankKey={setNewBankKey}
-        newBankCategory={newBankCategory}
-        setNewBankCategory={setNewBankCategory}
-        onConfirm={handleAddBank}
-        isDarkMode={isDarkMode}
-      />
+      
+      {/* 移除了 AddBankModal */}
 
       {/* 隐藏的图片选择器 */}
       <input
@@ -2982,7 +2793,7 @@ const App = () => {
                setDiscoveryView(true);
                setZoomedImage(null);
                setIsTemplatesDrawerOpen(false);
-               setIsBanksDrawerOpen(false);
+               // 移除了 setIsBanksDrawerOpen
              }}
              className="flex flex-col items-center justify-center w-full h-full transition-all active:scale-90 group"
           >
@@ -3012,7 +2823,7 @@ const App = () => {
                setDiscoveryView(false);
                setZoomedImage(null);
                setIsTemplatesDrawerOpen(false);
-               setIsBanksDrawerOpen(false);
+               // 移除了 setIsBanksDrawerOpen
                // 强制确保有模板被选中
                if (templates.length > 0 && !activeTemplateId) {
                  const firstId = templates[0].id;
@@ -3049,7 +2860,7 @@ const App = () => {
                setDiscoveryView(false);
                setZoomedImage(null);
                setIsTemplatesDrawerOpen(false);
-               setIsBanksDrawerOpen(false);
+               // 移除了 setIsBanksDrawerOpen
              }}
              className="flex flex-col items-center justify-center w-full h-full transition-all active:scale-90 group"
           >
@@ -3070,7 +2881,7 @@ const App = () => {
                setDiscoveryView(false);
                setZoomedImage(null);
                setIsTemplatesDrawerOpen(false);
-               setIsBanksDrawerOpen(false);
+               // 移除了 setIsBanksDrawerOpen
              }}
              className="flex flex-col items-center justify-center w-full h-full transition-all active:scale-90 group"
           >
@@ -3107,19 +2918,9 @@ const App = () => {
           </button>
       </div>
 
-      {/* --- Category Manager Modal (Moved to bottom) --- */}
-      <CategoryManager 
-        isOpen={isCategoryManagerOpen} 
-        onClose={() => setIsCategoryManagerOpen(false)}
-        categories={categories}
-        setCategories={setCategories}
-        banks={banks}
-        setBanks={setBanks}
-        t={t}
-        isDarkMode={isDarkMode}
-      />
+      {/* 移除了 CategoryManager Modal */}
 
-      {/* --- Insert Variable Modal (Moved to bottom) --- */}
+{/* --- Insert Variable Modal --- */}
       <InsertVariableModal
         isOpen={isInsertModalOpen}
         onClose={() => setIsInsertModalOpen(false)}
@@ -3130,9 +2931,9 @@ const App = () => {
             setIsInsertModalOpen(false);
         }}
         t={t}
+        language={templateLanguage} // 注意这里通常使用 templateLanguage 以匹配内容
         isDarkMode={isDarkMode}
       />
-
       {/* --- AI Generated Images Modal --- */}
       <ImageModal
         images={generatedImages}

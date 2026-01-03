@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Check, AlertCircle } from 'lucide-react';
+import { PremiumButton } from './PremiumButton';
 
 export const SimpleAIConfig = ({ language, isDarkMode, onClose }) => {
   const [provider, setProvider] = useState('dashscope');

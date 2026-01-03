@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { 
-  Globe, Database, Download, Upload, 
+  Database, Download, Upload, 
   Trash2, Mail, MessageCircle, Github, 
   ChevronRight, RefreshCw, FolderOpen,
   Image as ImageIcon, FileText
@@ -94,7 +94,7 @@ export const SettingsView = ({
       <div className="px-8 pt-10 pb-6 flex-shrink-0 flex items-center justify-between max-w-5xl mx-auto w-full">
         <div>
           <h1 className={`text-3xl font-black tracking-tighter ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-            {language === 'cn' ? '设置' : 'Settings'}
+            {t('settings_title')}
           </h1>
           <p className={`text-[11px] font-bold mt-2 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
             System V0.6.1 • Data {SYSTEM_DATA_VERSION}
@@ -111,34 +111,43 @@ export const SettingsView = ({
           
           {/* Column 1: Core Preferences */}
           <div className="flex flex-col gap-6">
-            <SettingCard title={language === 'cn' ? '通用' : 'General'}>
+            <SettingCard title={t('general')}>
               <SettingItem 
-                icon={Globe} 
-                label={language === 'cn' ? '界面语言' : 'Language'} 
-                description={language === 'cn' ? '切换中英文界面' : 'Switch UI Language'}
-                value={language === 'cn' ? '中文' : 'English'} 
+                icon={() => <img 
+                  src="/translate.svg" 
+                  alt="translate" 
+                  className="w-5 h-5" 
+                  style={{
+                    filter: isDarkMode 
+                      ? 'brightness(0) saturate(100%) invert(60%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(60%) contrast(100%)' 
+                      : 'brightness(0) saturate(100%) invert(40%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(60%) contrast(100%)'
+                  }}
+                />} 
+                label={t('interface_language')} 
+                description={t('switch_ui_language')}
+                value={t(language === 'cn' ? 'chinese' : 'english')} 
                 onClick={() => setLanguage(language === 'cn' ? 'en' : 'cn')}
               />
               <SettingItem 
                 icon={ImageIcon} 
-                label={language === 'cn' ? 'AI 图像生成' : 'AI Image Generation'}
-                description={language === 'cn' ? '配置 API Key 与模型参数' : 'Configure API Keys & Models'} 
+                label={t('ai_image_generation_config')}
+                description={t('configure_api_keys_models')} 
                 onClick={() => setShowAIConfig(true)}
               />
             </SettingCard>
 
-            <SettingCard title={language === 'cn' ? '数据存储' : 'Storage Location'}>
+            <SettingCard title={t('storage_location')}>
               <SettingItem 
                 icon={Database} 
-                label={language === 'cn' ? '浏览器存储' : 'Browser Storage'}
-                description={language === 'cn' ? '数据仅保存在当前浏览器' : 'Fast, simplified storage'}
+                label={t('browser_storage')}
+                description={t('fast_simplified_storage')}
                 active={storageMode === 'browser'}
                 onClick={handleSwitchToLocalStorage}
               />
               <SettingItem 
                 icon={FolderOpen} 
-                label={language === 'cn' ? '本地文件夹' : 'Local Directory'}
-                description={language === 'cn' ? '读写本地 JSON 文件' : 'Sync with local file system'}
+                label={t('local_directory')}
+                description={t('sync_local_filesystem')}
                 active={storageMode === 'folder'}
                 onClick={handleSelectDirectory}
               />
@@ -147,67 +156,65 @@ export const SettingsView = ({
 
           {/* Column 2: Data & System */}
           <div className="flex flex-col gap-6">
-            <SettingCard title={language === 'cn' ? '数据管理' : 'Data Management'}>
+            <SettingCard title={t('data_management')}>
               <div className="relative">
                 <input type="file" accept=".json" onChange={handleImportTemplate} className="hidden" id="import-json" />
                 <label htmlFor="import-json">
                    <SettingItem 
                     icon={Download} 
-                    label={language === 'cn' ? '导入数据' : 'Import JSON'}
-                    description={language === 'cn' ? '从备份文件恢复模版' : 'Restore from backup'}
+                    label={t('import_json')}
+                    description={t('restore_from_backup')}
                   />
                 </label>
               </div>
               <SettingItem 
                 icon={Upload} 
-                label={language === 'cn' ? '全量导出' : 'Export All'} 
-                description={language === 'cn' ? '备份所有模版与设置' : 'Backup all templates'}
+                label={t('export_all')} 
+                description={t('backup_all_templates')}
                 onClick={handleExportAllTemplates} 
               />
               <div className={`w-full h-[1px] my-1 ${isDarkMode ? 'bg-white/5' : 'bg-gray-100'}`} />
               <SettingItem 
                 icon={RefreshCw} 
-                label={language === 'cn' ? '重置预设' : 'Reset Defaults'} 
+                label={t('reset_defaults')} 
                 onClick={handleResetSystemData} 
               />
               <SettingItem 
                 icon={Trash2} 
-                label={language === 'cn' ? '清空数据' : 'Clear All Data'} 
+                label={t('clear_all_data')} 
                 danger={true}
                 onClick={handleClearAllData} 
               />
             </SettingCard>
 
-            <SettingCard title={language === 'cn' ? '关于' : 'About'}>
+            <SettingCard title={t('about')}>
               <SettingItem 
                 icon={FileText} 
-                label={language === 'cn' ? '更新日志' : 'Changelog'} 
+                label={t('changelog')} 
                 value="V0.6.1"
                 onClick={() => setShowUpdateLogs(true)}
               />
               <SettingItem 
                 icon={MessageCircle} 
-                label={language === 'cn' ? '联系作者' : 'Contact (WeChat)'} 
+                label={t('contact_wechat')} 
                 onClick={() => setShowWechatQR(true)}
               />
                <SettingItem 
                 icon={Mail} 
-                label={language === 'cn' ? '反馈邮箱' : 'Send Feedback'} 
+                label={t('send_feedback')} 
                 onClick={() => window.location.href = 'mailto:tanshilong@gmail.com'}
               />
               <SettingItem 
                 icon={Github} 
-                label="GitHub" 
-                description="Open Source Repository"
+                label={t('github')} 
+                description={t('open_source_repository')}
                 onClick={() => window.open('https://github.com/TanShilongMario/PromptFill', '_blank')}
               />
             </SettingCard>
 
             <div className="px-2">
                <p className={`text-[11px] font-bold leading-relaxed text-center opacity-60 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
-                {language === 'cn' 
-                  ? 'Prompt Fill 为创作者而生。所有数据均保存在本地，我们不会上传您的任何内容。' 
-                  : 'Built for creators. All data stays local; we never upload your prompts.'}
+                {t('built_for_creators')}
               </p>
             </div>
           </div>
@@ -221,8 +228,8 @@ export const SettingsView = ({
       <Modal
         isOpen={showUpdateLogs}
         onClose={() => setShowUpdateLogs(false)}
-        title={language === 'cn' ? '更新日志' : 'Changelog'}
-        subtitle="Timeline of changes & improvements"
+        title={t('changelog')}
+        subtitle={t('timeline_changes_improvements')}
         isDarkMode={isDarkMode}
         maxWidth="max-w-3xl"
         maxHeight="h-[85vh]"
@@ -279,8 +286,8 @@ export const SettingsView = ({
       <Modal
         isOpen={showAIConfig}
         onClose={() => setShowAIConfig(false)}
-        title={language === 'cn' ? 'AI 图像生成配置' : 'AI Image Generation'}
-        subtitle={language === 'cn' ? '配置 API Key 与服务提供商' : 'Configure API Key & Provider'}
+        title={t('ai_config_title')}
+        subtitle={t('ai_config_subtitle')}
         isDarkMode={isDarkMode}
       >
         <SimpleAIConfig 
@@ -306,7 +313,7 @@ export const SettingsView = ({
             />
           </div>
           <p className={`text-base font-black mb-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-            {language === 'cn' ? '扫码添加作者微信' : 'Scan to Connect'}
+            {t('scan_to_connect')}
           </p>
           <p className={`text-[10px] font-bold uppercase tracking-widest ${isDarkMode ? 'text-gray-600' : 'text-gray-400'}`}>
             TanShilongMario
