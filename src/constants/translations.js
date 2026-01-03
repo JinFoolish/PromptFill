@@ -157,7 +157,9 @@ export const TRANSLATIONS = {
     image_info: "图片信息",
     ai_generated: "AI生成",
     download: "另存为",
+    download_success: "图片已保存",
     copy: "复制图片",
+    copy_success: "图片已复制到剪贴板",
     save_to_history: "保存到历史记录",
     navigation_tip: "使用左右箭头键或按钮浏览图像",
     

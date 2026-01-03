@@ -1160,6 +1160,7 @@ const AppContent = () => {
       <ImageModal
         images={generatedImages}
         isOpen={showImageModal}
+        templateName={getLocalized(activeTemplate.name, language)}
         onClose={() => {
           setShowImageModal(false);
           setGeneratedImages([]);
@@ -1173,12 +1174,14 @@ const AppContent = () => {
                 const blob = await response.blob();
                 const filename = fileManager.generateFilename(image.provider, 'png');
                 await fileManager.saveImageFile(blob, filename);
+                alert(t('download_success') || '图片已保存');
                 break;
               case 'copy':
                 const { default: fileManagerCopy } = await import('./utils/fileManager.js');
                 const responseCopy = await fetch(image.url);
                 const blobCopy = await responseCopy.blob();
                 await fileManagerCopy.copyImageToClipboard(blobCopy);
+                alert(t('copy_success') || '图片已复制到剪贴板');
                 break;
               case 'history':
                 const { default: storageAdapter } = await import('./utils/storage.js');
@@ -1196,9 +1199,13 @@ const AppContent = () => {
                   provider: image.provider,
                   model: image.model,
                   parameters: image.parameters || {},
+                  templateName: getLocalized(activeTemplate.name, language), // 保存模板名称
+                  width: image.width, // 保存图像宽度
+                  height: image.height, // 保存图像高度
                   createdAt: image.timestamp || Date.now()
                 };
                 await storageAdapter.saveImage(image.id, blobHistory, metadata);
+                alert(t('save_to_history_success') || '已保存到历史记录');
                 break;
               default:
                 console.warn('Unknown save action:', action);

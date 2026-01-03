@@ -6,6 +6,7 @@ import { Modal } from './Modal';
 
 export const AIImageGenerator = ({ 
   prompt, 
+  parameters = {}, // 接收模板变量参数
   onImageGenerated, 
   isDarkMode = false, 
   t = (key) => key,
@@ -21,7 +22,7 @@ export const AIImageGenerator = ({
     provider: 'dashscope',
     model: 'z-image-turbo',
     size: '1536*1536',
-    parameters: {}
+    parameters: parameters // 使用传入的 parameters
   });
   
   // 临时配置状态（用于Modal中的编辑）
@@ -29,8 +30,14 @@ export const AIImageGenerator = ({
     provider: 'dashscope',
     model: 'z-image-turbo',
     size: '1536*1536',
-    parameters: {}
+    parameters: parameters // 使用传入的 parameters
   });
+
+  // 当 parameters prop 变化时，更新 config
+  useEffect(() => {
+    setConfig(prev => ({ ...prev, parameters }));
+    setTempConfig(prev => ({ ...prev, parameters }));
+  }, [parameters]);
   
   // 可用的配置选项
   const [providers, setProviders] = useState([]);

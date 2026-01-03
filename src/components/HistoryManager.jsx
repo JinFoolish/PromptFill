@@ -103,9 +103,11 @@ export const HistoryManager = ({
       if (selectedRecord?.id === recordId) {
         setSelectedRecord(null);
       }
+      alert(t('delete_success') || '删除成功');
     } catch (err) {
       console.error('Failed to delete record:', err);
       setError(`删除失败: ${err.message}`);
+      alert(`删除失败: ${err.message}`);
     }
   };
 
@@ -115,9 +117,11 @@ export const HistoryManager = ({
       await storageAdapter.clearAll();
       await loadHistory();
       setShowClearAllConfirm(false);
+      alert(t('clear_all_success') || '已清空所有历史记录');
     } catch (err) {
       console.error('Failed to clear all records:', err);
       setError(`清空失败: ${err.message}`);
+      alert(`清空失败: ${err.message}`);
     }
   };
 
@@ -133,9 +137,11 @@ export const HistoryManager = ({
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
+      alert(t('download_success') || '图片已保存');
     } catch (err) {
       console.error('Failed to download image:', err);
       setError(`下载失败: ${err.message}`);
+      alert(`下载失败: ${err.message}`);
     }
   };
 
@@ -147,12 +153,14 @@ export const HistoryManager = ({
         const item = new ClipboardItem({ [blob.type]: blob });
         await navigator.clipboard.write([item]);
         console.log('Image copied to clipboard');
+        alert(t('copy_success') || '图片已复制到剪贴板');
       } else {
         throw new Error('Clipboard API not supported');
       }
     } catch (err) {
       console.error('Failed to copy image:', err);
       setError(`复制失败: ${err.message}`);
+      alert(`复制失败: ${err.message}`);
     }
   };
 
@@ -179,25 +187,40 @@ export const HistoryManager = ({
 
   // Filter and sort
   const filteredAndSortedRecords = useMemo(() => {
-    let filtered = records;
+    if (!records || records.length === 0) return [];
+    
+    let filtered = [...records]; // 创建副本以避免直接修改原数组
+    
+    // 搜索筛选
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(record => 
-        record.prompt?.toLowerCase().includes(query) ||
-        record.provider?.toLowerCase().includes(query) ||
-        record.model?.toLowerCase().includes(query)
-      );
+      filtered = filtered.filter(record => {
+        const promptMatch = record.prompt?.toLowerCase().includes(query) || false;
+        const providerMatch = record.provider?.toLowerCase().includes(query) || false;
+        const modelMatch = record.model?.toLowerCase().includes(query) || false;
+        const templateNameMatch = record.templateName?.toLowerCase().includes(query) || false;
+        return promptMatch || providerMatch || modelMatch || templateNameMatch;
+      });
     }
+    
+    // 提供商筛选
     if (filterProvider !== 'all') {
       filtered = filtered.filter(record => record.provider === filterProvider);
     }
+    
+    // 排序
     filtered.sort((a, b) => {
       switch (sortBy) {
-        case 'oldest': return a.savedAt - b.savedAt;
-        case 'provider': return (a.provider || '').localeCompare(b.provider || '');
-        case 'newest': default: return b.savedAt - a.savedAt;
+        case 'oldest': 
+          return (a.savedAt || a.createdAt || 0) - (b.savedAt || b.createdAt || 0);
+        case 'provider': 
+          return (a.provider || '').localeCompare(b.provider || '');
+        case 'newest': 
+        default: 
+          return (b.savedAt || b.createdAt || 0) - (a.savedAt || a.createdAt || 0);
       }
     });
+    
     return filtered;
   }, [records, searchQuery, filterProvider, sortBy]);
 
@@ -210,20 +233,24 @@ export const HistoryManager = ({
   const popupTemplate = useMemo(() => {
     if (!selectedRecord) return null;
     
-    // Extract parameters for tags
+    // Tags: 服务提供商、模型名称、图像分辨率
     const tags = [];
-    if (selectedRecord.parameters) {
-      Object.entries(selectedRecord.parameters).forEach(([key, val]) => {
-        // Skip long values, keep short tech specs
-        if (typeof val !== 'object' && String(val).length < 20) {
-           tags.push(`${key}: ${val}`);
-        }
-      });
+    // 服务提供商
+    if (selectedRecord.provider) {
+      tags.push(selectedRecord.provider);
+    }
+    // 模型名称
+    if (selectedRecord.model) {
+      tags.push(selectedRecord.model);
+    }
+    // 图像分辨率（最后一个）
+    if (selectedRecord.width && selectedRecord.height) {
+      tags.push(`${selectedRecord.width}×${selectedRecord.height}`);
     }
 
     return {
-      name: formatDate(selectedRecord.savedAt) + " 生成",
-      author: `${selectedRecord.provider || 'AI'} / ${selectedRecord.model || 'Model'}`,
+      name: selectedRecord.templateName || t('generated_image') || '生成的图片', // 模板名称
+      author: formatDate(selectedRecord.savedAt || selectedRecord.createdAt), // 生成日期
       content: selectedRecord.prompt || t('no_prompt'),
       tags: tags
     };

@@ -14,7 +14,7 @@ import { PremiumButton } from './PremiumButton';
  * Component: Bank Group (Collapsible Card)
  */
 const BankGroup = ({ 
-    bankKey, bank, onInsert, onDeleteOption, onAddOption, 
+    bankKey, bank, onDeleteOption, onAddOption, 
     onDeleteBank, onUpdateBankCategory, categories, t, language, 
     isDarkMode, bankSearchQuery 
 }) => {
@@ -40,16 +40,9 @@ const BankGroup = ({
         return getLocalized(opt, language).toLowerCase().includes(query);
     });
 
-    const handleDragStart = (e) => {
-        e.dataTransfer.setData('text/plain', ` {{${bankKey}}} `);
-        e.dataTransfer.effectAllowed = 'copy';
-    };
-
     return (
         <div 
-            draggable="true"
-            onDragStart={handleDragStart}
-            className="relative group/card mb-3 ml-3 cursor-grab active:cursor-grabbing transition-all duration-300 hover:-translate-y-0.5"
+            className="relative group/card mb-3 ml-3 transition-all duration-300 hover:-translate-y-0.5"
         >
             {/* Colored Tag */}
             <div 
@@ -89,15 +82,6 @@ const BankGroup = ({
                     
                     {/* Actions */}
                     <div className="flex gap-1 items-center">
-                        <button 
-                            onClick={(e) => { e.stopPropagation(); onInsert(bankKey); }}
-                            title={t('insert')}
-                            className={`p-2 rounded-xl transition-all shadow-sm flex items-center gap-1.5 group/insert ${isDarkMode ? 'bg-white/5 hover:bg-white/10 text-gray-400 hover:text-orange-400' : 'bg-white hover:bg-orange-50 text-gray-400 hover:text-orange-600 border border-gray-100'}`}
-                        >
-                            <Plus size={16} className="group-hover/insert:scale-110 transition-transform" /> 
-                            {!isCollapsed && <span className="text-[10px] font-black uppercase tracking-widest hidden sm:inline">{t('insert')}</span>}
-                        </button>
-                        
                         {!isCollapsed && (
                             <>
                                 <button 
@@ -193,7 +177,7 @@ const BankGroup = ({
  * Component: Category Section (Masonry Item)
  */
 const CategorySection = ({ 
-    catId, categories, banks, onInsert, onDeleteOption, onAddOption, 
+    catId, categories, banks, onDeleteOption, onAddOption, 
     onDeleteBank, onUpdateBankCategory, onStartAddBank, t, language, 
     isDarkMode, bankSearchQuery 
 }) => {
@@ -247,7 +231,6 @@ const CategorySection = ({
                             key={key}
                             bankKey={key} 
                             bank={bank} 
-                            onInsert={onInsert}
                             onDeleteOption={onDeleteOption}
                             onAddOption={onAddOption}
                             onDeleteBank={onDeleteBank}
@@ -503,96 +486,6 @@ export const AddBankModal = ({ isOpen, onClose, t, categories, newBankLabel, set
     );
 };
 
-export const InsertVariableModal = ({ isOpen, onClose, categories, banks, onSelect, t, language, isDarkMode }) => {
-    // 管理每个分类的折叠状态，默认全部折叠
-    const [collapsedCategories, setCollapsedCategories] = useState(() => {
-        const initialState = {};
-        Object.keys(categories).forEach(catId => {
-            initialState[catId] = true; // 默认折叠
-        });
-        return initialState;
-    });
-
-    // 当 modal 打开时，重置所有分类为折叠状态
-    useEffect(() => {
-        if (isOpen) {
-            const initialState = {};
-            Object.keys(categories).forEach(catId => {
-                initialState[catId] = true; // 默认折叠
-            });
-            setCollapsedCategories(initialState);
-        }
-    }, [isOpen, categories]);
-
-    // 切换分类折叠状态
-    const toggleCategory = (catId) => {
-        setCollapsedCategories(prev => ({
-            ...prev,
-            [catId]: !prev[catId]
-        }));
-    };
-
-    return (
-        <Modal
-            isOpen={isOpen}
-            onClose={onClose}
-            title={t('insert')}
-            icon={List}
-            isDarkMode={isDarkMode}
-            maxWidth="max-w-md"
-        >
-             <div className="space-y-6 pt-2">
-               {Object.keys(categories).map(catId => {
-                   const catBanks = Object.entries(banks).filter(([_, bank]) => (bank.category || 'other') === catId);
-                   if (catBanks.length === 0) return null;
-                   
-                   const category = categories[catId];
-                   const style = CATEGORY_STYLES[category.color] || CATEGORY_STYLES.slate;
-                   const isCollapsed = collapsedCategories[catId] ?? true;
-    
-                   return (
-                       <div key={catId}>
-                           <h4 
-                               className={`text-[10px] font-black uppercase tracking-[0.2em] mb-3 flex items-center gap-2 cursor-pointer group/header transition-colors ${style.text} ${isDarkMode ? 'hover:text-gray-300' : 'hover:text-gray-700'}`}
-                               onClick={() => toggleCategory(catId)}
-                           >
-                               <div className={`transition-transform duration-200 ${isCollapsed ? '' : 'rotate-90'}`}>
-                                   <ChevronRight size={14} />
-                               </div>
-                               <span className={`w-1.5 h-1.5 rounded-full ${style.dotBg}`}></span>
-                               {getLocalized(category.label, language)}
-                               <span className="ml-auto text-[9px] opacity-60 tabular-nums">
-                                   {catBanks.length}
-                               </span>
-                           </h4>
-                           {!isCollapsed && (
-                               <div className="grid grid-cols-1 gap-2 slide-in-from-top-2 duration-200">
-                                   {catBanks.map(([key, bank]) => (
-                                       <button
-                                           key={key}
-                                           onClick={() => onSelect(key)}
-                                           className={`
-                                             flex items-center justify-between p-3 rounded-xl border text-left transition-all group
-                                             ${isDarkMode ? 'bg-white/5 border-white/5 hover:border-orange-500/50 hover:bg-orange-500/10' : 'bg-white border-gray-100 hover:border-orange-200 hover:bg-orange-50'}
-                                           `}
-                                       >
-                                           <div>
-                                               <span className={`block text-sm font-bold transition-colors ${isDarkMode ? 'text-gray-300 group-hover:text-orange-400' : 'text-gray-700 group-hover:text-orange-700'}`}>{getLocalized(bank.label, language)}</span>
-                                               <code className={`text-[10px] font-black tracking-wide opacity-50 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>{`{{${key}}}`}</code>
-                                           </div>
-                                           <Plus size={16} className={`transition-colors ${isDarkMode ? 'text-gray-600 group-hover:text-orange-500' : 'text-gray-300 group-hover:text-orange-500'}`} />
-                                       </button>
-                                   ))}
-                               </div>
-                           )}
-                       </div>
-                   );
-               })}
-            </div>
-        </Modal>
-    );
-};
-
 // --- Main View Component ---
 
 /**
@@ -601,7 +494,7 @@ export const InsertVariableModal = ({ isOpen, onClose, categories, banks, onSele
 export const BanksView = ({ 
   categories, banks, setCategories, setBanks,
   handleDeleteOption, handleAddOption, handleDeleteBank, 
-  handleUpdateBankCategory, insertVariableToTemplate,
+  handleUpdateBankCategory,
   t, language, isDarkMode, globalContainerStyle
 }) => {
   // Modal States
@@ -697,7 +590,6 @@ export const BanksView = ({
                         catId={catId}
                         categories={categories}
                         banks={banks}
-                        onInsert={insertVariableToTemplate}
                         onDeleteOption={handleDeleteOption}
                         onAddOption={handleAddOption}
                         onDeleteBank={handleDeleteBank}
@@ -745,4 +637,95 @@ export const BanksView = ({
 
     </div>
   );
+};
+
+
+export const InsertVariableModal = ({ isOpen, onClose, categories, banks, onSelect, t, language, isDarkMode }) => {
+    // 管理每个分类的折叠状态，默认全部折叠
+    const [collapsedCategories, setCollapsedCategories] = useState(() => {
+        const initialState = {};
+        Object.keys(categories).forEach(catId => {
+            initialState[catId] = true; // 默认折叠
+        });
+        return initialState;
+    });
+
+    // 当 modal 打开时，重置所有分类为折叠状态
+    useEffect(() => {
+        if (isOpen) {
+            const initialState = {};
+            Object.keys(categories).forEach(catId => {
+                initialState[catId] = true; // 默认折叠
+            });
+            setCollapsedCategories(initialState);
+        }
+    }, [isOpen, categories]);
+
+    // 切换分类折叠状态
+    const toggleCategory = (catId) => {
+        setCollapsedCategories(prev => ({
+            ...prev,
+            [catId]: !prev[catId]
+        }));
+    };
+
+    return (
+        <Modal
+            isOpen={isOpen}
+            onClose={onClose}
+            title={t('insert')}
+            icon={List}
+            isDarkMode={isDarkMode}
+            maxWidth="max-w-md"
+        >
+             <div className="space-y-6 pt-2">
+               {Object.keys(categories).map(catId => {
+                   const catBanks = Object.entries(banks).filter(([_, bank]) => (bank.category || 'other') === catId);
+                   if (catBanks.length === 0) return null;
+                   
+                   const category = categories[catId];
+                   const style = CATEGORY_STYLES[category.color] || CATEGORY_STYLES.slate;
+                   const isCollapsed = collapsedCategories[catId] ?? true;
+    
+                   return (
+                       <div key={catId}>
+                           <h4 
+                               className={`text-[10px] font-black uppercase tracking-[0.2em] mb-3 flex items-center gap-2 cursor-pointer group/header transition-colors ${style.text} ${isDarkMode ? 'hover:text-gray-300' : 'hover:text-gray-700'}`}
+                               onClick={() => toggleCategory(catId)}
+                           >
+                               <div className={`transition-transform duration-200 ${isCollapsed ? '' : 'rotate-90'}`}>
+                                   <ChevronRight size={14} />
+                               </div>
+                               <span className={`w-1.5 h-1.5 rounded-full ${style.dotBg}`}></span>
+                               {getLocalized(category.label, language)}
+                               <span className="ml-auto text-[9px] opacity-60 tabular-nums">
+                                   {catBanks.length}
+                               </span>
+                           </h4>
+                           {!isCollapsed && (
+                               <div className="grid grid-cols-1 gap-2 slide-in-from-top-2 duration-200">
+                                   {catBanks.map(([key, bank]) => (
+                                       <button
+                                           key={key}
+                                           onClick={() => onSelect(key)}
+                                           className={`
+                                             flex items-center justify-between p-3 rounded-xl border text-left transition-all group
+                                             ${isDarkMode ? 'bg-white/5 border-white/5 hover:border-orange-500/50 hover:bg-orange-500/10' : 'bg-white border-gray-100 hover:border-orange-200 hover:bg-orange-50'}
+                                           `}
+                                       >
+                                           <div>
+                                               <span className={`block text-sm font-bold transition-colors ${isDarkMode ? 'text-gray-300 group-hover:text-orange-400' : 'text-gray-700 group-hover:text-orange-700'}`}>{getLocalized(bank.label, language)}</span>
+                                               <code className={`text-[10px] font-black tracking-wide opacity-50 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>{`{{${key}}}`}</code>
+                                           </div>
+                                           <Plus size={16} className={`transition-colors ${isDarkMode ? 'text-gray-600 group-hover:text-orange-500' : 'text-gray-300 group-hover:text-orange-500'}`} />
+                                       </button>
+                                   ))}
+                               </div>
+                           )}
+                       </div>
+                   );
+               })}
+            </div>
+        </Modal>
+    );
 };
