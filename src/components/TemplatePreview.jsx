@@ -46,8 +46,6 @@ export const TemplatePreview = React.memo(({
   isDarkMode
 }) => {
   const [editImageIndex, setEditImageIndex] = React.useState(0);
-  // 移动端适配已禁用，通过配置接口可重新启用
-  const isMobile = false; // 使用配置接口: import { isMobileDevice } from '../config/mobileConfig';
 
   // 统一的底层容器样式
   const unifiedStyle = isDarkMode ? {

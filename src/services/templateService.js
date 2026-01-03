@@ -14,29 +14,6 @@ export const exportTemplate = async (template, language, showToast = alert) => {
     const dataBlob = new Blob([dataStr], { type: 'application/json' });
     const filename = `${templateName.replace(/\s+/g, '_')}_template.json`;
     
-    // 移动端适配已禁用，通过配置接口可重新启用
-    // import { isMobileDevice, isMobileUserAgent } from '../config/mobileConfig';
-    const isMobileDevice = false; // 使用配置接口
-    const isIOS = false; // 使用配置接口
-    
-    if (false && isMobileDevice && navigator.share) {
-      // 移动端：使用 Web Share API
-      try {
-        const file = new File([dataBlob], filename, { type: 'application/json' });
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          await navigator.share({
-            files: [file],
-            title: templateName,
-            text: '导出的提示词模板'
-          });
-          showToast('✅ 模板已分享/保存');
-          return;
-        }
-      } catch (shareError) {
-        console.log('Web Share API 失败，使用降级方案', shareError);
-      }
-    }
-    
     // 桌面端或降级方案：使用传统下载方式
     const url = URL.createObjectURL(dataBlob);
     const link = document.createElement('a');
@@ -87,24 +64,6 @@ export const exportAllTemplates = async (templates, banks, categories, showToast
     // 移动端适配已禁用，通过配置接口可重新启用
     const isMobileDevice = false; // 使用配置接口
     const isIOS = false; // 使用配置接口
-    
-    if (false && isMobileDevice && navigator.share) {
-      // 移动端：使用 Web Share API
-      try {
-        const file = new File([dataBlob], filename, { type: 'application/json' });
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          await navigator.share({
-            files: [file],
-            title: '提示词填空器备份',
-            text: '所有模板和词库的完整备份'
-          });
-          showToast('✅ 备份已分享/保存');
-          return;
-        }
-      } catch (shareError) {
-        console.log('Web Share API 失败，使用降级方案', shareError);
-      }
-    }
     
     // 桌面端或降级方案：使用传统下载方式
     const url = URL.createObjectURL(dataBlob);

@@ -66,8 +66,6 @@ export const AppProvider = ({ children }) => {
     setTempTemplateName: appState.setTempTemplateName,
     tempTemplateAuthor: appState.tempTemplateAuthor,
     setTempTemplateAuthor: appState.setTempTemplateAuthor,
-    isMobileDevice: appState.isMobileDevice,
-    setMobileTab: appState.setMobileTab,
     setIsEditing: appState.setIsEditing,
     lastAppliedDataVersion: appState.lastAppliedDataVersion,
     setLastAppliedDataVersion: appState.setLastAppliedDataVersion,

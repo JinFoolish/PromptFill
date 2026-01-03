@@ -61,9 +61,6 @@ const AppContent = () => {
     // 核心状态
     isDarkMode,
     setIsDarkMode,
-    isMobileDevice,
-    mobileTab,
-    setMobileTab,
     language,
     setLanguage,
     templateLanguage,
@@ -332,6 +329,7 @@ const AppContent = () => {
               setIsHistoryOpen(false);
               setIsBanksViewOpen(false);
               setIsSettingsOpen(true);
+              setDiscoveryView(false);
             }}
             isDarkMode={isDarkMode}
             setIsDarkMode={setIsDarkMode}
@@ -417,9 +415,6 @@ const AppContent = () => {
         ) : (
           <div className="flex-1 flex gap-4 overflow-hidden">
             <TemplatesSidebar 
-              mobileTab={mobileTab}
-              isTemplatesDrawerOpen={isTemplatesDrawerOpen}
-              setIsTemplatesDrawerOpen={setIsTemplatesDrawerOpen}
               setDiscoveryView={setDiscoveryView}
               activeTemplateId={activeTemplateId}
               setActiveTemplateId={setActiveTemplateId} 
@@ -702,177 +697,6 @@ const AppContent = () => {
         onChange={imageManagement.handleUploadImage}
       />
 
-      {/* Settings Modal - Mobile (已禁用，通过配置接口可重新启用) */}
-      {false && isSettingsOpen && isMobileDevice && (
-        <div 
-          className="fixed inset-0 z-[110] bg-black/40 backdrop-blur-md flex items-center justify-center p-4 md:p-8 animate-in fade-in duration-200"
-          onClick={() => setIsSettingsOpen(false)}
-        >
-          <div 
-            className="bg-gradient-to-br from-white via-white to-gray-50/30 w-full max-w-4xl rounded-3xl shadow-2xl overflow-hidden border-2 border-white/60 animate-in zoom-in-95 duration-300"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="relative flex items-center justify-between px-6 py-5 border-b border-gray-100/80 bg-gradient-to-r from-orange-50/50 via-white to-blue-50/30 backdrop-blur">
-              <div className="absolute inset-0 bg-gradient-to-r from-orange-500/5 to-blue-500/5"></div>
-              
-              <div className="relative flex items-center gap-3 text-gray-800">
-                <div className="p-3 rounded-2xl bg-gradient-to-br from-orange-400 to-orange-600 text-white shadow-lg shadow-orange-500/30">
-                  <Settings size={20} />
-                </div>
-                <div>
-                  <p className="text-base font-bold tracking-tight">{t('settings')}</p>
-                  <p className="text-xs text-gray-500 font-medium">{t('app_title')}</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setIsSettingsOpen(false)}
-                className="relative p-2.5 text-gray-400 hover:text-gray-700 hover:bg-white/80 rounded-xl transition-all duration-200 hover:shadow-md hover:scale-110"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <div className="p-6 md:p-8 space-y-8 max-h-[75vh] overflow-y-auto">
-              {/* Import / Export */}
-              <div className="space-y-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-1 h-5 bg-gradient-to-b from-orange-400 to-orange-600 rounded-full"></div>
-                  <p className="text-sm font-bold tracking-tight text-gray-700">{t('import_template')} / {t('export_all_templates')}</p>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <label className="block">
-                    <input 
-                      type="file" 
-                      accept=".json" 
-                      onChange={(e) => templateManagement.handleImportTemplate(e, setCategories)}
-                      className="hidden" 
-                      id="import-template-input-modal"
-                    />
-                    <div 
-                      onClick={() => document.getElementById('import-template-input-modal').click()}
-                      className="cursor-pointer w-full text-center px-5 py-4 text-sm font-semibold bg-gradient-to-br from-white to-gray-50 hover:from-gray-50 hover:to-gray-100 text-gray-700 rounded-2xl transition-all duration-300 border-2 border-gray-200 hover:border-gray-300 flex items-center justify-center gap-2.5 shadow-md hover:shadow-lg hover:scale-[1.02]"
-                    >
-                      <Download size={18} />
-                      <span>{t('import_template')}</span>
-                    </div>
-                  </label>
-                  <button
-                    onClick={() => templateManagement.handleExportAllTemplates(categories)}
-                    className="w-full text-center px-5 py-4 text-sm font-semibold bg-gradient-to-br from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-2xl transition-all duration-300 border-2 border-orange-500 hover:border-orange-600 flex items-center justify-center gap-2.5 shadow-md shadow-orange-500/30 hover:shadow-lg hover:shadow-orange-500/40 hover:scale-[1.02]"
-                  >
-                    <Upload size={18} />
-                    <span>{t('export_all_templates')}</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Data Refresh */}
-              <div className="space-y-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-1 h-5 bg-gradient-to-b from-amber-400 to-orange-500 rounded-full"></div>
-                  <p className="text-sm font-bold tracking-tight text-gray-700">{t('refresh_system')}</p>
-                </div>
-                <button
-                  onClick={templateManagement.handleRefreshSystemData}
-                  className="w-full text-center px-5 py-4 text-sm font-semibold bg-white hover:bg-orange-50 text-orange-600 rounded-2xl transition-all duration-300 border-2 border-orange-100 hover:border-orange-200 flex items-center justify-center gap-2.5 shadow-sm"
-                >
-                  <RefreshCw size={18} />
-                  <span>{t('refresh_system')}</span>
-                </button>
-              </div>
-
-              {/* Storage */}
-              <div className="space-y-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-1 h-5 bg-gradient-to-b from-blue-400 to-blue-600 rounded-full"></div>
-                  <p className="text-sm font-bold tracking-tight text-gray-700">{t('storage_mode')}</p>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <button
-                    onClick={fileSystem.handleSwitchToLocalStorage}
-                    className={`relative w-full px-5 py-4 text-sm font-semibold rounded-2xl transition-all duration-300 border-2 flex items-center justify-between overflow-hidden group ${
-                      storageMode === 'browser' 
-                        ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white border-blue-500 shadow-lg shadow-blue-500/30' 
-                        : 'bg-gradient-to-br from-white to-gray-50 text-gray-700 border-gray-200 hover:border-blue-300 hover:shadow-md hover:scale-[1.02]'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3 relative z-10">
-                      <Globe size={18} />
-                      <span>{t('use_browser_storage')}</span>
-                    </div>
-                    {storageMode === 'browser' && (
-                      <div className="relative z-10">
-                        <Check size={18} className="animate-in zoom-in duration-300" />
-                      </div>
-                    )}
-                  </button>
-                  <button
-                    onClick={fileSystem.handleSelectDirectory}
-                    disabled={!isFileSystemSupported}
-                    className={`relative w-full px-5 py-4 text-sm font-semibold rounded-2xl transition-all duration-300 border-2 flex items-center justify-between overflow-hidden group ${
-                      storageMode === 'folder' 
-                        ? 'bg-gradient-to-br from-green-500 to-green-600 text-white border-green-500 shadow-lg shadow-green-500/30' 
-                        : `bg-gradient-to-br from-white to-gray-50 text-gray-700 border-gray-200 ${!isFileSystemSupported ? 'opacity-50 cursor-not-allowed' : 'hover:border-green-300 hover:shadow-md hover:scale-[1.02]'}`
-                    }`}
-                    title={!isFileSystemSupported ? t('browser_not_supported') : ''}
-                  >
-                    <div className="flex items-center gap-3 relative z-10">
-                      <Download size={18} />
-                      <span>{t('use_local_folder')}</span>
-                    </div>
-                    {storageMode === 'folder' && (
-                      <div className="relative z-10">
-                        <Check size={18} className="animate-in zoom-in duration-300" />
-                      </div>
-                    )}
-                  </button>
-                </div>
-
-                {storageMode === 'folder' && directoryHandle && (
-                  <div className="px-4 py-3 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200/60 rounded-xl text-sm text-green-700 flex items-center justify-between gap-3 shadow-sm animate-in slide-in-from-top duration-300">
-                    <div className="flex items-center gap-2.5 font-medium">
-                      <div className="p-1 bg-green-500 rounded-lg text-white">
-                        <Check size={14} />
-                      </div>
-                      <span>{t('auto_save_enabled')}</span>
-                    </div>
-                    <button
-                      onClick={fileSystem.handleManualLoadFromFolder}
-                      className="px-4 py-1.5 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-lg text-xs font-semibold transition-all duration-200 shadow-md hover:shadow-lg hover:scale-105"
-                    >
-                      {t('load_from_folder')}
-                    </button>
-                  </div>
-                )}
-
-                {storageMode === 'browser' && (
-                  <div className="px-4 py-2.5 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-xl">
-                    <p className="text-xs text-blue-700 font-medium">
-                      {t('storage_used')}: <span className="font-bold">{getStorageSize()} KB</span>
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              {/* Danger Zone */}
-              <div className="space-y-4 pt-4 border-t-2 border-gray-100">
-                <div className="flex items-center gap-2">
-                  <div className="w-1 h-5 bg-gradient-to-b from-red-400 to-red-600 rounded-full"></div>
-                  <p className="text-sm font-bold tracking-tight text-red-600">{t('clear_all_data')}</p>
-                </div>
-                <button
-                  onClick={handleClearAllData}
-                  className="w-full text-center px-5 py-4 text-sm font-semibold bg-gradient-to-br from-red-50 to-red-100 hover:from-red-100 hover:to-red-200 text-red-600 hover:text-red-700 rounded-2xl transition-all duration-300 border-2 border-red-200 hover:border-red-300 flex items-center justify-center gap-2.5 shadow-md hover:shadow-lg hover:scale-[1.02] group"
-                >
-                  <Trash2 size={18} className="group-hover:animate-pulse" />
-                  <span>{t('clear_all_data')}</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Image Action Menu */}
       {showImageActionMenu && (() => {
         const buttonEl = window.__imageMenuButtonRef;
@@ -950,12 +774,6 @@ const AppContent = () => {
         />
       )}
 
-      {/* Mobile Bottom Navigation (已禁用，通过配置接口可重新启用) */}
-      {false && (
-        <div className="md:hidden fixed bottom-0 left-0 right-0 backdrop-blur-2xl border-t flex justify-around items-center z-[250] h-16 pb-safe shadow-[0_-8px_30px_rgba(0,0,0,0.05)] transition-colors duration-300 bg-white/25 dark:bg-[#181716]/25 border-white/30 dark:border-white/5">
-          {/* 移动端导航栏代码已移除，可通过配置接口重新启用 */}
-        </div>
-      )}
 
       {/* Insert Variable Modal */}
       <InsertVariableModal

@@ -30,8 +30,6 @@ export const DiscoveryView = React.memo(({
   isDarkMode,
   masonryStyleKey
 }) => {
-  // 移动端适配已禁用，通过配置接口可重新启用
-  // 如需启用移动端视图，请修改 src/config/mobileConfig.js 中的 ENABLE_MOBILE_ADAPTATION
 
   return (
     <div 

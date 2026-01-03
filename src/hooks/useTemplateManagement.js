@@ -25,8 +25,6 @@ export const useTemplateManagement = ({
   setTempTemplateName,
   tempTemplateAuthor,
   setTempTemplateAuthor,
-  isMobileDevice,
-  setMobileTab,
   setIsEditing,
   lastAppliedDataVersion,
   setLastAppliedDataVersion,
@@ -48,12 +46,7 @@ export const useTemplateManagement = ({
     setTemplates([...templates, newTemplate]);
     setActiveTemplateId(newId);
     setIsEditing(true);
-    // 在移动端自动切换到编辑Tab
-    // 移动端适配已禁用，通过配置接口可重新启用
-    // if (isMobileDevice) {
-    //   setMobileTab('editor');
-    // }
-  }, [templates, setTemplates, setActiveTemplateId, setIsEditing, isMobileDevice, setMobileTab, t]);
+  }, [templates, setTemplates, setActiveTemplateId, setIsEditing, t]);
 
   // 复制模板
   const handleDuplicateTemplate = useCallback((t_item, e) => {
@@ -79,12 +72,7 @@ export const useTemplateManagement = ({
     };
     setTemplates([...templates, newTemplate]);
     setActiveTemplateId(newId);
-    // 在移动端自动切换到编辑Tab
-    // 移动端适配已禁用，通过配置接口可重新启用
-    // if (isMobileDevice) {
-    //   setMobileTab('editor');
-    // }
-  }, [templates, setTemplates, setActiveTemplateId, isMobileDevice, setMobileTab, t]);
+  }, [templates, setTemplates, setActiveTemplateId, t]);
 
   // 删除模板
   const handleDeleteTemplate = useCallback((id, e) => {

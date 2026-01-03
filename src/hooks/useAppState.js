@@ -5,7 +5,6 @@ import { getSystemLanguage } from '../utils/helpers';
 import { INITIAL_TEMPLATES_CONFIG, SYSTEM_DATA_VERSION } from '../data/templates';
 import { INITIAL_BANKS, INITIAL_DEFAULTS, INITIAL_CATEGORIES } from '../data/banks';
 import { MASONRY_STYLES } from '../constants/masonryStyles';
-import { isMobileDevice } from '../config/mobileConfig';
 
 /**
  * 核心应用状态管理 Hook
@@ -34,11 +33,6 @@ export const useAppState = () => {
   const [isDarkMode, setIsDarkMode] = useStickyState(false, "app_dark_mode_v1");
   const [showDataUpdateNotice, setShowDataUpdateNotice] = useState(false);
   const [showAppUpdateNotice, setShowAppUpdateNotice] = useState(false);
-  
-  // 检测是否为移动设备（基于配置接口）
-  const mobileDevice = isMobileDevice();
-  const [mobileTab, setMobileTab] = useState(mobileDevice ? "home" : "editor"); // 'home', 'editor', 'history', 'settings'
-  const [isTemplatesDrawerOpen, setIsTemplatesDrawerOpen] = useState(false);
 
   // UI State
   const [isEditing, setIsEditing] = useState(false);
@@ -80,20 +74,14 @@ export const useAppState = () => {
   const handleSetDiscoveryView = useMemo(() => {
     return (val) => {
       setDiscoveryView(val);
-      // 移动端：侧边栏里的"回到发现页"按钮需要同步切回 mobileTab
-      if (mobileDevice && val) {
-        setMobileTab('home');
-      } else if (mobileDevice && !val && mobileTab === 'home') {
-        setMobileTab('editor');
-      }
     };
-  }, [mobileDevice, mobileTab]);
+  }, []);
   
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isBanksViewOpen, setIsBanksViewOpen] = useState(false);
   
-  const showDiscoveryOverlay = mobileDevice ? mobileTab === "home" : isDiscoveryView;
+  const showDiscoveryOverlay = isDiscoveryView;
   
   // Template Sort State
   const [sortOrder, setSortOrder] = useState("newest"); // newest, oldest, a-z, z-a, random
@@ -139,19 +127,6 @@ export const useAppState = () => {
     }
   }, [templates, activeTemplateId, setActiveTemplateId]);
 
-  // 移动端：切换 Tab 时的状态保障
-  useEffect(() => {
-    // 模版 Tab：强制收起模式 + 列表视图
-    if (mobileTab === 'templates') {
-      setMasonryStyleKey('list');
-    }
-
-    // 编辑 / 词库 Tab：确保有选中的模板
-    if ((mobileTab === 'editor' || mobileTab === 'banks') && templates.length > 0 && !activeTemplateId) {
-      console.log('[tab切换] 自动选择第一个模板:', templates[0].id);
-      setActiveTemplateId(templates[0].id);
-    }
-  }, [mobileTab, templates, activeTemplateId, setActiveTemplateId]);
 
   // Fix initial categories if empty (migration safety)
   useEffect(() => {
@@ -231,12 +206,7 @@ export const useAppState = () => {
     updateNoticeType,
     setUpdateNoticeType,
     
-    // 移动端相关（基于配置接口）
-    isMobileDevice: mobileDevice,
-    mobileTab,
-    setMobileTab,
-    isTemplatesDrawerOpen,
-    setIsTemplatesDrawerOpen,
+    // 视图状态
     isDiscoveryView,
     setDiscoveryView: handleSetDiscoveryView,
     showDiscoveryOverlay,

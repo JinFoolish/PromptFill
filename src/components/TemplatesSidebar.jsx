@@ -13,9 +13,6 @@ import { getLocalized } from '../utils/helpers';
  * TemplatesSidebar 组件 - 负责展示左侧模版列表
  */
 export const TemplatesSidebar = React.memo(({ 
-  mobileTab, 
-  isTemplatesDrawerOpen,
-  setIsTemplatesDrawerOpen,
   setDiscoveryView,
   activeTemplateId,
   setActiveTemplateId, 
@@ -51,19 +48,8 @@ export const TemplatesSidebar = React.memo(({
   setEditingTemplateNameId,
   isDarkMode
 }) => {
-  // 移动端适配已禁用，通过配置接口可重新启用
-  const isMobile = false; // 使用配置接口: import { isMobileDevice } from '../config/mobileConfig';
-
   return (
     <>
-      {/* Mobile Overlay (已禁用) */}
-      {false && isMobile && isTemplatesDrawerOpen && (
-        <div 
-          className="fixed inset-0 bg-black/10 backdrop-blur-[2px] z-[290] animate-in fade-in duration-300"
-          onClick={() => setIsTemplatesDrawerOpen(false)}
-        />
-      )}
-
       <Card 
         variant="container"
         className="relative md:flex flex-col flex-shrink-0 h-full w-[340px] overflow-hidden flex overflow-hidden bg-transparent"
@@ -73,7 +59,7 @@ export const TemplatesSidebar = React.memo(({
       <div className="flex-shrink-0 p-6">
          <div className="flex items-center justify-between mb-6">
              <div className="flex flex-col items-start gap-1">
-                  <h1 className={`${isMobile ? 'text-[18px]' : 'text-[22px]'} font-black tracking-tight text-orange-500 flex items-baseline gap-2`}>
+                  <h1 className="text-[22px] font-black tracking-tight text-orange-500 flex items-baseline gap-2">
                       提示词填空器
                       <span className="text-gray-400 dark:text-gray-600 text-xs font-bold tracking-widest">V0.6.1</span>
                   </h1>

@@ -267,101 +267,14 @@ export const exportImage = async ({
     const image = canvas.toDataURL('image/jpeg', 0.92);
     const activeTemplateName = getLocalized(activeTemplate.name, language);
     const filename = `${activeTemplateName.replace(/\s+/g, '_')}_prompt.jpg`;
+    const link = document.createElement('a');
+    link.href = image;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast('✅ 图片导出成功！');
     
-    // 移动端适配已禁用，通过配置接口可重新启用
-    const isMobileDevice = false; // 使用配置接口
-    const isIOS = false; // 使用配置接口
-    
-    if (false && isMobileDevice) {
-      try {
-        const base64Response = await fetch(image);
-        const blob = await base64Response.blob();
-        const file = new File([blob], filename, { type: 'image/jpeg' });
-        
-        if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-          await navigator.share({
-            files: [file],
-            title: activeTemplateName,
-            text: '导出的提示词模板'
-          });
-          showToast('✅ 图片已分享，请选择"存储图像"保存到相册');
-        } else {
-          if (isIOS) {
-            const newWindow = window.open();
-            if (newWindow) {
-              newWindow.document.write(`
-                <html>
-                <head>
-                  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                  <title>${activeTemplateName}</title>
-                  <style>
-                    body { margin: 0; padding: 20px; background: #000; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-                    img { max-width: 100%; height: auto; }
-                    .tip { position: fixed; top: 10px; left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.95); padding: 12px 20px; border-radius: 8px; color: #333; font-size: 14px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); z-index: 1000; }
-                  </style>
-                </head>
-                <body>
-                  <div class="tip">长按图片保存到相册 📱</div>
-                  <img src="${image}" alt="${activeTemplateName}" />
-                </body>
-                </html>
-              `);
-              showToast('✅ 请在新页面长按图片保存');
-            } else {
-              const link = document.createElement('a');
-              link.href = image;
-              link.download = filename;
-              link.target = '_blank';
-              document.body.appendChild(link);
-              link.click();
-              document.body.removeChild(link);
-              showToast('✅ 图片已导出，请在新页面保存');
-            }
-          } else {
-            const link = document.createElement('a');
-            link.href = image;
-            link.download = filename;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            showToast('✅ 图片已保存到下载文件夹');
-          }
-        }
-      } catch (shareError) {
-        console.log('Share failed:', shareError);
-        if (isIOS) {
-          const newWindow = window.open();
-          if (newWindow) {
-            newWindow.document.write(`
-              <html>
-              <head><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>${activeTemplateName}</title></head>
-              <body style="margin:0;padding:20px;background:#000;text-align:center;">
-                <p style="color:#fff;margin-bottom:20px;">长按图片保存到相册 📱</p>
-                <img src="${image}" style="max-width:100%;height:auto;" />
-              </body>
-              </html>
-            `);
-          }
-          showToast('⚠️ 请在新页面长按图片保存');
-        } else {
-          const link = document.createElement('a');
-          link.href = image;
-          link.download = filename;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          showToast('✅ 图片已保存');
-        }
-      }
-    } else {
-      const link = document.createElement('a');
-      link.href = image;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      showToast('✅ 图片导出成功！');
-    }
   } catch (err) {
     console.error("Export failed:", err);
     showToast('❌ 导出失败，请重试');
