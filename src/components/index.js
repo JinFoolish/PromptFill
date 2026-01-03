@@ -18,3 +18,8 @@ export { AIImageGenerator } from './AIImageGenerator';
 export { ImageModal } from './ImageModal';
 export { default as ImagePopup } from './ImagePopup';
 export { HistoryManager } from './HistoryManager';
+export { AnimatedSlogan } from './AnimatedSlogan';
+export { MobileAnimatedSlogan } from './MobileAnimatedSlogan';
+export { UpdateNotice } from './UpdateNotice';
+export { AppUpdateNotice } from './AppUpdateNotice';
+export { DarkModeLamp } from './DarkModeLamp';

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Settings, List, Check, ChevronRight, ChevronDown, 
   Plus, Trash2, X, ChevronUp, Pencil, Search, Database 
@@ -119,7 +119,7 @@ const BankGroup = ({
                 
                 {/* Expanded Content */}
                 {!isCollapsed && (
-                    <div className="px-4 pb-4 animate-in slide-in-from-top-1 duration-200">
+                    <div className="px-4 pb-4 slide-in-from-top-1 duration-200">
                         <div className={`h-px mb-4 ${isDarkMode ? 'bg-white/5' : 'bg-gray-100'}`}></div>
                         
                         {/* Category Edit */}
@@ -406,7 +406,7 @@ export const CategoryManager = ({ isOpen, onClose, categories, setCategories, ba
                             <button className={`w-6 h-6 rounded-lg flex items-center justify-center hover:bg-black/10 transition-colors`}>
                                 <div className={`w-3 h-3 rounded-full ${CATEGORY_STYLES[cat.color].bg}`}></div>
                             </button>
-                            <div className={`absolute right-0 top-full mt-2 hidden group-hover/color:grid grid-cols-5 gap-1.5 p-3 border shadow-xl rounded-xl z-50 w-[140px] animate-in slide-in-from-top-2 ${isDarkMode ? 'bg-[#1E1E1E] border-white/10' : 'bg-white border-gray-100'}`}>
+                            <div className={`absolute right-0 top-full mt-2 hidden group-hover/color:grid grid-cols-5 gap-1.5 p-3 border shadow-xl rounded-xl z-50 w-[140px] slide-in-from-top-2 ${isDarkMode ? 'bg-[#1E1E1E] border-white/10' : 'bg-white border-gray-100'}`}>
                                 {availableColors.map(c => (
                                     <div 
                                       key={c} 
@@ -504,6 +504,34 @@ export const AddBankModal = ({ isOpen, onClose, t, categories, newBankLabel, set
 };
 
 export const InsertVariableModal = ({ isOpen, onClose, categories, banks, onSelect, t, language, isDarkMode }) => {
+    // 管理每个分类的折叠状态，默认全部折叠
+    const [collapsedCategories, setCollapsedCategories] = useState(() => {
+        const initialState = {};
+        Object.keys(categories).forEach(catId => {
+            initialState[catId] = true; // 默认折叠
+        });
+        return initialState;
+    });
+
+    // 当 modal 打开时，重置所有分类为折叠状态
+    useEffect(() => {
+        if (isOpen) {
+            const initialState = {};
+            Object.keys(categories).forEach(catId => {
+                initialState[catId] = true; // 默认折叠
+            });
+            setCollapsedCategories(initialState);
+        }
+    }, [isOpen, categories]);
+
+    // 切换分类折叠状态
+    const toggleCategory = (catId) => {
+        setCollapsedCategories(prev => ({
+            ...prev,
+            [catId]: !prev[catId]
+        }));
+    };
+
     return (
         <Modal
             isOpen={isOpen}
@@ -520,31 +548,43 @@ export const InsertVariableModal = ({ isOpen, onClose, categories, banks, onSele
                    
                    const category = categories[catId];
                    const style = CATEGORY_STYLES[category.color] || CATEGORY_STYLES.slate;
+                   const isCollapsed = collapsedCategories[catId] ?? true;
     
                    return (
                        <div key={catId}>
-                           <h4 className={`text-[10px] font-black uppercase tracking-[0.2em] mb-3 flex items-center gap-2 ${style.text}`}>
+                           <h4 
+                               className={`text-[10px] font-black uppercase tracking-[0.2em] mb-3 flex items-center gap-2 cursor-pointer group/header transition-colors ${style.text} ${isDarkMode ? 'hover:text-gray-300' : 'hover:text-gray-700'}`}
+                               onClick={() => toggleCategory(catId)}
+                           >
+                               <div className={`transition-transform duration-200 ${isCollapsed ? '' : 'rotate-90'}`}>
+                                   <ChevronRight size={14} />
+                               </div>
                                <span className={`w-1.5 h-1.5 rounded-full ${style.dotBg}`}></span>
                                {getLocalized(category.label, language)}
+                               <span className="ml-auto text-[9px] opacity-60 tabular-nums">
+                                   {catBanks.length}
+                               </span>
                            </h4>
-                           <div className="grid grid-cols-1 gap-2">
-                               {catBanks.map(([key, bank]) => (
-                                   <button
-                                       key={key}
-                                       onClick={() => onSelect(key)}
-                                       className={`
-                                         flex items-center justify-between p-3 rounded-xl border text-left transition-all group
-                                         ${isDarkMode ? 'bg-white/5 border-white/5 hover:border-orange-500/50 hover:bg-orange-500/10' : 'bg-white border-gray-100 hover:border-orange-200 hover:bg-orange-50'}
-                                       `}
-                                   >
-                                       <div>
-                                           <span className={`block text-sm font-bold transition-colors ${isDarkMode ? 'text-gray-300 group-hover:text-orange-400' : 'text-gray-700 group-hover:text-orange-700'}`}>{getLocalized(bank.label, language)}</span>
-                                           <code className={`text-[10px] font-black tracking-wide opacity-50 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>{`{{${key}}}`}</code>
-                                       </div>
-                                       <Plus size={16} className={`transition-colors ${isDarkMode ? 'text-gray-600 group-hover:text-orange-500' : 'text-gray-300 group-hover:text-orange-500'}`} />
-                                   </button>
-                               ))}
-                           </div>
+                           {!isCollapsed && (
+                               <div className="grid grid-cols-1 gap-2 slide-in-from-top-2 duration-200">
+                                   {catBanks.map(([key, bank]) => (
+                                       <button
+                                           key={key}
+                                           onClick={() => onSelect(key)}
+                                           className={`
+                                             flex items-center justify-between p-3 rounded-xl border text-left transition-all group
+                                             ${isDarkMode ? 'bg-white/5 border-white/5 hover:border-orange-500/50 hover:bg-orange-500/10' : 'bg-white border-gray-100 hover:border-orange-200 hover:bg-orange-50'}
+                                           `}
+                                       >
+                                           <div>
+                                               <span className={`block text-sm font-bold transition-colors ${isDarkMode ? 'text-gray-300 group-hover:text-orange-400' : 'text-gray-700 group-hover:text-orange-700'}`}>{getLocalized(bank.label, language)}</span>
+                                               <code className={`text-[10px] font-black tracking-wide opacity-50 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>{`{{${key}}}`}</code>
+                                           </div>
+                                           <Plus size={16} className={`transition-colors ${isDarkMode ? 'text-gray-600 group-hover:text-orange-500' : 'text-gray-300 group-hover:text-orange-500'}`} />
+                                       </button>
+                                   ))}
+                               </div>
+                           )}
                        </div>
                    );
                })}

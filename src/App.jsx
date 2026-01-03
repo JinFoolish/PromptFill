@@ -1,497 +1,185 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { Copy, Plus, X, Settings, Check, Edit3, Eye, Trash2, FileText, Pencil, Copy as CopyIcon, Globe, ChevronDown, ChevronUp, ChevronRight, ChevronLeft, GripVertical, Download, Upload, Image as ImageIcon, List, Undo, Redo, Maximize2, RotateCcw, LayoutGrid, Search, ArrowRight, ArrowUpRight, ArrowUpDown, RefreshCw, Sparkles, Sun, Moon } from 'lucide-react';
-import html2canvas from 'html2canvas';
+// 重构后的 App.jsx - 使用提取的 Hooks、Context 和组件
+import React, { useRef, useEffect, useState, useCallback } from 'react';
+import { Copy, Plus, X, Settings, Check, Edit3, Eye, ChevronRight, Download, Upload, Image as ImageIcon, Copy as CopyIcon, Globe, Sun, Moon, RefreshCw, Trash2 } from 'lucide-react';
 
-// ====== 导入数据配置 ======
+// 导入数据配置
 import { INITIAL_TEMPLATES_CONFIG, TEMPLATE_TAGS, SYSTEM_DATA_VERSION } from './data/templates';
-import { INITIAL_BANKS, INITIAL_DEFAULTS, INITIAL_CATEGORIES } from './data/banks';
 
-// ====== 导入常量配置 ======
-import { TRANSLATIONS } from './constants/translations';
-import { PREMIUM_STYLES, CATEGORY_STYLES, TAG_STYLES, TAG_LABELS } from './constants/styles';
+// 导入常量配置
+import { TAG_STYLES, TAG_LABELS } from './constants/styles';
 import { MASONRY_STYLES } from './constants/masonryStyles';
 
-// ====== 导入工具函数 ======
-import { deepClone, makeUniqueKey, waitForImageLoad, getLocalized, getSystemLanguage } from './utils/helpers';
-import { mergeTemplatesWithSystem, mergeBanksWithSystem } from './utils/merge';
-import { SCENE_WORDS, STYLE_WORDS } from './constants/slogan';
+// 导入工具函数
+import { getLocalized } from './utils/helpers';
+import { exportImage } from './services/exportService';
+import { getStorageSize, clearAllData } from './services/storageService';
 
-// ====== 导入自定义 Hooks ======
-import { useStickyState } from './hooks/useStickyState';
+// 导入 Context
+import { AppProvider, useApp } from './contexts/AppContext';
 
-// ====== 导入 UI 组件 ======
-// 移除了 BanksSidebar, CategoryManager, InsertVariableModal, AddBankModal
-import { Variable, VisualEditor, PremiumButton, EditorToolbar, Lightbox, InsertVariableModal ,TemplatePreview, TemplatesSidebar, BanksView, DiscoveryView, MobileSettingsView, SettingsView, Sidebar, ImageModal, ImagePopup, HistoryManager } from './components';
+// 导入 UI 组件
+import {
+  Variable,
+  VisualEditor,
+  PremiumButton,
+  EditorToolbar,
+  InsertVariableModal,
+  TemplatePreview,
+  TemplatesSidebar,
+  BanksView,
+  DiscoveryView,
+  MobileSettingsView,
+  SettingsView,
+  Sidebar,
+  ImageModal,
+  ImagePopup,
+  HistoryManager,
+  AnimatedSlogan,
+  MobileAnimatedSlogan,
+  UpdateNotice,
+  AppUpdateNotice,
+  DarkModeLamp
+} from './components';
 import MobileTabBar from './components/MobileTabBar';
 
-// ====== 核心组件区 (已提取至独立文件) ======
+// Toast 消息函数（简单实现）
+const showToastMessage = (message) => {
+  // 简单的 alert 实现，可以后续替换为更好的 Toast 组件
+  console.log(message);
+  // 如果需要，可以使用 alert(message) 或实现一个 Toast 组件
+};
 
-// --- 组件：动态 Slogan (PC端) ---
-const AnimatedSlogan = React.memo(({ isActive, language, isDarkMode }) => {
-  const [sceneIndex, setSceneIndex] = useState(0);
-  const [styleIndex, setStyleIndex] = useState(0);
-
-  const currentScenes = SCENE_WORDS[language] || SCENE_WORDS.cn;
-  const currentStyles = STYLE_WORDS[language] || STYLE_WORDS.cn;
-  useEffect(() => {
-    if (!isActive) return;
+// App 主组件（使用 Context）
+const AppContent = () => {
+  const app = useApp();
+  
+  // 从 Context 中解构所有需要的状态和函数
+  const {
+    // 核心状态
+    isDarkMode,
+    setIsDarkMode,
+    isMobileDevice,
+    mobileTab,
+    setMobileTab,
+    language,
+    setLanguage,
+    templateLanguage,
+    setTemplateLanguage,
+    activeTemplate,
+    activeTemplateId,
+    setActiveTemplateId,
+    templates,
+    banks,
+    defaults,
+    categories,
+    isEditing,
+    setIsEditing,
+    activePopover,
+    setActivePopover,
+    copied,
+    setCopied,
+    isExporting,
+    setIsExporting,
+    isInsertModalOpen,
+    setIsInsertModalOpen,
+    isDiscoveryView,
+    setDiscoveryView,
+    showDiscoveryOverlay,
+    isSettingsOpen,
+    setIsSettingsOpen,
+    isHistoryOpen,
+    setIsHistoryOpen,
+    isBanksViewOpen,
+    setIsBanksViewOpen,
+    isTemplatesDrawerOpen,
+    setIsTemplatesDrawerOpen,
+    zoomedImage,
+    setZoomedImage,
+    imageUrlInput,
+    setImageUrlInput,
+    imageUpdateMode,
+    setImageUpdateMode,
+    currentImageEditIndex,
+    setCurrentImageEditIndex,
+    showImageUrlInput,
+    setShowImageUrlInput,
+    showImageActionMenu,
+    setShowImageActionMenu,
+    generatedImages,
+    setGeneratedImages,
+    showImageModal,
+    setShowImageModal,
+    storageMode,
+    setStorageMode,
+    directoryHandle,
+    isFileSystemSupported,
+    selectedTags,
+    setSelectedTags,
+    searchQuery,
+    setSearchQuery,
+    editingTemplateNameId,
+    setEditingTemplateNameId,
+    tempTemplateName,
+    setTempTemplateName,
+    tempTemplateAuthor,
+    setTempTemplateAuthor,
+    editingTemplateTags,
+    setEditingTemplateTags,
+    sortOrder,
+    setSortOrder,
+    isSortMenuOpen,
+    setIsSortMenuOpen,
+    randomSeed,
+    setRandomSeed,
+    masonryStyleKey,
+    currentMasonryStyle,
+    lampRotation,
+    setLampRotation,
+    isLampHovered,
+    setIsLampHovered,
+    isLampOn,
+    setIsLampOn,
+    handleLampMouseMove,
+    showDataUpdateNotice,
+    setShowDataUpdateNotice,
+    showAppUpdateNotice,
+    setShowAppUpdateNotice,
+    updateNoticeType,
+    SYSTEM_DATA_VERSION,
+    lastAppliedDataVersion,
+    setLastAppliedDataVersion,
     
-    const sceneTimer = setInterval(() => {
-      setSceneIndex(prev => (prev + 1) % currentScenes.length);
-    }, 2000);
-    const styleTimer = setInterval(() => {
-      setStyleIndex(prev => (prev + 1) % currentStyles.length);
-    }, 2500);
-    return () => {
-      clearInterval(sceneTimer);
-      clearInterval(styleTimer);
-    };
-  }, [isActive, currentScenes.length, currentStyles.length]);
-
-  return (
-    <div className={`flex flex-wrap items-center justify-center lg:justify-start gap-x-2 gap-y-3 text-base md:text-lg lg:text-xl font-medium font-['MiSans',system-ui,sans-serif] px-2 leading-relaxed min-h-[60px] ${isDarkMode ? 'text-gray-400' : 'text-gray-700'}`}>
-      <span className="whitespace-nowrap">"{language === 'en' ? 'Show a detailed, miniature' : '展示一个精致的、微缩'}</span>
-      <div className="inline-flex items-center justify-center min-w-[120px]">
-        <span 
-          key={`style-${styleIndex}-${language}`}
-          className="inline-block px-4 py-1.5 md:px-5 md:py-2 rounded-full transition-all duration-500 select-none font-bold text-white whitespace-nowrap pill-animate"
-          style={{
-            background: 'linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%)',
-            boxShadow: isDarkMode 
-              ? 'inset 0px 2px 4px 0px rgba(255, 255, 255, 0.1), 0 4px 12px rgba(96, 165, 250, 0.2)'
-              : 'inset 0px 2px 4px 0px rgba(255, 255, 255, 0.2), 0 4px 12px rgba(96, 165, 250, 0.4)',
-            border: isDarkMode ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(255, 255, 255, 0.3)',
-            textShadow: '0 1px 2px rgba(0,0,0,0.1)'
-          }}
-        >
-          {currentStyles[styleIndex]}
-                </span>
-        </div>
-      <span className="whitespace-nowrap">{language === 'en' ? 'of' : '的'}</span>
-      <div className="inline-flex items-center justify-center min-w-[120px]">
-        <span 
-          key={`scene-${sceneIndex}-${language}`}
-          className="inline-block px-4 py-1.5 md:px-5 md:py-2 rounded-full transition-all duration-500 select-none font-bold text-white whitespace-nowrap pill-animate"
-          style={{
-            background: 'linear-gradient(135deg, #f97316 0%, #fb923c 100%)',
-            boxShadow: isDarkMode 
-              ? 'inset 0px 2px 4px 0px rgba(255, 255, 255, 0.1), 0 4px 12px rgba(251, 146, 60, 0.2)'
-              : 'inset 0px 2px 4px 0px rgba(255, 255, 255, 0.2), 0 4px 12px rgba(251, 146, 60, 0.4)',
-            border: isDarkMode ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(255, 255, 255, 0.3)',
-            textShadow: '0 1px 2px rgba(0,0,0,0.1)'
-          }}
-        >
-          {currentScenes[sceneIndex]}
-        </span>
-            </div>
-      <span className="whitespace-nowrap">{language === 'en' ? 'scene"' : '场景"'}</span>
-    </div>
-  );
-});
-
-// --- 组件：动态 Slogan (移动端) ---
-const MobileAnimatedSlogan = React.memo(({ isActive, language, isDarkMode }) => {
-  const [sceneIndex, setSceneIndex] = useState(0);
-  const [styleIndex, setStyleIndex] = useState(0);
-
-  const currentScenes = SCENE_WORDS[language] || SCENE_WORDS.cn;
-  const currentStyles = STYLE_WORDS[language] || STYLE_WORDS.cn;
-
-  useEffect(() => {
-    if (!isActive) return;
-
-    const sceneTimer = setInterval(() => {
-      setSceneIndex(prev => (prev + 1) % currentScenes.length);
-    }, 2000);
-    const styleTimer = setInterval(() => {
-      setStyleIndex(prev => (prev + 1) % currentStyles.length);
-    }, 2500);
-    return () => {
-      clearInterval(sceneTimer);
-      clearInterval(styleTimer);
-    };
-  }, [isActive, currentScenes.length, currentStyles.length]);
-
-    return (
-    <div className={`flex flex-wrap items-center justify-center gap-1.5 text-sm font-medium mb-3 min-h-[32px] ${isDarkMode ? 'text-gray-400' : 'text-gray-700'}`}>
-      <span className="whitespace-nowrap">"{language === 'en' ? 'Show' : '展示'}</span>
-      <div className="inline-flex items-center justify-center min-w-[80px]">
-        <span 
-          key={`style-m-${styleIndex}-${language}`}
-          className="inline-block px-2.5 py-0.5 rounded-full font-bold text-white text-xs whitespace-nowrap pill-animate"
-          style={{
-            background: 'linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%)',
-            boxShadow: isDarkMode 
-              ? 'inset 0px 2px 4px 0px rgba(255, 255, 255, 0.1), 0 4px 12px rgba(96, 165, 250, 0.2)'
-              : '0 2px 8px rgba(96, 165, 250, 0.3)'
-          }}
-        >
-          {currentStyles[styleIndex]}
-        </span>
-                    </div>
-      <span className="whitespace-nowrap">{language === 'en' ? 'of' : '的'}</span>
-      <div className="inline-flex items-center justify-center min-w-[80px]">
-        <span 
-          key={`scene-m-${sceneIndex}-${language}`}
-          className="inline-block px-2.5 py-0.5 rounded-full font-bold text-white text-xs whitespace-nowrap pill-animate"
-          style={{
-            background: 'linear-gradient(135deg, #f97316 0%, #fb923c 100%)',
-            boxShadow: isDarkMode 
-              ? 'inset 0px 2px 4px 0px rgba(255, 255, 255, 0.1), 0 4px 12px rgba(251, 146, 60, 0.2)'
-              : '0 2px 8px rgba(251, 146, 60, 0.3)'
-          }}
-        >
-          {currentScenes[sceneIndex]}
-        </span>
-                            </div>
-      <span className="whitespace-nowrap">{language === 'en' ? 'scene"' : '场景"'}</span>
-        </div>
-    );
-});
-
-const App = () => {
-  // 当前应用代码版本 (必须与 package.json 和 version.json 一致)
-  const APP_VERSION = "0.6.2";
-
-  // 临时功能：瀑布流样式管理
-  const [masonryStyleKey, setMasonryStyleKey] = useState('poster');
-  const [isStyleMenuOpen, setIsStyleMenuOpen] = useState(false);
-  const currentMasonryStyle = MASONRY_STYLES[masonryStyleKey] || MASONRY_STYLES.default;
-
-  // Global State with Persistence
-  // bump version keys to强制刷新新增词库与默认值
-  const [banks, setBanks] = useStickyState(INITIAL_BANKS, "app_banks_v9");
-  const [defaults, setDefaults] = useStickyState(INITIAL_DEFAULTS, "app_defaults_v9");
-  const [language, setLanguage] = useStickyState(getSystemLanguage(), "app_language_v1"); // 全局UI语言
-  const [templateLanguage, setTemplateLanguage] = useStickyState(getSystemLanguage(), "app_template_language_v1"); // 模板内容语言
-  const [categories, setCategories] = useStickyState(INITIAL_CATEGORIES, "app_categories_v1"); // New state
-  
-  const [templates, setTemplates] = useStickyState(INITIAL_TEMPLATES_CONFIG, "app_templates_v10");
-  const [activeTemplateId, setActiveTemplateId] = useStickyState("tpl_default", "app_active_template_id_v4");
-  
-  const [lastAppliedDataVersion, setLastAppliedDataVersion] = useStickyState("", "app_data_version_v1");
-  const [isDarkMode, setIsDarkMode] = useStickyState(false, "app_dark_mode_v1");
-  const [showDataUpdateNotice, setShowDataUpdateNotice] = useState(false);
-  const [showAppUpdateNotice, setShowAppUpdateNotice] = useState(false);
-  
-  // UI State
-  // 移除了 bankSidebarWidth, isResizing 相关状态
-  
-  // 检测是否为移动设备
-  const isMobileDevice = typeof window !== 'undefined' && window.innerWidth < 768;
-  const [mobileTab, setMobileTab] = useState(isMobileDevice ? "home" : "editor"); // 'home', 'editor', 'history', 'settings'
-  const [isTemplatesDrawerOpen, setIsTemplatesDrawerOpen] = useState(false);
-  // 移除了 isBanksDrawerOpen, touchDraggingVar
-
-  const [isEditing, setIsEditing] = useState(false);
-  const [activePopover, setActivePopover] = useState(null);
-  const [copied, setCopied] = useState(false);
-  const [isExporting, setIsExporting] = useState(false);
-  const [isInsertModalOpen, setIsInsertModalOpen] = useState(false);
-
-  // 移除了 isCategoryManagerOpen, isInsertModalOpen, isAddingBank 及其相关表单状态
-
-  // Template Management UI State
-  const [editingTemplateNameId, setEditingTemplateNameId] = useState(null);
-  const [tempTemplateName, setTempTemplateName] = useState("");
-  const [tempTemplateAuthor, setTempTemplateAuthor] = useState("");
-  const [zoomedImage, setZoomedImage] = useState(null);
-  
-  const [imageUrlInput, setImageUrlInput] = useState("");
-  const [imageUpdateMode, setImageUpdateMode] = useState('replace'); // 'replace' or 'add'
-  const [currentImageEditIndex, setCurrentImageEditIndex] = useState(0);
-  const [showImageUrlInput, setShowImageUrlInput] = useState(false);
-  const [showImageActionMenu, setShowImageActionMenu] = useState(false);
-  
-  // AI Image Generation State
-  const [generatedImages, setGeneratedImages] = useState([]);
-  const [showImageModal, setShowImageModal] = useState(false);
-  
-  // File System Access API State
-  const [storageMode, setStorageMode] = useState(() => {
-    return localStorage.getItem('app_storage_mode') || 'browser';
-  });
-  const [directoryHandle, setDirectoryHandle] = useState(null);
-  const [isFileSystemSupported, setIsFileSystemSupported] = useState(false);
-  
-  // Template Tag Management State
-  const [selectedTags, setSelectedTags] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [editingTemplateTags, setEditingTemplateTags] = useState(null); // {id, tags}
-  const [isDiscoveryView, setDiscoveryView] = useState(true); // 首次加载默认显示发现（海报）视图
-  
-  // 统一的发现页切换处理器
-  const handleSetDiscoveryView = React.useCallback((val) => {
-    setDiscoveryView(val);
-    // 移动端：侧边栏里的“回到发现页”按钮需要同步切回 mobileTab
-    if (isMobileDevice && val) {
-      setMobileTab('home');
-    } else if (isMobileDevice && !val && mobileTab === 'home') {
-      setMobileTab('editor');
-    }
-  }, [isMobileDevice, mobileTab]);
-  
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
-  const [isBanksViewOpen, setIsBanksViewOpen] = useState(false);
-  
-  const showDiscoveryOverlay = isMobileDevice ? mobileTab === "home" : isDiscoveryView;
-  
-  // Template Sort State
-  const [sortOrder, setSortOrder] = useState("newest"); // newest, oldest, a-z, z-a, random
-  const [isSortMenuOpen, setIsSortMenuOpen] = useState(false);
-  const [randomSeed, setRandomSeed] = useState(Date.now()); // 用于随机排序的种子
-  
-  // 趣味设计：灯具摆动状态
-  const [lampRotation, setLampRotation] = useState(0);
-  const [isLampHovered, setIsLampHovered] = useState(false);
-  const [isLampOn, setIsLampOn] = useState(true); // 暗色模式下灯是否开启 (强度控制)
-  
-  // 当暗夜模式关闭时，重置灯的状态为开启
-  useEffect(() => {
-    if (!isDarkMode) {
-      setIsLampOn(true);
-    }
-  }, [isDarkMode]);
-
-  const handleLampMouseMove = (e) => {
-    if (!isDarkMode) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const mouseX = e.clientX;
-    const diffX = mouseX - centerX;
-    // 灵敏度提升：由于感应区缩小到 32px，调整系数以保持摆动幅度
-    const rotation = Math.max(-12, Math.min(12, -diffX / 1.5));
-    setLampRotation(rotation);
-    setIsLampHovered(true);
-  };
-  
-  const [updateNoticeType, setUpdateNoticeType] = useState(null); // 'app' | 'data' | null
-  
-  // 检测数据版本更新 (模板与词库)
-  useEffect(() => {
-    if (SYSTEM_DATA_VERSION && lastAppliedDataVersion !== SYSTEM_DATA_VERSION) {
-      // 检查是否有存储的数据。如果是第一次使用（无数据），直接静默更新版本号
-      const hasTemplates = localStorage.getItem("app_templates_v10");
-      const hasBanks = localStorage.getItem("app_banks_v9");
-      
-      if (hasTemplates || hasBanks) {
-        setShowDataUpdateNotice(true);
-      } else {
-        setLastAppliedDataVersion(SYSTEM_DATA_VERSION);
-      }
-    }
-  }, [lastAppliedDataVersion]);
-
-  // 检查应用代码版本更新与数据版本更新
-  useEffect(() => {
-    const checkUpdates = async () => {
-      try {
-        const response = await fetch('/version.json?t=' + Date.now());
-        if (response.ok) {
-          const data = await response.json();
-          
-          // 检查应用版本更新
-          if (data.appVersion && data.appVersion !== APP_VERSION) {
-            setUpdateNoticeType('app');
-            setShowAppUpdateNotice(true);
-            return; // 优先提示程序更新
-          }
-          
-          // 检查数据定义更新 (存在于代码中，但服务器上更新了)
-          if (data.dataVersion && data.dataVersion !== SYSTEM_DATA_VERSION) {
-            setUpdateNoticeType('data');
-            setShowAppUpdateNotice(true);
-          }
-        }
-      } catch (e) {
-        // 静默失败
-      }
-    };
+    // 功能模块
+    templateManagement,
+    bankManagement,
+    history,
+    fileSystem,
+    imageManagement,
+    editor,
+    templateFilter,
     
-    checkUpdates();
-    const timer = setInterval(checkUpdates, 5 * 60 * 1000); // 5分钟检查一次
+    // 工具函数
+    t,
     
-    return () => clearInterval(timer);
-  }, [lastAppliedDataVersion]); // 移除 lastAppliedAppVersion 依赖
+    // 额外的状态设置函数（从 appState 中获取）
+    setCategories,
+    setBanks,
+    setTemplates,
+    setDefaults,
+  } = app;
 
-  // History State for Undo/Redo
-  const [historyPast, setHistoryPast] = useState([]);
-  const [historyFuture, setHistoryFuture] = useState([]);
-  const historyLastSaveTime = useRef(0);
-
-  // Cursor State for Grouping
-  const [cursorInVariable, setCursorInVariable] = useState(false);
-  const [currentVariableName, setCurrentVariableName] = useState(null);
-  const [currentGroupId, setCurrentGroupId] = useState(null);
-
+  // Refs
   const popoverRef = useRef(null);
-  const textareaRef = useRef(null);
-  // 移除了 sidebarRef
+  const fileInputRef = useRef(null);
   const posterScrollRef = useRef(null);
-  
-  // Poster Mode Auto Scroll State
   const [isPosterAutoScrollPaused, setIsPosterAutoScrollPaused] = useState(false);
 
-  // Helper: Translate
-  const t = (key, params = {}) => {
-    let str = TRANSLATIONS[language][key] || key;
-    Object.keys(params).forEach(k => {
-        str = str.replace(`{{${k}}}`, params[k]);
-    });
-    return str;
-  };
-
-  const displayTag = React.useCallback((tag) => {
+  // 显示标签
+  const displayTag = useCallback((tag) => {
     return TAG_LABELS[language]?.[tag] || tag;
   }, [language]);
 
-  // 确保有一个有效的 activeTemplateId - 自动选择第一个模板
-  useEffect(() => {
-      if (templates.length > 0) {
-          // 检查当前 activeTemplateId 是否有效
-          const currentTemplateExists = templates.some(t => t.id === activeTemplateId);
-          if (!currentTemplateExists || !activeTemplateId) {
-              // 如果当前选中的模板不存在或为空，选择第一个模板
-              console.log('[自动选择] 选择第一个模板:', templates[0].id);
-              setActiveTemplateId(templates[0].id);
-          }
-      }
-  }, [templates, activeTemplateId]);  // 依赖 templates 和 activeTemplateId
-
-  // 移动端：切换 Tab 时的状态保障
-  useEffect(() => {
-      // 模版 Tab：强制收起模式 + 列表视图
-      if (mobileTab === 'templates') {
-          setMasonryStyleKey('list');
-      }
-
-      // 编辑 / 词库 Tab：确保有选中的模板
-      if ((mobileTab === 'editor' || mobileTab === 'banks') && templates.length > 0 && !activeTemplateId) {
-          console.log('[tab切换] 自动选择第一个模板:', templates[0].id);
-          setActiveTemplateId(templates[0].id);
-      }
-  }, [mobileTab, templates, activeTemplateId]);
-
-  // Check File System Access API support and restore directory handle
-  useEffect(() => {
-      const checkSupport = async () => {
-          const supported = 'showDirectoryPicker' in window;
-          setIsFileSystemSupported(supported);
-          
-          // Try to restore directory handle from IndexedDB
-          if (supported && storageMode === 'folder') {
-              try {
-                  const db = await openDB();
-                  const handle = await getDirectoryHandle(db);
-                  if (handle) {
-                      // Verify permission
-                      const permission = await handle.queryPermission({ mode: 'readwrite' });
-                      if (permission === 'granted') {
-                          setDirectoryHandle(handle);
-                          // Load data from file system
-                          await loadFromFileSystem(handle);
-                      } else {
-                          // Permission not granted, switch back to browser storage
-                          setStorageMode('browser');
-                          localStorage.setItem('app_storage_mode', 'browser');
-                      }
-                  }
-              } catch (error) {
-                  console.error('恢复文件夹句柄失败:', error);
-              }
-          }
-      };
-      
-      checkSupport();
-  }, []);
-
-  // IndexedDB helper functions for storing directory handle
-  const openDB = () => {
-      return new Promise((resolve, reject) => {
-          const request = indexedDB.open('PromptFillDB', 1);
-          request.onerror = () => reject(request.error);
-          request.onsuccess = () => resolve(request.result);
-          request.onupgradeneeded = (event) => {
-              const db = event.target.result;
-              if (!db.objectStoreNames.contains('handles')) {
-                  db.createObjectStore('handles');
-              }
-          };
-      });
-  };
-
-  const saveDirectoryHandle = async (handle) => {
-      try {
-          const db = await openDB();
-          const transaction = db.transaction(['handles'], 'readwrite');
-          const store = transaction.objectStore('handles');
-          await store.put(handle, 'directory');
-      } catch (error) {
-          console.error('保存文件夹句柄失败:', error);
-      }
-  };
-
-  const getDirectoryHandle = async (db) => {
-      try {
-          const transaction = db.transaction(['handles'], 'readonly');
-          const store = transaction.objectStore('handles');
-          return new Promise((resolve, reject) => {
-              const request = store.get('directory');
-              request.onsuccess = () => resolve(request.result);
-              request.onerror = () => reject(request.error);
-          });
-      } catch (error) {
-          console.error('获取文件夹句柄失败:', error);
-          return null;
-      }
-  };
-
-  // Fix initial categories if empty (migration safety)
-  useEffect(() => {
-      if (!categories || Object.keys(categories).length === 0) {
-          setCategories(INITIAL_CATEGORIES);
-      }
-  }, []);
-
-  // Ensure all templates have tags field and sync default templates' tags (migration safety)
-  useEffect(() => {
-    let needsUpdate = false;
-    const updatedTemplates = templates.map(t => {
-      // Find if this is a default template
-      const defaultTemplate = INITIAL_TEMPLATES_CONFIG.find(dt => dt.id === t.id);
-      
-      if (defaultTemplate) {
-        // Sync tags from default template if it's a built-in one
-        if (JSON.stringify(t.tags) !== JSON.stringify(defaultTemplate.tags)) {
-          needsUpdate = true;
-          return { ...t, tags: defaultTemplate.tags || [] };
-        }
-      } else if (!t.tags) {
-        // User-created template without tags
-        needsUpdate = true;
-        return { ...t, tags: [] };
-      }
-      
-      return t;
-    });
-    
-    if (needsUpdate) {
-      setTemplates(updatedTemplates);
-    }
-  }, []);
-
-  // Derived State: Current Active Template
-  const activeTemplate = templates.find(t => t.id === activeTemplateId) || templates[0];
-
-  // --- Effects ---
-  // Reset history when template changes
-  useEffect(() => {
-      setHistoryPast([]);
-      setHistoryFuture([]);
-      historyLastSaveTime.current = 0;
-  }, [activeTemplateId]);
-
+  // 点击外部关闭 popover
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (popoverRef.current && !popoverRef.current.contains(event.target)) {
@@ -500,18 +188,17 @@ const App = () => {
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  }, [setActivePopover]);
 
-  // Poster Mode Auto Scroll Animation with Ping-Pong Effect
-  // Poster Mode Auto Scroll - Optimized with requestAnimationFrame
+  // Poster Mode Auto Scroll Animation
   useEffect(() => {
     if (masonryStyleKey !== 'poster' || !posterScrollRef.current || isPosterAutoScrollPaused || !isDiscoveryView) {
       return;
     }
 
     const scrollContainer = posterScrollRef.current;
-    let scrollDirection = 1; // 1 = down, -1 = up
-    const scrollSpeed = 0.5; // 每次滚动的像素数
+    let scrollDirection = 1;
+    const scrollSpeed = 0.5;
     let animationFrameId;
 
     const performScroll = () => {
@@ -520,16 +207,12 @@ const App = () => {
       const currentScroll = scrollContainer.scrollTop;
       const maxScroll = scrollContainer.scrollHeight - scrollContainer.clientHeight;
 
-      // 到达底部，改变方向向上
       if (scrollDirection === 1 && currentScroll >= maxScroll - 1) {
         scrollDirection = -1;
-      }
-      // 到达顶部，改变方向向下
-      else if (scrollDirection === -1 && currentScroll <= 1) {
+      } else if (scrollDirection === -1 && currentScroll <= 1) {
         scrollDirection = 1;
       }
 
-      // 执行滚动
       scrollContainer.scrollTop += scrollSpeed * scrollDirection;
       animationFrameId = requestAnimationFrame(performScroll);
     };
@@ -543,1453 +226,64 @@ const App = () => {
     };
   }, [masonryStyleKey, isPosterAutoScrollPaused, isDiscoveryView]);
 
-  // 移除了 sidebar resizing 逻辑
-
-  // --- Template Actions ---
-
-  const handleAddTemplate = () => {
-    const newId = `tpl_${Date.now()}`;
-    const newTemplate = {
-      id: newId,
-      name: t('new_template_name'),
-      author: "",
-      content: t('new_template_content'),
-      selections: {},
-      tags: []
-    };
-    setTemplates([...templates, newTemplate]);
-    setActiveTemplateId(newId);
-    setIsEditing(true);
-    // 在移动端自动切换到编辑Tab
-    if (isMobileDevice) {
-      setMobileTab('editor');
-    }
-  };
-
-  const handleDuplicateTemplate = (t_item, e) => {
-      e.stopPropagation();
-      const newId = `tpl_${Date.now()}`;
-      
-      const duplicateName = (name) => {
-        if (typeof name === 'string') return `${name}${t('copy_suffix')}`;
-        const newName = { ...name };
-        Object.keys(newName).forEach(lang => {
-          const suffix = TRANSLATIONS[lang]?.copy_suffix || ' (Copy)';
-          newName[lang] = `${newName[lang]}${suffix}`;
-        });
-        return newName;
-      };
-
-      const newTemplate = {
-          ...t_item,
-          id: newId,
-          name: duplicateName(t_item.name),
-          author: t_item.author || "",
-          selections: { ...t_item.selections }
-      };
-      setTemplates([...templates, newTemplate]);
-      setActiveTemplateId(newId);
-      // 在移动端自动切换到编辑Tab
-      if (isMobileDevice) {
-        setMobileTab('editor');
-      }
-  };
-
-  const handleDeleteTemplate = (id, e) => {
-    e.stopPropagation();
-    if (templates.length <= 1) {
-      alert(t('alert_keep_one'));
-      return;
-    }
-    if (window.confirm(t('confirm_delete_template'))) {
-      const newTemplates = templates.filter(t => t.id !== id);
-      setTemplates(newTemplates);
-      if (activeTemplateId === id) {
-        setActiveTemplateId(newTemplates[0].id);
-      }
-    }
-  };
-
-  const handleResetTemplate = (id, e) => {
-    e.stopPropagation();
-    if (!window.confirm(t('confirm_reset_template'))) return;
-
-    const original = INITIAL_TEMPLATES_CONFIG.find(t => t.id === id);
-    if (!original) return;
-
-    setTemplates(prev => prev.map(t => 
-      t.id === id ? JSON.parse(JSON.stringify(original)) : t
-    ));
-  };
-
-  const startRenamingTemplate = (t_item, e) => {
-    e.stopPropagation();
-    setEditingTemplateNameId(t_item.id);
-    setTempTemplateName(getLocalized(t_item.name, language));
-    setTempTemplateAuthor(t_item.author || "");
-  };
-
-  const saveTemplateName = () => {
-    if (tempTemplateName.trim()) {
-      setTemplates(prev => prev.map(t_item => {
-        if (t_item.id === editingTemplateNameId) {
-          const newName = typeof t_item.name === 'object' 
-            ? { ...t_item.name, [language]: tempTemplateName }
-            : tempTemplateName;
-          return { ...t_item, name: newName, author: tempTemplateAuthor };
-        }
-        return t_item;
-      }));
-    }
-    setEditingTemplateNameId(null);
-  };
-
-  // 刷新系统模板与词库，保留用户数据
-  const handleRefreshSystemData = React.useCallback(() => {
-    const backupSuffix = t('refreshed_backup_suffix') || '';
-    
-    // 迁移旧格式的 selections：将字符串值转换为对象格式
-    const migratedTemplates = templates.map(tpl => {
-      const newSelections = {};
-      Object.entries(tpl.selections || {}).forEach(([key, value]) => {
-        if (typeof value === 'string' && banks[key.split('-')[0]]) {
-          // 查找对应的词库选项
-          const bankKey = key.split('-')[0];
-          const bank = banks[bankKey];
-          if (bank && bank.options) {
-            const matchedOption = bank.options.find(opt => 
-              (typeof opt === 'string' && opt === value) ||
-              (typeof opt === 'object' && (opt.cn === value || opt.en === value))
-            );
-            newSelections[key] = matchedOption || value;
-          } else {
-            newSelections[key] = value;
-          }
-        } else {
-          newSelections[key] = value;
-        }
-      });
-      return { ...tpl, selections: newSelections };
-    });
-    
-    const templateResult = mergeTemplatesWithSystem(migratedTemplates, { backupSuffix });
-    const bankResult = mergeBanksWithSystem(banks, defaults, { backupSuffix });
-
-    setTemplates(templateResult.templates);
-    setBanks(bankResult.banks);
-    setDefaults(bankResult.defaults);
-    setActiveTemplateId(prev => templateResult.templates.some(t => t.id === prev) ? prev : "tpl_default");
-    
-    // 更新版本号，避免再次提示更新
-    setLastAppliedDataVersion(SYSTEM_DATA_VERSION);
-
-    const notes = [...templateResult.notes, ...bankResult.notes];
-    if (notes.length > 0) {
-      alert(`${t('refresh_done_with_conflicts')}\n- ${notes.join('\n- ')}`);
-    } else {
-      alert(t('refresh_done_no_conflict'));
-    }
-  }, [banks, defaults, templates, t]);
-
-  const handleAutoUpdate = () => {
-    handleRefreshSystemData();
-    setLastAppliedDataVersion(SYSTEM_DATA_VERSION);
-    setShowDataUpdateNotice(false);
-  };
-
-  // Template Tags Management
-  const handleUpdateTemplateTags = (templateId, newTags) => {
-    setTemplates(prev => prev.map(t => 
-      t.id === templateId ? { ...t, tags: newTags } : t
-    ));
-  };
-
-  const toggleTag = (tag) => {
-    setSelectedTags(prevTag => prevTag === tag ? "" : tag);
-  };
-
-  // Base filtered templates (by search and language)
-  const baseFilteredTemplates = React.useMemo(() => {
-    return templates.filter(t => {
-      // Search filter
-      const templateName = getLocalized(t.name, language);
-      const matchesSearch = !searchQuery || 
-        templateName.toLowerCase().includes(searchQuery.toLowerCase());
-      
-      // 语言过滤：如果模板指定了语言，且不包含当前语言，则隐藏
-      const templateLangs = t.language ? (Array.isArray(t.language) ? t.language : [t.language]) : ['cn', 'en'];
-      const matchesLanguage = templateLangs.includes(language);
-      
-      return matchesSearch && matchesLanguage;
-    });
-  }, [templates, searchQuery, language]);
-
-  // Discovery View templates (ignore tags, but respect search, language and sort)
-  const discoveryTemplates = React.useMemo(() => {
-    return [...baseFilteredTemplates].sort((a, b) => {
-      const nameA = getLocalized(a.name, language);
-      const nameB = getLocalized(b.name, language);
-      switch(sortOrder) {
-        case 'newest':
-          return templates.indexOf(b) - templates.indexOf(a);
-        case 'oldest':
-          return templates.indexOf(a) - templates.indexOf(b);
-        case 'a-z':
-          return nameA.localeCompare(nameB, language === 'cn' ? 'zh-CN' : 'en');
-        case 'z-a':
-          return nameB.localeCompare(nameA, language === 'cn' ? 'zh-CN' : 'en');
-        case 'random':
-          const hashA = (a.id + randomSeed).split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-          const hashB = (b.id + randomSeed).split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-          return hashA - hashB;
-        default:
-          return 0;
-      }
-    });
-  }, [baseFilteredTemplates, sortOrder, randomSeed, language, templates]);
-
-  // Filter templates based on tags for sidebar
-  const filteredTemplates = React.useMemo(() => {
-    return discoveryTemplates.filter(t => {
-      // Tag filter
-      const matchesTags = selectedTags === "" || 
-        (t.tags && t.tags.includes(selectedTags));
-      return matchesTags;
-    });
-  }, [discoveryTemplates, selectedTags]);
-
-  const fileInputRef = useRef(null);
-  
-  const handleUploadImage = (e) => {
-      try {
-          const file = e.target.files?.[0];
-          if (!file) return;
-          
-          // 验证文件类型
-          if (!file.type.startsWith('image/')) {
-              if (storageMode === 'browser') {
-                  alert('请选择图片文件');
-              }
-              return;
-          }
-          
-          // 移除文件大小限制，让用户自由上传
-          // 如果超出localStorage限制，会在useStickyState中捕获并提示
-          
-          const reader = new FileReader();
-          
-          reader.onloadend = () => {
-              try {
-                  setTemplates(prev => prev.map(t => {
-                      if (t.id !== activeTemplateId) return t;
-                      
-                      if (imageUpdateMode === 'add') {
-                        const newUrls = [...(t.imageUrls || [t.imageUrl]), reader.result];
-                        return { ...t, imageUrls: newUrls, imageUrl: newUrls[0] };
-                      } else {
-                        // Replace current index
-                        if (t.imageUrls && Array.isArray(t.imageUrls)) {
-                          const newUrls = [...t.imageUrls];
-                          newUrls[currentImageEditIndex] = reader.result;
-                          return { ...t, imageUrls: newUrls, imageUrl: newUrls[0] };
-                        }
-                        return { ...t, imageUrl: reader.result };
-                      }
-                  }));
-              } catch (error) {
-                  console.error('图片上传失败:', error);
-                  if (error.name === 'QuotaExceededError') {
-                      console.error('存储空间不足！图片过大。建议使用图片链接方式或切换到本地文件夹模式。');
-                  } else {
-                      alert('图片上传失败，请重试');
-                  }
-              }
-          };
-          
-          reader.onerror = () => {
-              console.error('文件读取失败');
-              if (storageMode === 'browser') {
-                  alert('文件读取失败，请重试');
-              }
-          };
-          
-          reader.readAsDataURL(file);
-      } catch (error) {
-          console.error('上传图片出错:', error);
-          if (storageMode === 'browser') {
-              alert('上传图片出错，请重试');
-          }
-      } finally {
-          // 重置input，允许重复选择同一文件
-          if (e.target) {
-              e.target.value = '';
-          }
-      }
-  };
-
-  const handleResetImage = () => {
-      const defaultUrl = INITIAL_TEMPLATES_CONFIG.find(t => t.id === activeTemplateId)?.imageUrl;
-      const defaultUrls = INITIAL_TEMPLATES_CONFIG.find(t => t.id === activeTemplateId)?.imageUrls;
-      
-      setTemplates(prev => prev.map(t => 
-          t.id === activeTemplateId ? { ...t, imageUrl: defaultUrl, imageUrls: defaultUrls } : t
-      ));
-  };
-
-  const handleSetImageUrl = () => {
-      if (!imageUrlInput.trim()) return;
-      
-      setTemplates(prev => prev.map(t => {
-          if (t.id !== activeTemplateId) return t;
-          
-          if (imageUpdateMode === 'add') {
-            const newUrls = [...(t.imageUrls || [t.imageUrl]), imageUrlInput];
-            return { ...t, imageUrls: newUrls, imageUrl: newUrls[0] };
-          } else {
-            // Replace current index
-            if (t.imageUrls && Array.isArray(t.imageUrls)) {
-              const newUrls = [...t.imageUrls];
-              newUrls[currentImageEditIndex] = imageUrlInput;
-              return { ...t, imageUrls: newUrls, imageUrl: newUrls[0] };
-            }
-            return { ...t, imageUrl: imageUrlInput };
-          }
-      }));
-      setImageUrlInput("");
-      setShowImageUrlInput(false);
-  };
-
-  // --- 导出/导入功能 ---
-  const handleExportTemplate = async (template) => {
-      try {
-          const templateName = getLocalized(template.name, language);
-          const dataStr = JSON.stringify(template, null, 2);
-          const dataBlob = new Blob([dataStr], { type: 'application/json' });
-          const filename = `${templateName.replace(/\s+/g, '_')}_template.json`;
-          
-          // 检测是否为移动设备（尤其是iOS）
-          const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
-          const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-          
-          if (isMobileDevice && navigator.share) {
-              // 移动端：使用 Web Share API
-              try {
-                  const file = new File([dataBlob], filename, { type: 'application/json' });
-                  if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                      await navigator.share({
-                          files: [file],
-                          title: templateName,
-                          text: '导出的提示词模板'
-                      });
-                      showToastMessage('✅ 模板已分享/保存');
-                      return;
-                  }
-              } catch (shareError) {
-                  console.log('Web Share API 失败，使用降级方案', shareError);
-              }
-          }
-          
-          // 桌面端或降级方案：使用传统下载方式
-          const url = URL.createObjectURL(dataBlob);
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = filename;
-          
-          // iOS Safari 特殊处理
-          if (isIOS) {
-              link.target = '_blank';
-          }
-          
-          document.body.appendChild(link);
-          link.click();
-          
-          // 延迟清理，确保iOS有足够时间处理
-          setTimeout(() => {
-              document.body.removeChild(link);
-              URL.revokeObjectURL(url);
-          }, 100);
-          
-          showToastMessage('✅ 模板已导出');
-      } catch (error) {
-          console.error('导出失败:', error);
-          alert('导出失败，请重试');
-      }
-  };
-
-  const handleExportAllTemplates = async () => {
-      try {
-          const exportData = {
-              templates,
-              banks,
-              categories,
-              version: 'v9',
-              exportDate: new Date().toISOString()
-          };
-          const dataStr = JSON.stringify(exportData, null, 2);
-          const dataBlob = new Blob([dataStr], { type: 'application/json' });
-          const filename = `prompt_fill_backup_${Date.now()}.json`;
-          
-          // 检测是否为移动设备（尤其是iOS）
-          const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
-          const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-          
-          if (isMobileDevice && navigator.share) {
-              // 移动端：使用 Web Share API
-              try {
-                  const file = new File([dataBlob], filename, { type: 'application/json' });
-                  if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                      await navigator.share({
-                          files: [file],
-                          title: '提示词填空器备份',
-                          text: '所有模板和词库的完整备份'
-                      });
-                      showToastMessage('✅ 备份已分享/保存');
-                      return;
-                  }
-              } catch (shareError) {
-                  console.log('Web Share API 失败，使用降级方案', shareError);
-              }
-          }
-          
-          // 桌面端或降级方案：使用传统下载方式
-          const url = URL.createObjectURL(dataBlob);
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = filename;
-          
-          // iOS Safari 特殊处理
-          if (isIOS) {
-              link.target = '_blank';
-          }
-          
-          document.body.appendChild(link);
-          link.click();
-          
-          // 延迟清理，确保iOS有足够时间处理
-          setTimeout(() => {
-              document.body.removeChild(link);
-              URL.revokeObjectURL(url);
-          }, 100);
-          
-          showToastMessage('✅ 备份已导出');
-      } catch (error) {
-          console.error('导出失败:', error);
-          alert('导出失败，请重试');
-      }
-  };
-
-  const handleImportTemplate = (event) => {
-      const file = event.target.files?.[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = (e) => {
-          try {
-              const data = JSON.parse(e.target.result);
-              
-              // 检查是单个模板还是完整备份
-              if (data.templates && Array.isArray(data.templates)) {
-                  // 完整备份
-                  if (window.confirm('检测到完整备份文件。是否要覆盖当前所有数据？')) {
-                      setTemplates(data.templates);
-                      if (data.banks) setBanks(data.banks);
-                      if (data.categories) setCategories(data.categories);
-                      alert('导入成功！');
-                  }
-              } else if (data.id && data.name) {
-                  // 单个模板
-                  const newId = `tpl_${Date.now()}`;
-                  const newTemplate = { ...data, id: newId };
-                  setTemplates(prev => [...prev, newTemplate]);
-                  setActiveTemplateId(newId);
-                  alert('模板导入成功！');
-              } else {
-                  alert('文件格式不正确');
-              }
-          } catch (error) {
-              console.error('导入失败:', error);
-              alert('导入失败，请检查文件格式');
-          }
-      };
-      reader.readAsText(file);
-      
-      // 重置input
-      event.target.value = '';
-  };
-
-  // --- File System Access API Functions ---
-  const handleSelectDirectory = async () => {
-      try {
-          if (!isFileSystemSupported) {
-              alert(t('browser_not_supported'));
-              return;
-          }
-
-          const handle = await window.showDirectoryPicker({
-              mode: 'readwrite',
-              startIn: 'documents'
-          });
-          
-          setDirectoryHandle(handle);
-          setStorageMode('folder');
-          localStorage.setItem('app_storage_mode', 'folder');
-          
-          // Save handle to IndexedDB for future use
-          await saveDirectoryHandle(handle);
-          
-          // 尝试保存当前数据到文件夹
-          await saveToFileSystem(handle);
-          alert(t('auto_save_enabled'));
-      } catch (error) {
-          console.error('选择文件夹失败:', error);
-          if (error.name !== 'AbortError') {
-              alert(t('folder_access_denied'));
-          }
-      }
-  };
-
-  const saveToFileSystem = async (handle) => {
-      if (!handle) return;
-      
-      try {
-          const data = {
-              templates,
-              banks,
-              categories,
-              defaults,
-              version: 'v9',
-              lastSaved: new Date().toISOString()
-          };
-          
-          const fileHandle = await handle.getFileHandle('prompt_fill_data.json', { create: true });
-          const writable = await fileHandle.createWritable();
-          await writable.write(JSON.stringify(data, null, 2));
-          await writable.close();
-          
-          console.log('数据已保存到本地文件夹');
-      } catch (error) {
-          console.error('保存到文件系统失败:', error);
-      }
-  };
-
-  const loadFromFileSystem = async (handle) => {
-      if (!handle) return;
-      
-      try {
-          const fileHandle = await handle.getFileHandle('prompt_fill_data.json');
-          const file = await fileHandle.getFile();
-          const text = await file.text();
-          const data = JSON.parse(text);
-          
-          if (data.templates) setTemplates(data.templates);
-          if (data.banks) setBanks(data.banks);
-          if (data.categories) setCategories(data.categories);
-          if (data.defaults) setDefaults(data.defaults);
-          
-          console.log('从本地文件夹加载数据成功');
-      } catch (error) {
-          console.error('从文件系统读取失败:', error);
-      }
-  };
-
-  // Auto-save to file system when data changes
-  useEffect(() => {
-      if (storageMode === 'folder' && directoryHandle) {
-          const timeoutId = setTimeout(() => {
-              saveToFileSystem(directoryHandle);
-          }, 1000); // Debounce 1 second
-          
-          return () => clearTimeout(timeoutId);
-      }
-  }, [templates, banks, categories, defaults, storageMode, directoryHandle]);
-
-  // 存储空间管理
-  const getStorageSize = () => {
-      try {
-          let total = 0;
-          for (let key in localStorage) {
-              if (localStorage.hasOwnProperty(key)) {
-                  total += localStorage[key].length + key.length;
-              }
-          }
-          return (total / 1024).toFixed(2); // KB
-      } catch (error) {
-          return '0';
-      }
-  };
-
-  function handleClearAllData() {
-      if (window.confirm(t('confirm_clear_all'))) {
-          try {
-              // 只清除应用相关的数据
-              const keysToRemove = Object.keys(localStorage).filter(key => 
-                  key.startsWith('app_')
-              );
-              keysToRemove.forEach(key => localStorage.removeItem(key));
-              
-              // 刷新页面
-              window.location.reload();
-          } catch (error) {
-              console.error('清除数据失败:', error);
-              alert('清除数据失败');
-          }
-      }
-  }
-
-  function handleCompleteBackup() {
-    handleExportAllTemplates();
-  }
-
-  function handleImportAllData(event) {
-    handleImportTemplate(event);
-  }
-
-  function handleResetSystemData() {
-    if (window.confirm('确定要重置系统数据吗？这将清除所有本地修改并重新从系统加载初始模板。')) {
-        localStorage.removeItem('app_templates');
-        localStorage.removeItem('app_banks');
-        localStorage.removeItem('app_categories');
-        window.location.reload();
-    }
-  }
-  
-  const handleSwitchToLocalStorage = async () => {
-      setStorageMode('browser');
-      setDirectoryHandle(null);
-      localStorage.setItem('app_storage_mode', 'browser');
-      
-      // Clear directory handle from IndexedDB
-      try {
-          const db = await openDB();
-          const transaction = db.transaction(['handles'], 'readwrite');
-          const store = transaction.objectStore('handles');
-          await store.delete('directory');
-      } catch (error) {
-          console.error('清除文件夹句柄失败:', error);
-      }
-  };
-  
-  const handleManualLoadFromFolder = async () => {
-      if (directoryHandle) {
-          try {
-              await loadFromFileSystem(directoryHandle);
-              alert('从文件夹加载成功！');
-          } catch (error) {
-              alert('从文件夹加载失败，请检查文件是否存在');
-          }
-      }
-  };
-
-  const updateActiveTemplateContent = React.useCallback((newContent, forceSaveHistory = false) => {
-    // History Management
-    const now = Date.now();
-    const shouldSave = forceSaveHistory || (now - historyLastSaveTime.current > 1000);
-
-    if (shouldSave) {
-        setHistoryPast(prev => [...prev, activeTemplate.content]);
-        setHistoryFuture([]); // Clear redo stack on new change
-        historyLastSaveTime.current = now;
-    }
-
-    setTemplates(prev => prev.map(t => 
-      t.id === activeTemplateId ? { ...t, content: newContent } : t
-    ));
-  }, [activeTemplate.content, activeTemplateId, setTemplates]);
-
-  const handleUndo = React.useCallback(() => {
-      if (historyPast.length === 0) return;
-      
-      const previous = historyPast[historyPast.length - 1];
-      const newPast = historyPast.slice(0, -1);
-      
-      setHistoryFuture(prev => [activeTemplate.content, ...prev]);
-      setHistoryPast(newPast);
-      
-      // Direct update without saving history again
-      setTemplates(prev => prev.map(t => 
-        t.id === activeTemplateId ? { ...t, content: previous } : t
-      ));
-  }, [activeTemplate.content, activeTemplateId, historyPast, setTemplates]);
-
-  const handleRedo = React.useCallback(() => {
-      if (historyFuture.length === 0) return;
-
-      const next = historyFuture[0];
-      const newFuture = historyFuture.slice(1);
-
-      setHistoryPast(prev => [...prev, activeTemplate.content]);
-      setHistoryFuture(newFuture);
-
-      // Direct update without saving history again
-      setTemplates(prev => prev.map(t => 
-        t.id === activeTemplateId ? { ...t, content: next } : t
-      ));
-  }, [activeTemplate.content, activeTemplateId, historyFuture, setTemplates]);
-
-  // 变量解析工具函数：从变量名中提取 baseKey 和 groupId
-  // 例如: "fruit_1" -> { baseKey: "fruit", groupId: "1" }
-  //      "fruit" -> { baseKey: "fruit", groupId: null }
-  const parseVariableName = React.useCallback((varName) => {
-    const match = varName.match(/^(.+?)(?:_(\d+))?$/);
-    if (match) {
-      return {
-        baseKey: match[1],
-        groupId: match[2] || null
-      };
-    }
-    return { baseKey: varName, groupId: null };
-  }, []);
-
-  // 检测光标是否在变量内，并提取当前变量信息
-  const detectCursorInVariable = React.useCallback(() => {
-    const textarea = textareaRef.current;
-    if (!textarea || !isEditing) {
-      setCursorInVariable(false);
-      setCurrentVariableName(null);
-      setCurrentGroupId(null);
-      return;
-    }
-
-    const text = textarea.value;
-    const cursorPos = textarea.selectionStart;
-
-    // 向前查找最近的 {{
-    let startPos = cursorPos;
-    while (startPos > 0 && text.substring(startPos - 2, startPos) !== '{{') {
-      startPos--;
-    }
-    
-    // 向后查找最近的 }}
-    let endPos = cursorPos;
-    while (endPos < text.length && text.substring(endPos, endPos + 2) !== '}}') {
-      endPos++;
-    }
-
-    // 检查光标是否在 {{...}} 之间
-    if (startPos >= 0 && endPos < text.length && 
-        text.substring(startPos - 2, startPos) === '{{' && 
-        text.substring(endPos, endPos + 2) === '}}') {
-      // 光标在变量内
-      const variableName = text.substring(startPos, endPos).trim();
-      const parsed = parseVariableName(variableName);
-      
-      setCursorInVariable(true);
-      setCurrentVariableName(variableName);
-      setCurrentGroupId(parsed.groupId);
-    } else {
-      setCursorInVariable(false);
-      setCurrentVariableName(null);
-      setCurrentGroupId(null);
-    }
-  }, [isEditing, parseVariableName]);
-
-  // 监听光标位置变化
-  React.useEffect(() => {
-    const textarea = textareaRef.current;
-    if (!textarea || !isEditing) return;
-
-    const handleSelectionChange = () => {
-      detectCursorInVariable();
-    };
-
-    textarea.addEventListener('keyup', handleSelectionChange);
-    textarea.addEventListener('click', handleSelectionChange);
-    textarea.addEventListener('select', handleSelectionChange);
-
-    return () => {
-      textarea.removeEventListener('keyup', handleSelectionChange);
-      textarea.removeEventListener('click', handleSelectionChange);
-      textarea.removeEventListener('select', handleSelectionChange);
-    };
-  }, [isEditing, detectCursorInVariable]);
-
-  // 设置分组：为当前变量添加或修改分组后缀
-  const handleSetGroup = React.useCallback((groupNum) => {
-    if (!cursorInVariable || !currentVariableName) return;
-
-    const textarea = textareaRef.current;
-    if (!textarea) return;
-
-    const text = textarea.value;
-    const cursorPos = textarea.selectionStart;
-
-    // 向前查找最近的 {{
-    let startPos = cursorPos;
-    while (startPos > 0 && text.substring(startPos - 2, startPos) !== '{{') {
-      startPos--;
-    }
-    
-    // 向后查找最近的 }}
-    let endPos = cursorPos;
-    while (endPos < text.length && text.substring(endPos, endPos + 2) !== '}}') {
-      endPos++;
-    }
-
-    if (startPos >= 0 && endPos < text.length) {
-      const variableName = text.substring(startPos, endPos).trim();
-      const parsed = parseVariableName(variableName);
-      const baseKey = parsed.baseKey;
-      
-      // 构建新的变量名：baseKey_groupNum
-      const newVariableName = `${baseKey}_${groupNum}`;
-      
-      // 替换文本：只替换 {{ 和 }} 之间的内容
-      const before = text.substring(0, startPos);
-      const after = text.substring(endPos);
-      const newText = `${before}${newVariableName}${after}`;
-      
-      // 更新内容
-      const currentContent = activeTemplate.content;
-      const isMultilingual = typeof currentContent === 'object';
-      if (isMultilingual) {
-        updateActiveTemplateContent({
-          ...currentContent,
-          [templateLanguage]: newText
-        }, true);
-      } else {
-        updateActiveTemplateContent(newText, true);
-      }
-
-      // 恢复光标位置（调整偏移）
-      setTimeout(() => {
-        const offset = newVariableName.length - variableName.length;
-        const newCursorPos = cursorPos + offset;
-        textarea.setSelectionRange(newCursorPos, newCursorPos);
-        textarea.focus();
-        detectCursorInVariable();
-      }, 0);
-    }
-  }, [cursorInVariable, currentVariableName, parseVariableName, activeTemplate.content, templateLanguage, updateActiveTemplateContent, detectCursorInVariable]);
-
-  // 移除分组：移除当前变量的分组后缀
-  const handleRemoveGroup = React.useCallback(() => {
-    if (!cursorInVariable || !currentVariableName || !currentGroupId) return;
-
-    const textarea = textareaRef.current;
-    if (!textarea) return;
-
-    const text = textarea.value;
-    const cursorPos = textarea.selectionStart;
-
-    // 向前查找最近的 {{
-    let startPos = cursorPos;
-    while (startPos > 0 && text.substring(startPos - 2, startPos) !== '{{') {
-      startPos--;
-    }
-    
-    // 向后查找最近的 }}
-    let endPos = cursorPos;
-    while (endPos < text.length && text.substring(endPos, endPos + 2) !== '}}') {
-      endPos++;
-    }
-
-    if (startPos >= 0 && endPos < text.length) {
-      const variableName = text.substring(startPos, endPos).trim();
-      const parsed = parseVariableName(variableName);
-      const baseKey = parsed.baseKey;
-      
-      // 新的变量名：只保留 baseKey，移除后缀
-      const newVariableName = baseKey;
-      
-      // 替换文本：只替换 {{ 和 }} 之间的内容
-      const before = text.substring(0, startPos);
-      const after = text.substring(endPos);
-      const newText = `${before}${newVariableName}${after}`;
-      
-      // 更新内容
-      const currentContent = activeTemplate.content;
-      const isMultilingual = typeof currentContent === 'object';
-      if (isMultilingual) {
-        updateActiveTemplateContent({
-          ...currentContent,
-          [templateLanguage]: newText
-        }, true);
-      } else {
-        updateActiveTemplateContent(newText, true);
-      }
-
-      // 恢复光标位置（调整偏移）
-      setTimeout(() => {
-        const offset = newVariableName.length - variableName.length;
-        const newCursorPos = cursorPos + offset;
-        textarea.setSelectionRange(newCursorPos, newCursorPos);
-        textarea.focus();
-        detectCursorInVariable();
-      }, 0);
-    }
-  }, [cursorInVariable, currentVariableName, currentGroupId, parseVariableName, activeTemplate.content, templateLanguage, updateActiveTemplateContent, detectCursorInVariable]);
-
-  // 查找模板中所有需要联动的变量
-  const findLinkedVariables = React.useCallback((template, baseKey, groupId) => {
-    if (!groupId) return []; // 没有 groupId 的变量不联动
-    
-    const linkedKeys = [];
-    const content = typeof template.content === 'object' 
-      ? Object.values(template.content).join('\n')
-      : template.content || '';
-    
-    // 找到所有 {{baseKey_groupId}} 格式的变量
-    const allMatches = content.matchAll(/\{\{([^}]+)\}\}/g);
-    const counters = {};
-    
-    for (const match of allMatches) {
-      const fullKey = match[1].trim();
-      const parsed = parseVariableName(fullKey);
-      
-      // 匹配相同 baseKey 且相同 groupId 的变量
-      if (parsed.baseKey === baseKey && parsed.groupId === groupId) {
-        const idx = counters[fullKey] || 0;
-        counters[fullKey] = idx + 1;
-        linkedKeys.push(`${fullKey}-${idx}`);
-      }
-    }
-    
-    return linkedKeys;
-  }, [parseVariableName]);
-
-  const updateActiveTemplateSelection = React.useCallback((uniqueKey, value, linkedKeys = []) => {
-    setTemplates(prev => prev.map(t => {
-      if (t.id === activeTemplateId) {
-        const newSelections = { ...t.selections, [uniqueKey]: value };
-        
-        // 同步更新所有联动的变量
-        linkedKeys.forEach(linkedKey => {
-          if (linkedKey !== uniqueKey) {
-            newSelections[linkedKey] = value;
-          }
-        });
-        
-        return {
-          ...t,
-          selections: newSelections
-        };
-      }
-      return t;
-    }));
-  }, [activeTemplateId, setTemplates]);
-
-  // --- Bank Actions ---
-
-  const handleSelect = React.useCallback((key, index, value) => {
-    const uniqueKey = `${key}-${index}`;
-    
-    // 解析变量名，检查是否有联动组
-    const parsed = parseVariableName(key);
-    
-    // 如果有关联组，找到所有需要联动的变量
-    let linkedKeys = [];
-    if (parsed.groupId) {
-      const activeTemplate = templates.find(t => t.id === activeTemplateId);
-      if (activeTemplate) {
-        linkedKeys = findLinkedVariables(activeTemplate, parsed.baseKey, parsed.groupId);
-      }
-    }
-    
-    updateActiveTemplateSelection(uniqueKey, value, linkedKeys);
-    setActivePopover(null);
-  }, [parseVariableName, findLinkedVariables, updateActiveTemplateSelection, templates, activeTemplateId]);
-
-  const handleAddCustomAndSelect = React.useCallback((key, index, newValue) => {
-    if (!newValue || !newValue.trim()) return;
-    
-    // 解析变量名，获取 baseKey（词库的 key）
-    const parsed = parseVariableName(key);
-    const baseKey = parsed.baseKey;
-    
-    // 1. Add to bank if not exists (使用 baseKey)
-    if (banks[baseKey] && !banks[baseKey].options.includes(newValue)) {
-        handleAddOption(baseKey, newValue);
-    }
-    
-    // 2. Select it (使用完整的 key，可能包含 groupId)
-    handleSelect(key, index, newValue);
-  }, [banks, handleSelect, parseVariableName]);
-
-  const handleAddOption = React.useCallback((key, newOption) => {
-    if (!newOption.trim()) return;
-    setBanks(prev => ({
-      ...prev,
-      [key]: {
-        ...prev[key],
-        options: [...prev[key].options, newOption]
-      }
-    }));
-  }, [setBanks]);
-
-  const handleDeleteOption = React.useCallback((key, optionToDelete) => {
-    setBanks(prev => ({
-      ...prev,
-      [key]: {
-        ...prev[key],
-        options: prev[key].options.filter(opt => opt !== optionToDelete)
-      }
-    }));
-  }, [setBanks]);
-
-  // 移除了 handleStartAddBank 和 handleAddBank
-
-  const handleDeleteBank = (key) => {
-    const bankLabel = getLocalized(banks[key].label, language);
-    if (window.confirm(t('confirm_delete_bank', { name: bankLabel }))) {
-      const newBanks = { ...banks };
-      delete newBanks[key];
-      setBanks(newBanks);
-    }
-  };
-
-  const handleUpdateBankCategory = (key, newCategory) => {
-      setBanks(prev => ({
-          ...prev,
-          [key]: {
-              ...prev[key],
-              category: newCategory
-          }
-      }));
-  };
-
-  // --- Editor Actions ---
-
-  const insertVariableToTemplate = (key, dropPoint = null) => {
-    const textToInsert = ` {{${key}}} `;
-    const currentContent = activeTemplate.content || "";
-    const isMultilingual = typeof currentContent === 'object';
-    const text = isMultilingual ? (currentContent[templateLanguage] || "") : currentContent;
-
-    if (!isEditing) {
-      setIsEditing(true);
-      setTimeout(() => {
-        const updatedText = text + textToInsert;
-        if (isMultilingual) {
-          updateActiveTemplateContent({ ...currentContent, [templateLanguage]: updatedText }, true);
-        } else {
-          updateActiveTemplateContent(updatedText, true);
-        }
-        if(textareaRef.current) textareaRef.current.scrollTop = textareaRef.current.scrollHeight;
-      }, 50);
-      return;
-    };
-
-    const textarea = textareaRef.current;
-    if (!textarea) return;
-
-    let start = textarea.selectionStart;
-    let end = textarea.selectionEnd;
-
-    const safeText = String(text);
-    const before = safeText.substring(0, start);
-    const after = safeText.substring(end, safeText.length);
-    const updatedText = `${before}${textToInsert}${after}`;
-    
-    if (isMultilingual) {
-      updateActiveTemplateContent({ ...currentContent, [templateLanguage]: updatedText }, true);
-    } else {
-      updateActiveTemplateContent(updatedText, true);
-    }
-    
-    setTimeout(() => {
-      textarea.focus();
-      const newPos = start + textToInsert.length;
-      textarea.setSelectionRange(newPos, newPos);
-    }, 0);
-  };
-
-  const handleCopy = () => {
-    // 获取当前模板语言的内容
-    let finalString = getLocalized(activeTemplate.content, templateLanguage);
-    const counters = {};
-
-    finalString = finalString.replace(/{{(.*?)}}/g, (match, key) => {
-        const fullKey = key.trim();
-        const parsed = parseVariableName(fullKey);
-        const baseKey = parsed.baseKey;
-        
-        // 使用完整的 fullKey 作为计数器的 key
-        const idx = counters[fullKey] || 0;
-        counters[fullKey] = idx + 1;
-
-        const uniqueKey = `${fullKey}-${idx}`;
-        // Prioritize selection, then default (use baseKey for defaults), and get localized value
-        const value = activeTemplate.selections[uniqueKey] || defaults[baseKey];
-        return getLocalized(value, templateLanguage) || match;
-    });
-
-    const cleanText = finalString
-        .replace(/###\s/g, '')
-        .replace(/\*\*(.*?)\*\*/g, '$1')
-        .replace(/\n\s*\n/g, '\n\n');
-
-    navigator.clipboard.writeText(cleanText).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }).catch(() => {});
-  };
-
+  // 导出图片
   const handleExportImage = async () => {
     const element = document.getElementById('preview-card');
     if (!element) return;
 
-    setIsExporting(true);
-    
-    const templateDefault = INITIAL_TEMPLATES_CONFIG.find(t => t.id === activeTemplateId);
-    const originalImageSrc = activeTemplate.imageUrl || templateDefault?.imageUrl || "";
-    let tempBase64Src = null;
-    const imgElement = element.querySelector('img');
-
-    if (imgElement && originalImageSrc) {
-        // 如果当前 img 没有正确的 src，先补上默认 src
-        if (!imgElement.src || imgElement.src.trim() === "" || imgElement.src.includes("data:image") === false) {
-          imgElement.src = originalImageSrc;
-        }
-    }
-
-    if (imgElement && originalImageSrc && originalImageSrc.startsWith('http')) {
-        try {
-            // 尝试通过 fetch 获取图片数据
-            const response = await fetch(originalImageSrc);
-            const blob = await response.blob();
-            tempBase64Src = await new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.onloadend = () => resolve(reader.result);
-                reader.readAsDataURL(blob);
-            });
-            
-            // 临时替换为 Base64
-            imgElement.src = tempBase64Src;
-            await waitForImageLoad(imgElement);
-        } catch (e) {
-            console.warn("图片 Base64 转换失败，尝试直接导出", e);
-        }
-    } else if (imgElement) {
-        await waitForImageLoad(imgElement);
-    }
-
-    // 预加载二维码
-    const websiteUrl = 'https://promptfill.tanshilong.com/';
-    const localQrCodePath = '/QRCode.png';
-    let qrCodeBase64 = null;
-    
-    try {
-        console.log('正在加载本地二维码...', localQrCodePath);
-        const qrResponse = await fetch(localQrCodePath);
-        if (!qrResponse.ok) throw new Error('本地二维码加载失败');
-        const qrBlob = await qrResponse.blob();
-        qrCodeBase64 = await new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                console.log('本地二维码加载成功');
-                resolve(reader.result);
-            };
-            reader.readAsDataURL(qrBlob);
-        });
-    } catch (e) {
-        console.error("本地二维码加载失败", e);
-    }
-
-    try {
-        // 创建一个临时的导出容器
-        const exportContainer = document.createElement('div');
-        exportContainer.id = 'export-container-temp';
-        exportContainer.style.position = 'fixed';
-        exportContainer.style.left = '-99999px';
-        exportContainer.style.top = '0';
-        exportContainer.style.width = '900px'; 
-        exportContainer.style.minHeight = '800px';
-        exportContainer.style.padding = '20px'; 
-        exportContainer.style.background = '#fafafa';
-        exportContainer.style.display = 'flex';
-        exportContainer.style.alignItems = 'center';
-        exportContainer.style.justifyContent = 'center';
-        document.body.appendChild(exportContainer);
-        
-        // 创建橙色渐变背景层
-        const bgLayer = document.createElement('div');
-        bgLayer.style.position = 'absolute';
-        bgLayer.style.inset = '0';
-        bgLayer.style.background = 'linear-gradient(180deg, #F08F62 0%, #EB7A54 100%)';
-        bgLayer.style.zIndex = '0';
-        exportContainer.appendChild(bgLayer);
-        
-        // 克隆 preview-card
-        const clonedCard = element.cloneNode(true);
-        clonedCard.style.position = 'relative';
-        clonedCard.style.zIndex = '10';
-        clonedCard.style.background = 'rgba(255, 255, 255, 0.98)';
-        clonedCard.style.borderRadius = '24px';
-        clonedCard.style.boxShadow = '0 8px 32px -4px rgba(0, 0, 0, 0.12), 0 4px 16px -2px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.05)'; 
-        clonedCard.style.border = '1px solid rgba(255, 255, 255, 0.8)';
-        clonedCard.style.padding = '40px 45px';
-        clonedCard.style.margin = '0 auto';
-        clonedCard.style.width = '860px'; 
-        clonedCard.style.boxSizing = 'border-box';
-        clonedCard.style.fontFamily = '"PingFang SC", "Microsoft YaHei", sans-serif';
-        clonedCard.style.webkitFontSmoothing = 'antialiased';
-        exportContainer.appendChild(clonedCard);
-        
-        const canvas = await html2canvas(exportContainer, {
-            scale: 2.0, 
-            useCORS: true,
-            allowTaint: true,
-            backgroundColor: '#ffffff',
-            logging: false,
-            onclone: (clonedDoc) => {
-                const clonedElement = clonedDoc.getElementById('export-container-temp');
-                if (clonedElement) {
-                   const card = clonedElement.querySelector('#preview-card');
-                   if (!card) return;
-
-                   // 获取原始数据
-                   const originalImg = card.querySelector('img');
-                   const imgSrc = tempBase64Src || (originalImg ? originalImg.src : '');
-                   const titleElement = card.querySelector('h2');
-                   const titleText = titleElement ? titleElement.textContent.trim() : getLocalized(activeTemplate.name, language);
-                   const contentElement = card.querySelector('#final-prompt-content');
-                   const contentHTML = contentElement ? contentElement.innerHTML : '';
-                   
-                   // 获取版本号（动态从原始DOM）
-                   const metaContainer = card.querySelector('.flex.flex-wrap.gap-2');
-                   const versionElement = metaContainer ? metaContainer.querySelector('.bg-orange-50') : null;
-                   const versionText = versionElement ? versionElement.textContent.trim() : '';
-                   
-                   // 清空卡片内容
-                   card.innerHTML = '';
-                   
-                   // --- 1. 图片区域 ---
-                   if (imgSrc) {
-                       const imgContainer = clonedDoc.createElement('div');
-                       imgContainer.style.width = '100%';
-                       imgContainer.style.marginBottom = '30px';
-                       imgContainer.style.display = 'flex';
-                       imgContainer.style.justifyContent = 'center';
-                       imgContainer.style.alignItems = 'center';
-                       
-                       const img = clonedDoc.createElement('img');
-                       img.src = imgSrc;
-                       img.style.width = '100%'; 
-                       img.style.height = 'auto'; 
-                       img.style.objectFit = 'contain'; 
-                       img.style.borderRadius = '12px'; 
-                       img.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
-                       img.style.boxSizing = 'border-box';
-                       
-                       imgContainer.appendChild(img);
-                       card.appendChild(imgContainer);
-                   }
-                   
-                   // --- 2. 标题区域 ---
-                   const titleContainer = clonedDoc.createElement('div');
-                   titleContainer.style.marginBottom = '25px';
-                   
-                   const title = clonedDoc.createElement('h2');
-                   title.textContent = titleText;
-                   title.style.fontSize = '32px'; 
-                   title.style.fontWeight = '700';
-                   title.style.color = '#1f2937';
-                   title.style.margin = '0';
-                   title.style.lineHeight = '1.2';
-                   
-                   titleContainer.appendChild(title);
-                   card.appendChild(titleContainer);
-                   
-                   // --- 3. 正文区域 ---
-                   if (contentHTML) {
-                       const contentContainer = clonedDoc.createElement('div');
-                       contentContainer.innerHTML = contentHTML;
-                       contentContainer.style.fontSize = '18px'; 
-                       contentContainer.style.lineHeight = '1.8';
-                       contentContainer.style.color = '#374151';
-                       contentContainer.style.marginBottom = '40px';
-                       
-                       // 修复胶囊样式
-                       const variables = contentContainer.querySelectorAll('[data-export-pill="true"]');
-                       variables.forEach(v => {
-                           if (v.parentElement && v.parentElement.classList.contains('inline-block')) {
-                               v.parentElement.style.display = 'inline';
-                               v.parentElement.style.margin = '0';
-                           }
-
-                           v.style.display = 'inline-flex';
-                           v.style.alignItems = 'center';
-                           v.style.justifyContent = 'center';
-                           v.style.padding = '4px 12px'; 
-                           v.style.margin = '2px 4px';
-                           v.style.borderRadius = '6px'; 
-                           v.style.fontSize = '17px'; 
-                           v.style.fontWeight = '600';
-                           v.style.lineHeight = '1.5';
-                           v.style.verticalAlign = 'middle';
-                           v.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
-                           v.style.color = '#ffffff'; 
-                           v.style.border = 'none'; 
-                       });
-                       
-                       card.appendChild(contentContainer);
-                   }
-                   
-                   // --- 4. 底部水印区域 ---
-                   const footer = clonedDoc.createElement('div');
-                   footer.style.marginTop = '40px';
-                   footer.style.paddingTop = '25px';
-                   footer.style.paddingBottom = '15px';
-                   footer.style.borderTop = '2px solid #e2e8f0';
-                   footer.style.display = 'flex';
-                   footer.style.justifyContent = 'space-between';
-                   footer.style.alignItems = 'center';
-                   footer.style.fontFamily = 'sans-serif';
-                   
-                   const qrCodeHtml = qrCodeBase64 
-                       ? `<img src="${qrCodeBase64}" 
-                               style="width: 80px; height: 80px; border: 3px solid #e2e8f0; border-radius: 8px; display: block; background: white;" 
-                               alt="QR Code" />`
-                       : `<div style="width: 80px; height: 80px; border: 3px dashed #cbd5e1; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: #f8fafc; font-size: 10px; color: #94a3b8; font-weight: 500;">QR Code</div>`;
-                   
-                   footer.innerHTML = `
-                       <div style="flex: 1; padding-right: 20px;">
-                           <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap;">
-                               <div style="font-size: 15px; font-weight: 600; color: #1f2937;">
-                                   Generated by <span style="color: #6366f1; font-weight: 700;">Prompt Fill</span>
-                               </div>
-                               ${versionText ? `<span style="font-size: 11px; padding: 3px 10px; background: #fff7ed; color: #f97316; border-radius: 5px; font-weight: 600; border: 1px solid #fed7aa;">${versionText}</span>` : ''}
-                           </div>
-                           <div style="font-size: 12px; color: #6b7280; margin-bottom: 6px; font-weight: 500;">提示词填空器</div>
-                           <div style="font-size: 11px; color: #3b82f6; font-weight: 500; background: #eff6ff; padding: 4px 8px; border-radius: 4px; display: inline-block; letter-spacing: 0.3px;">
-                               ${websiteUrl}
-                           </div>
-                       </div>
-                       <div style="display: flex; align-items: center;">
-                           <div style="text-align: center;">
-                               ${qrCodeHtml}
-                               <div style="font-size: 9px; color: #94a3b8; margin-top: 4px; font-weight: 500;">扫码访问</div>
-                           </div>
-                       </div>
-                   `;
-                   
-                   card.appendChild(footer);
-                }
-            }
-        });
-
-        const image = canvas.toDataURL('image/jpeg', 0.92);
-        const activeTemplateName = getLocalized(activeTemplate.name, language);
-        const filename = `${activeTemplateName.replace(/\s+/g, '_')}_prompt.jpg`;
-        
-        const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
-        const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-        
-        if (isMobileDevice) {
-            try {
-                const base64Response = await fetch(image);
-                const blob = await base64Response.blob();
-                const file = new File([blob], filename, { type: 'image/jpeg' });
-                
-                if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-                    await navigator.share({
-                        files: [file],
-                        title: activeTemplateName,
-                        text: '导出的提示词模板'
-                    });
-                    showToastMessage('✅ 图片已分享，请选择"存储图像"保存到相册');
-                } else {
-                    if (isIOS) {
-                        const newWindow = window.open();
-                        if (newWindow) {
-                            newWindow.document.write(`
-                                <html>
-                                <head>
-                                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                                    <title>${activeTemplateName}</title>
-                                    <style>
-                                        body { margin: 0; padding: 20px; background: #000; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-                                        img { max-width: 100%; height: auto; }
-                                        .tip { position: fixed; top: 10px; left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.95); padding: 12px 20px; border-radius: 8px; color: #333; font-size: 14px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); z-index: 1000; }
-                                    </style>
-                                </head>
-                                <body>
-                                    <div class="tip">长按图片保存到相册 📱</div>
-                                    <img src="${image}" alt="${activeTemplateName}" />
-                                </body>
-                                </html>
-                            `);
-                            showToastMessage('✅ 请在新页面长按图片保存');
-                        } else {
-                            const link = document.createElement('a');
-                            link.href = image;
-                            link.download = filename;
-                            link.target = '_blank';
-                            document.body.appendChild(link);
-                            link.click();
-                            document.body.removeChild(link);
-                            showToastMessage('✅ 图片已导出，请在新页面保存');
-                        }
-                    } else {
-                        const link = document.createElement('a');
-                        link.href = image;
-                        link.download = filename;
-                        document.body.appendChild(link);
-                        link.click();
-                        document.body.removeChild(link);
-                        showToastMessage('✅ 图片已保存到下载文件夹');
-                    }
-                }
-            } catch (shareError) {
-                console.log('Share failed:', shareError);
-                if (isIOS) {
-                    const newWindow = window.open();
-                    if (newWindow) {
-                        newWindow.document.write(`
-                            <html>
-                            <head><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>${activeTemplateName}</title></head>
-                            <body style="margin:0;padding:20px;background:#000;text-align:center;">
-                                <p style="color:#fff;margin-bottom:20px;">长按图片保存到相册 📱</p>
-                                <img src="${image}" style="max-width:100%;height:auto;" />
-                            </body>
-                            </html>
-                        `);
-                    }
-                    showToastMessage('⚠️ 请在新页面长按图片保存');
-                } else {
-                    const link = document.createElement('a');
-                    link.href = image;
-                    link.download = filename;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                    showToastMessage('✅ 图片已保存');
-                }
-            }
-        } else {
-            const link = document.createElement('a');
-            link.href = image;
-            link.download = filename;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            showToastMessage('✅ 图片导出成功！');
-        }
-    } catch (err) {
-        console.error("Export failed:", err);
-        showToastMessage('❌ 导出失败，请重试');
-    } finally {
-        const tempContainer = document.getElementById('export-container-temp');
-        if (tempContainer) {
-            document.body.removeChild(tempContainer);
-        }
-        if (imgElement && originalImageSrc) {
-            imgElement.src = originalImageSrc;
-        }
-        setIsExporting(false);
-    }
+    await exportImage({
+      element,
+      activeTemplate,
+      activeTemplateId,
+      INITIAL_TEMPLATES_CONFIG,
+      language,
+      setIsExporting,
+      showToast: showToastMessage
+    });
   };
 
-  // AI Image Generation Handler
+  // 复制处理
+  const handleCopy = () => {
+    editor.handleCopy();
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  // AI 图片生成处理
   const handleImageGenerated = (images) => {
-    setGeneratedImages(images);
-    setShowImageModal(true);
+    imageManagement.handleImageGenerated(images);
   };
 
-  // 移除了 onTouchDragStart, onTouchDragMove, onTouchDragEnd
+  // 设置图片 URL
+  const handleSetImageUrl = () => {
+    if (!imageUrlInput.trim()) return;
+    
+    setTemplates(prev => prev.map(t => {
+      if (t.id !== activeTemplateId) return t;
+      
+      if (imageUpdateMode === 'add') {
+        const newUrls = [...(t.imageUrls || [t.imageUrl]), imageUrlInput];
+        return { ...t, imageUrls: newUrls, imageUrl: newUrls[0] };
+      } else {
+        // Replace current index
+        if (t.imageUrls && Array.isArray(t.imageUrls)) {
+          const newUrls = [...t.imageUrls];
+          newUrls[currentImageEditIndex] = imageUrlInput;
+          return { ...t, imageUrls: newUrls, imageUrl: newUrls[0] };
+        }
+        return { ...t, imageUrl: imageUrlInput };
+      }
+    }));
+    setImageUrlInput("");
+    setShowImageUrlInput(false);
+  };
 
-  // --- Renderers ---
+  // 清除所有数据
+  const handleClearAllData = () => {
+    clearAllData(t);
+  };
 
+  // 全局容器样式
   const globalContainerStyle = isDarkMode ? {
     background: 'linear-gradient(180deg, #3B3B3B 0%, #242120 100%)',
     borderRadius: '16px',
@@ -2013,9 +307,8 @@ const App = () => {
         background: 'linear-gradient(180deg, #323131 0%, #181716 100%)',
         padding: isMobileDevice ? '0' : '16px'
       } : {}}
-      // 移除了 onTouchMove, onTouchEnd
     >
-      {/* 桌面端全局侧边栏 - 位置固定不动 */}
+      {/* 桌面端全局侧边栏 */}
       {!isMobileDevice && (
         <>
           <Sidebar 
@@ -2024,90 +317,49 @@ const App = () => {
               setIsSettingsOpen(false);
               setIsHistoryOpen(false);
               setIsBanksViewOpen(false);
-              handleSetDiscoveryView(true);
+              setDiscoveryView(true);
             }}
             onDetail={() => {
               setIsSettingsOpen(false);
               setIsHistoryOpen(false);
               setIsBanksViewOpen(false);
-              handleSetDiscoveryView(false);
+              setDiscoveryView(false);
             }}
             onHistory={() => {
               setIsSettingsOpen(false);
               setIsBanksViewOpen(false);
               setIsHistoryOpen(true);
-              handleSetDiscoveryView(false);
+              setDiscoveryView(false);
             }}
             onBanks={() => {
               setIsSettingsOpen(false);
               setIsHistoryOpen(false);
               setIsBanksViewOpen(true);
-              handleSetDiscoveryView(false);
+              setDiscoveryView(false);
             }}
             onSettings={() => {
               setIsHistoryOpen(false);
               setIsBanksViewOpen(false);
               setIsSettingsOpen(true);
             }}
-            // language={language}
-            // setLanguage={setLanguage}
             isDarkMode={isDarkMode}
             setIsDarkMode={setIsDarkMode}
             t={t}
           />
           
-          {/* 趣味设计：暗号模式下拉灯效果 */}
-          <div 
-            className={`hidden md:block fixed top-0 left-[-24px] z-[500] pointer-events-none transition-all duration-700 ease-in-out ${
-              isDarkMode ? 'translate-y-0 opacity-100 delay-0' : '-translate-y-full opacity-0 delay-[300ms]'
-            }`}
-            style={{ width: '220px' }}
-          >
-            {/* 精准感应区：仅 32px 宽，处于灯体中心 */}
-            <div 
-              className="absolute left-[94px] top-0 h-full w-[32px] cursor-pointer pointer-events-auto z-10"
-              onClick={() => setIsLampOn(!isLampOn)}
-              onMouseMove={handleLampMouseMove}
-              onMouseLeave={() => {
-                setLampRotation(0);
-                setIsLampHovered(false);
-              }}
-            />
-            
-            <div 
-              style={{ 
-                transformOrigin: '50% 0',
-                transform: `rotate(${lampRotation}deg)`,
-                transition: isLampHovered ? 'transform 0.1s ease-out' : 'transform 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
-              }}
-            >
-              <img src="/lamp.png" alt="Dark Mode Lamp" className={`w-full h-auto drop-shadow-2xl transition-all duration-500 ${!isLampOn ? 'brightness-50' : 'brightness-100'}`} />
-            </div>
-          </div>
-
-          {/* 趣味设计：光照效果 */}
-          <div 
-            className={`hidden md:block fixed pointer-events-none transition-opacity ease-in-out ${
-              isDarkMode 
-                ? (isLampOn ? 'opacity-[0.28] duration-500 delay-[900ms]' : 'opacity-[0.05] duration-500 delay-0') 
-                : 'opacity-0 duration-300 delay-0'
-            }`}
-            style={{
-              left: '-286px',
-              top: '58px',
-              width: '815px',
-              height: '731px',
-              background: 'linear-gradient(180deg, #FFD09D 5%, rgba(216, 216, 216, 0) 100%)',
-              filter: 'blur(286px)',
-              mixBlendMode: 'lighten',
-              zIndex: 499
-            }}
+          <DarkModeLamp
+            isDarkMode={isDarkMode}
+            lampRotation={lampRotation}
+            isLampHovered={isLampHovered}
+            isLampOn={isLampOn}
+            setIsLampOn={setIsLampOn}
+            handleLampMouseMove={handleLampMouseMove}
+            setLampRotation={setLampRotation}
+            setIsLampHovered={setIsLampHovered}
           />
         </>
       )}
 
-      {/* 移除了 touchDraggingVar 拖拽浮层 */}
-      
       {/* 主视图区域 */}
       <div className="flex-1 relative flex overflow-hidden">
         {isSettingsOpen && !isMobileDevice ? (
@@ -2116,12 +368,12 @@ const App = () => {
             setLanguage={setLanguage}
             storageMode={storageMode}
             setStorageMode={setStorageMode}
-            handleImportTemplate={handleImportTemplate}
-            handleExportAllTemplates={handleExportAllTemplates}
-            handleResetSystemData={handleRefreshSystemData}
+            handleImportTemplate={(e) => templateManagement.handleImportTemplate(e, setCategories)}
+            handleExportAllTemplates={() => templateManagement.handleExportAllTemplates(categories)}
+            handleResetSystemData={templateManagement.handleRefreshSystemData}
             handleClearAllData={handleClearAllData}
-            handleSelectDirectory={handleSelectDirectory}
-            handleSwitchToLocalStorage={handleSwitchToLocalStorage}
+            handleSelectDirectory={fileSystem.handleSelectDirectory}
+            handleSwitchToLocalStorage={fileSystem.handleSwitchToLocalStorage}
             SYSTEM_DATA_VERSION={SYSTEM_DATA_VERSION}
             t={t}
             globalContainerStyle={globalContainerStyle}
@@ -2144,11 +396,11 @@ const App = () => {
             banks={banks}
             setCategories={setCategories}
             setBanks={setBanks}
-            handleDeleteOption={handleDeleteOption}
-            handleAddOption={handleAddOption}
-            handleDeleteBank={handleDeleteBank}
-            handleUpdateBankCategory={handleUpdateBankCategory}
-            insertVariableToTemplate={insertVariableToTemplate}
+            handleDeleteOption={bankManagement.handleDeleteOption}
+            handleAddOption={bankManagement.handleAddOption}
+            handleDeleteBank={bankManagement.handleDeleteBank}
+            handleUpdateBankCategory={bankManagement.handleUpdateBankCategory}
+            insertVariableToTemplate={editor.insertVariableToTemplate}
             t={t}
             language={language}
             isDarkMode={isDarkMode}
@@ -2156,20 +408,20 @@ const App = () => {
           />
         ) : showDiscoveryOverlay ? (
           <DiscoveryView 
-            filteredTemplates={discoveryTemplates}
+            filteredTemplates={templateFilter.discoveryTemplates}
             setActiveTemplateId={setActiveTemplateId}
-            setDiscoveryView={handleSetDiscoveryView}
+            setDiscoveryView={setDiscoveryView}
             setZoomedImage={setZoomedImage}
             posterScrollRef={posterScrollRef}
             setIsPosterAutoScrollPaused={setIsPosterAutoScrollPaused}
-            currentMasonryStyle={MASONRY_STYLES[masonryStyleKey]}
+            currentMasonryStyle={currentMasonryStyle}
             masonryStyleKey={masonryStyleKey}
             AnimatedSlogan={isMobileDevice ? MobileAnimatedSlogan : AnimatedSlogan}
             isSloganActive={!zoomedImage}
             t={t}
             TAG_STYLES={TAG_STYLES}
             displayTag={displayTag}
-            handleRefreshSystemData={handleRefreshSystemData}
+            handleRefreshSystemData={templateManagement.handleRefreshSystemData}
             language={language}
             setLanguage={setLanguage}
             setIsSettingsOpen={setIsSettingsOpen}
@@ -2182,10 +434,10 @@ const App = () => {
               mobileTab={mobileTab}
               isTemplatesDrawerOpen={isTemplatesDrawerOpen}
               setIsTemplatesDrawerOpen={setIsTemplatesDrawerOpen}
-              setDiscoveryView={handleSetDiscoveryView}
+              setDiscoveryView={setDiscoveryView}
               activeTemplateId={activeTemplateId}
               setActiveTemplateId={setActiveTemplateId} 
-              filteredTemplates={filteredTemplates}
+              filteredTemplates={templateFilter.filteredTemplates}
               searchQuery={searchQuery}
               setSearchQuery={setSearchQuery}
               selectedTags={selectedTags}
@@ -2202,24 +454,24 @@ const App = () => {
               sortOrder={sortOrder}
               setSortOrder={setSortOrder}
               setRandomSeed={setRandomSeed}
-              handleResetTemplate={handleResetTemplate}
-              startRenamingTemplate={startRenamingTemplate}
-              handleDuplicateTemplate={handleDuplicateTemplate}
-              handleExportTemplate={handleExportTemplate}
-              handleDeleteTemplate={handleDeleteTemplate}
-              handleAddTemplate={handleAddTemplate}
+              handleResetTemplate={templateManagement.handleResetTemplate}
+              startRenamingTemplate={templateManagement.startRenamingTemplate}
+              handleDuplicateTemplate={templateManagement.handleDuplicateTemplate}
+              handleExportTemplate={templateManagement.handleExportTemplate}
+              handleDeleteTemplate={templateManagement.handleDeleteTemplate}
+              handleAddTemplate={templateManagement.handleAddTemplate}
               INITIAL_TEMPLATES_CONFIG={INITIAL_TEMPLATES_CONFIG}
               editingTemplateNameId={editingTemplateNameId}
               tempTemplateName={tempTemplateName}
               setTempTemplateName={setTempTemplateName}
               tempTemplateAuthor={tempTemplateAuthor}
               setTempTemplateAuthor={setTempTemplateAuthor}
-              saveTemplateName={saveTemplateName}
+              saveTemplateName={templateManagement.saveTemplateName}
               setEditingTemplateNameId={setEditingTemplateNameId}
               globalContainerStyle={globalContainerStyle}
             />
 
-            {/* --- 2. Main Editor (Middle) --- */}
+            {/* 主编辑器 */}
             <div 
               style={!isMobileDevice ? globalContainerStyle : {}}
               className={`
@@ -2229,302 +481,295 @@ const App = () => {
                 md:rounded-2xl origin-left
               `}
             >
-                <div className={`flex flex-col w-full h-full ${!isMobileDevice ? (isDarkMode ? 'bg-black/20 backdrop-blur-sm rounded-2xl' : 'bg-white/30 backdrop-blur-sm rounded-2xl') : ''}`}>
+              <div className={`flex flex-col w-full h-full ${!isMobileDevice ? (isDarkMode ? 'bg-black/20 backdrop-blur-sm rounded-2xl' : 'bg-white/30 backdrop-blur-sm rounded-2xl') : ''}`}>
                 {/* Mobile Side Drawer Triggers */}
                 {isMobileDevice && (
-                  <>
-                    <div className={`md:hidden absolute left-0 top-1/2 -translate-y-1/2 z-40 transition-all duration-300 ${mobileTab === 'editor' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-                      <button 
-                        onClick={() => setIsTemplatesDrawerOpen(true)}
-                        className={`p-3 backdrop-blur-md rounded-r-2xl shadow-lg border border-l-0 active:scale-95 transition-all ${isDarkMode ? 'bg-black/40 border-white/5 text-gray-600' : 'bg-white/60 border-white/40 text-gray-400'}`}
-                      >
-                        <ChevronRight size={20} />
-                      </button>
-                    </div>
-                    {/* 移除了 Mobile Right Drawer Trigger (BanksSidebar) */}
-                  </>
+                  <div className={`md:hidden absolute left-0 top-1/2 -translate-y-1/2 z-40 transition-all duration-300 ${mobileTab === 'editor' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+                    <button 
+                      onClick={() => setIsTemplatesDrawerOpen(true)}
+                      className={`p-3 backdrop-blur-md rounded-r-2xl shadow-lg border border-l-0 active:scale-95 transition-all ${isDarkMode ? 'bg-black/40 border-white/5 text-gray-600' : 'bg-white/60 border-white/40 text-gray-400'}`}
+                    >
+                      <ChevronRight size={20} />
+                    </button>
+                  </div>
                 )}
               
-              {/* 顶部工具栏 */}
-              {(!isMobileDevice || mobileTab !== 'settings') && (
-                <div className={`px-4 md:px-8 py-3 md:py-4 border-b flex justify-between items-center z-20 h-auto min-h-[60px] md:min-h-[72px] ${isDarkMode ? 'border-white/5' : 'border-gray-100/50'}`}>
-                  <div className="min-w-0 flex-1 mr-4 flex items-center gap-6">
-                    <h1 className={`text-xl md:text-2xl font-black truncate tracking-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{getLocalized(activeTemplate.name, language)}</h1>
-                    
-                    {/* Language Toggle */}
-                    {activeTemplate && (() => {
-                      const templateLangs = activeTemplate.language ? (Array.isArray(activeTemplate.language) ? activeTemplate.language : [activeTemplate.language]) : ['cn', 'en'];
-                      const showLanguageToggle = templateLangs.length > 1;
-                      const supportsChinese = templateLangs.includes('cn');
-                      const supportsEnglish = templateLangs.includes('en');
+                {/* 顶部工具栏 */}
+                {(!isMobileDevice || mobileTab !== 'settings') && (
+                  <div className={`px-4 md:px-8 py-3 md:py-4 border-b flex justify-between items-center z-20 h-auto min-h-[60px] md:min-h-[72px] ${isDarkMode ? 'border-white/5' : 'border-gray-100/50'}`}>
+                    <div className="min-w-0 flex-1 mr-4 flex items-center gap-6">
+                      <h1 className={`text-xl md:text-2xl font-black truncate tracking-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{getLocalized(activeTemplate.name, language)}</h1>
                       
-                      if (!showLanguageToggle) return null;
+                      {/* Language Toggle */}
+                      {activeTemplate && (() => {
+                        const templateLangs = activeTemplate.language ? (Array.isArray(activeTemplate.language) ? activeTemplate.language : [activeTemplate.language]) : ['cn', 'en'];
+                        const showLanguageToggle = templateLangs.length > 1;
+                        const supportsChinese = templateLangs.includes('cn');
+                        const supportsEnglish = templateLangs.includes('en');
+                        
+                        if (!showLanguageToggle) return null;
 
-                      return (
-                        <div className={`flex items-center p-1 rounded-xl border shadow-inner shrink-0 ${isDarkMode ? 'bg-black/20 border-white/5' : 'bg-gray-100/80 border-gray-200'}`}>
+                        return (
+                          <div className={`flex items-center p-1 rounded-xl border shadow-inner shrink-0 ${isDarkMode ? 'bg-black/20 border-white/5' : 'bg-gray-100/80 border-gray-200'}`}>
                             <button 
-                                onClick={() => supportsChinese && setTemplateLanguage('cn')}
-                                disabled={!supportsChinese}
-                                className={`
-                                    text-[10px] font-black tracking-widest transition-all py-1.5 px-3 rounded-lg
-                                    ${!supportsChinese 
-                                        ? 'text-gray-600 cursor-not-allowed opacity-30' 
-                                        : templateLanguage === 'cn' 
-                                            ? (isDarkMode ? 'bg-white/10 text-orange-400 shadow-lg' : 'bg-white text-orange-600 shadow-sm ring-1 ring-black/5') 
-                                            : (isDarkMode ? 'text-gray-500 hover:text-gray-300 hover:bg-white/5' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50')}
-                                `}
+                              onClick={() => supportsChinese && setTemplateLanguage('cn')}
+                              disabled={!supportsChinese}
+                              className={`
+                                text-[10px] font-black tracking-widest transition-all py-1.5 px-3 rounded-lg
+                                ${!supportsChinese 
+                                  ? 'text-gray-600 cursor-not-allowed opacity-30' 
+                                  : templateLanguage === 'cn' 
+                                    ? (isDarkMode ? 'bg-white/10 text-orange-400 shadow-lg' : 'bg-white text-orange-600 shadow-sm ring-1 ring-black/5') 
+                                    : (isDarkMode ? 'text-gray-500 hover:text-gray-300 hover:bg-white/5' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50')}
+                              `}
                             >
-                                CN
+                              CN
                             </button>
                             <button 
-                                onClick={() => supportsEnglish && setTemplateLanguage('en')}
-                                disabled={!supportsEnglish}
-                                className={`
-                                    text-[10px] font-black tracking-widest transition-all py-1.5 px-3 rounded-lg
-                                    ${!supportsEnglish 
-                                        ? 'text-gray-600 cursor-not-allowed opacity-30' 
-                                        : templateLanguage === 'en' 
-                                            ? (isDarkMode ? 'bg-white/10 text-orange-400 shadow-lg' : 'bg-white text-orange-600 shadow-sm ring-1 ring-black/5') 
-                                            : (isDarkMode ? 'text-gray-500 hover:text-gray-300 hover:bg-white/5' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50')}
-                                `}
+                              onClick={() => supportsEnglish && setTemplateLanguage('en')}
+                              disabled={!supportsEnglish}
+                              className={`
+                                text-[10px] font-black tracking-widest transition-all py-1.5 px-3 rounded-lg
+                                ${!supportsEnglish 
+                                  ? 'text-gray-600 cursor-not-allowed opacity-30' 
+                                  : templateLanguage === 'en' 
+                                    ? (isDarkMode ? 'bg-white/10 text-orange-400 shadow-lg' : 'bg-white text-orange-600 shadow-sm ring-1 ring-black/5') 
+                                    : (isDarkMode ? 'text-gray-500 hover:text-gray-300 hover:bg-white/5' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50')}
+                              `}
                             >
-                                EN
+                              EN
                             </button>
-                        </div>
-                      );
-                    })()}
-                  </div>
-                  
-                  <div className="flex items-center gap-2 md:gap-3 shrink-0">
-                     
-                     <div className={`flex p-1 rounded-xl border shadow-inner ${isDarkMode ? 'bg-black/20 border-white/5' : 'bg-gray-100/80 border-gray-200'}`}>
+                          </div>
+                        );
+                      })()}
+                    </div>
+                    
+                    <div className="flex items-center gap-2 md:gap-3 shrink-0">
+                      <div className={`flex p-1 rounded-xl border shadow-inner ${isDarkMode ? 'bg-black/20 border-white/5' : 'bg-gray-100/80 border-gray-200'}`}>
                         <button
-                            onClick={() => setIsEditing(false)}
-                            className={`
-                                p-1.5 md:px-3 md:py-1.5 rounded-lg text-sm font-medium transition-all duration-300 flex items-center gap-1.5
-                                ${!isEditing 
-                                    ? (isDarkMode ? 'bg-white/10 text-orange-400 shadow-lg' : 'bg-white text-orange-600 shadow-sm ring-1 ring-black/5') 
-                                    : (isDarkMode ? 'text-gray-600 hover:text-gray-300 hover:bg-white/5' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50')}
-                            `}
-                            title={t('preview_mode')}
+                          onClick={() => setIsEditing(false)}
+                          className={`
+                            p-1.5 md:px-3 md:py-1.5 rounded-lg text-sm font-medium transition-all duration-300 flex items-center gap-1.5
+                            ${!isEditing 
+                              ? (isDarkMode ? 'bg-white/10 text-orange-400 shadow-lg' : 'bg-white text-orange-600 shadow-sm ring-1 ring-black/5') 
+                              : (isDarkMode ? 'text-gray-600 hover:text-gray-300 hover:bg-white/5' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50')}
+                          `}
+                          title={t('preview_mode')}
                         >
-                            <Eye size={16} /> <span className="hidden md:inline">{t('preview_mode')}</span>
+                          <Eye size={16} /> <span className="hidden md:inline">{t('preview_mode')}</span>
                         </button>
                         <button
-                            onClick={() => setIsEditing(true)}
-                            className={`
-                                p-1.5 md:px-3 md:py-1.5 rounded-lg text-sm font-medium transition-all duration-300 flex items-center gap-1.5
-                                ${isEditing 
-                                    ? (isDarkMode ? 'bg-white/10 text-orange-400 shadow-lg' : 'bg-white text-orange-600 shadow-sm ring-1 ring-black/5') 
-                                    : (isDarkMode ? 'text-gray-600 hover:text-gray-300 hover:bg-white/5' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50')}
-                            `}
-                            title={t('edit_mode')}
+                          onClick={() => setIsEditing(true)}
+                          className={`
+                            p-1.5 md:px-3 md:py-1.5 rounded-lg text-sm font-medium transition-all duration-300 flex items-center gap-1.5
+                            ${isEditing 
+                              ? (isDarkMode ? 'bg-white/10 text-orange-400 shadow-lg' : 'bg-white text-orange-600 shadow-sm ring-1 ring-black/5') 
+                              : (isDarkMode ? 'text-gray-600 hover:text-gray-300 hover:bg-white/5' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50')}
+                          `}
+                          title={t('edit_mode')}
                         >
-                            <Edit3 size={16} /> <span className="hidden md:inline">{t('edit_mode')}</span>
+                          <Edit3 size={16} /> <span className="hidden md:inline">{t('edit_mode')}</span>
                         </button>
-                     </div>
+                      </div>
 
-                    <div className={`h-6 w-px mx-1 hidden md:block ${isDarkMode ? 'bg-white/5' : 'bg-gray-200'}`}></div>
+                      <div className={`h-6 w-px mx-1 hidden md:block ${isDarkMode ? 'bg-white/5' : 'bg-gray-200'}`}></div>
 
-                    <PremiumButton 
+                      <PremiumButton 
                         onClick={handleExportImage} 
                         disabled={isEditing || isExporting} 
                         title={isExporting ? t('exporting') : t('export_image')} 
                         icon={ImageIcon} 
                         color="orange"
                         isDarkMode={isDarkMode}
-                    >
+                      >
                         <span className="hidden sm:inline">{isExporting ? t('exporting') : t('export_image')}</span>
-                    </PremiumButton>
-                    <PremiumButton 
+                      </PremiumButton>
+                      <PremiumButton 
                         onClick={handleCopy} 
                         title={copied ? t('copied') : t('copy_result')} 
                         icon={copied ? Check : CopyIcon} 
                         color={copied ? "emerald" : "orange"}
-                        active={true} // Always active look for CTA
+                        active={true}
                         isDarkMode={isDarkMode}
                         className="transition-all duration-300 transform hover:-translate-y-0.5"
-                    >
-                         <span className="hidden md:inline ml-1">{copied ? t('copied') : t('copy_result')}</span>
-                    </PremiumButton>
+                      >
+                        <span className="hidden md:inline ml-1">{copied ? t('copied') : t('copy_result')}</span>
+                      </PremiumButton>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* 核心内容区 */}
-              <div className={`flex-1 overflow-hidden relative pb-24 md:pb-0 flex flex-col ${mobileTab === 'settings' || mobileTab === 'history' ? 'pt-0' : ''}`}>
+                {/* 核心内容区 */}
+                <div className={`flex-1 overflow-hidden relative pb-24 md:pb-0 flex flex-col ${mobileTab === 'settings' || mobileTab === 'history' ? 'pt-0' : ''}`}>
                   {mobileTab === 'settings' ? (
-                      <div className={`flex-1 flex flex-col overflow-hidden transition-colors duration-300 ${isDarkMode ? 'bg-[#181716]' : 'bg-white'}`}>
-                          <MobileSettingsView 
-                              language={language}
-                              setLanguage={setLanguage}
-                              storageMode={storageMode}
-                              setStorageMode={setStorageMode}
-                              handleImportTemplate={handleImportTemplate}
-                              handleExportAllTemplates={handleExportAllTemplates}
-                              handleCompleteBackup={handleCompleteBackup}
-                              handleImportAllData={handleImportAllData}
-                              handleResetSystemData={handleRefreshSystemData}
-                              handleClearAllData={handleClearAllData}
-                              SYSTEM_DATA_VERSION={SYSTEM_DATA_VERSION}
-                              t={t}
-                              isDarkMode={isDarkMode}
-                          />
-                      </div>
+                    <div className={`flex-1 flex flex-col overflow-hidden transition-colors duration-300 ${isDarkMode ? 'bg-[#181716]' : 'bg-white'}`}>
+                      <MobileSettingsView 
+                        language={language}
+                        setLanguage={setLanguage}
+                        storageMode={storageMode}
+                        setStorageMode={setStorageMode}
+                        handleImportTemplate={(e) => templateManagement.handleImportTemplate(e, app.setCategories)}
+                        handleExportAllTemplates={() => templateManagement.handleExportAllTemplates(categories)}
+                        handleCompleteBackup={() => templateManagement.handleExportAllTemplates(categories)}
+                        handleImportAllData={(e) => templateManagement.handleImportTemplate(e, app.setCategories)}
+                        handleResetSystemData={templateManagement.handleRefreshSystemData}
+                        handleClearAllData={handleClearAllData}
+                        SYSTEM_DATA_VERSION={SYSTEM_DATA_VERSION}
+                        t={t}
+                        isDarkMode={isDarkMode}
+                      />
+                    </div>
                   ) : mobileTab === 'history' ? (
-                      <div className={`flex-1 flex flex-col overflow-hidden transition-colors duration-300 ${isDarkMode ? 'bg-[#181716]' : 'bg-white'}`}>
-                          <HistoryManager 
-                              isDarkMode={isDarkMode}
-                              t={t}
-                              onBack={() => setMobileTab('home')}
-                          />
-                      </div>
+                    <div className={`flex-1 flex flex-col overflow-hidden transition-colors duration-300 ${isDarkMode ? 'bg-[#181716]' : 'bg-white'}`}>
+                      <HistoryManager 
+                        isDarkMode={isDarkMode}
+                        t={t}
+                        onBack={() => setMobileTab('home')}
+                      />
+                    </div>
                   ) : (
                     <>
                       {isEditing && (
-                          <div className={`backdrop-blur-sm ${isDarkMode ? 'bg-black/20' : 'bg-white/30'}`}>
-                            <EditorToolbar 
-                                onInsertClick={() => setIsInsertModalOpen(true)}
-                                canUndo={historyPast.length > 0}
-                                canRedo={historyFuture.length > 0}
-                                onUndo={handleUndo}
-                                onRedo={handleRedo}
-                                t={t}
-                                isDarkMode={isDarkMode}
-                                cursorInVariable={cursorInVariable}
-                                currentGroupId={currentGroupId}
-                                onSetGroup={handleSetGroup}
-                                onRemoveGroup={handleRemoveGroup}
-                            />
-                          </div>
+                        <div className={`backdrop-blur-sm ${isDarkMode ? 'bg-black/20' : 'bg-white/30'}`}>
+                          <EditorToolbar 
+                            onInsertClick={() => setIsInsertModalOpen(true)}
+                            canUndo={history.canUndo}
+                            canRedo={history.canRedo}
+                            onUndo={history.handleUndo}
+                            onRedo={history.handleRedo}
+                            t={t}
+                            isDarkMode={isDarkMode}
+                            cursorInVariable={editor.cursorInVariable}
+                            currentGroupId={editor.currentGroupId}
+                            onSetGroup={editor.handleSetGroup}
+                            onRemoveGroup={editor.handleRemoveGroup}
+                          />
+                        </div>
                       )}
                       
                       {isEditing ? (
-                          <div className="flex-1 relative overflow-hidden">
-                              <VisualEditor
-                                  ref={textareaRef}
-                                  value={getLocalized(activeTemplate.content, templateLanguage)}
-                                  onChange={(e) => {
-                                      const newText = e.target.value;
-                                      if (typeof activeTemplate.content === 'object') {
-                                          updateActiveTemplateContent({
-                                              ...activeTemplate.content,
-                                              [templateLanguage]: newText
-                                          });
-                                      } else {
-                                          updateActiveTemplateContent(newText);
-                                      }
-                                  }}
-                                  banks={banks}
-                                  categories={categories}
-                                  isDarkMode={isDarkMode}
-                              />
-                          </div>
+                        <div className="flex-1 relative overflow-hidden">
+                          <VisualEditor
+                            ref={editor.textareaRef}
+                            value={getLocalized(activeTemplate.content, templateLanguage)}
+                            onChange={(e) => {
+                              const newText = e.target.value;
+                              if (typeof activeTemplate.content === 'object') {
+                                history.updateActiveTemplateContent({
+                                  ...activeTemplate.content,
+                                  [templateLanguage]: newText
+                                });
+                              } else {
+                                history.updateActiveTemplateContent(newText);
+                              }
+                            }}
+                            banks={banks}
+                            categories={categories}
+                            isDarkMode={isDarkMode}
+                          />
+                        </div>
                       ) : (
-                          <><TemplatePreview
-                                  activeTemplate={activeTemplate}
-                                  banks={banks}
-                                  defaults={defaults}
-                                  categories={categories}
-                                  activePopover={activePopover}
-                                  setActivePopover={setActivePopover}
-                                  handleSelect={handleSelect}
-                                  handleAddCustomAndSelect={handleAddCustomAndSelect}
-                                  popoverRef={popoverRef}
-                                  t={t}
-                                  displayTag={displayTag}
-                                  TAG_STYLES={TAG_STYLES}
-                                  setZoomedImage={setZoomedImage}
-                                  fileInputRef={fileInputRef}
-                                  setShowImageUrlInput={setShowImageUrlInput}
-                                  handleResetImage={handleResetImage}
-                                  language={templateLanguage}
-                                  setLanguage={setTemplateLanguage}
-                                  // 标签编辑相关
-                                  TEMPLATE_TAGS={TEMPLATE_TAGS}
-                                  handleUpdateTemplateTags={handleUpdateTemplateTags}
-                                  editingTemplateTags={editingTemplateTags}
-                                  setEditingTemplateTags={setEditingTemplateTags}
-                                  // 多图编辑相关
-                                  setImageUpdateMode={setImageUpdateMode}
-                                  setCurrentImageEditIndex={setCurrentImageEditIndex}
-                                  // 标题编辑相关
-                                  editingTemplateNameId={editingTemplateNameId}
-                                  tempTemplateName={tempTemplateName}
-                                  setTempTemplateName={setTempTemplateName}
-                                  saveTemplateName={saveTemplateName}
-                                  startRenamingTemplate={startRenamingTemplate}
-                                  setEditingTemplateNameId={setEditingTemplateNameId}
-                                  globalContainerStyle={globalContainerStyle}
-                                  onImageGenerated={handleImageGenerated}
-                                  isDarkMode={isDarkMode} />
-                                  </>
+                        <TemplatePreview
+                          activeTemplate={activeTemplate}
+                          banks={banks}
+                          defaults={defaults}
+                          categories={categories}
+                          activePopover={activePopover}
+                          setActivePopover={setActivePopover}
+                          handleSelect={(key, index, value) => {
+                            bankManagement.handleSelect(key, index, value);
+                          }}
+                          handleAddCustomAndSelect={(key, index, newValue) => {
+                            bankManagement.handleAddCustomAndSelect(key, index, newValue, bankManagement.handleAddOption, bankManagement.handleSelect);
+                          }}
+                          popoverRef={popoverRef}
+                          t={t}
+                          displayTag={displayTag}
+                          TAG_STYLES={TAG_STYLES}
+                          setZoomedImage={setZoomedImage}
+                          fileInputRef={fileInputRef}
+                          setShowImageUrlInput={setShowImageUrlInput}
+                          handleResetImage={imageManagement.handleResetImage}
+                          language={templateLanguage}
+                          setLanguage={setTemplateLanguage}
+                          TEMPLATE_TAGS={TEMPLATE_TAGS}
+                          handleUpdateTemplateTags={templateManagement.handleUpdateTemplateTags}
+                          editingTemplateTags={editingTemplateTags}
+                          setEditingTemplateTags={setEditingTemplateTags}
+                          setImageUpdateMode={setImageUpdateMode}
+                          setCurrentImageEditIndex={setCurrentImageEditIndex}
+                          editingTemplateNameId={editingTemplateNameId}
+                          tempTemplateName={tempTemplateName}
+                          setTempTemplateName={setTempTemplateName}
+                          saveTemplateName={templateManagement.saveTemplateName}
+                          startRenamingTemplate={templateManagement.startRenamingTemplate}
+                          setEditingTemplateNameId={setEditingTemplateNameId}
+                          globalContainerStyle={globalContainerStyle}
+                          onImageGenerated={handleImageGenerated}
+                          isDarkMode={isDarkMode}
+                        />
                       )}
                     </>
                   )}
                            
-                           {/* Image URL Input Modal */}
-                           {showImageUrlInput && (
-                               <div 
-                                   className="fixed inset-0 z-[90] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
-                                   onClick={() => { setShowImageUrlInput(false); setImageUrlInput(""); }}
-                               >
-                                   <div 
-                                       className="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full"
-                                       onClick={(e) => e.stopPropagation()}
-                                   >
-                                       <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                                           <Globe size={20} className="text-blue-500" />
-                                           {t('image_url')}
-                                       </h3>
-                                       <input
-                                           autoFocus
-                                           type="text"
-                                           value={imageUrlInput}
-                                           onChange={(e) => setImageUrlInput(e.target.value)}
-                                           placeholder={t('image_url_placeholder')}
-                                           className="w-full px-4 py-3 text-sm border border-gray-300 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                           onKeyDown={(e) => e.key === 'Enter' && handleSetImageUrl()}
-                                       />
-                                       <div className="flex gap-3">
-                                           <button
-                                               onClick={handleSetImageUrl}
-                                               disabled={!imageUrlInput.trim()}
-                                               className="flex-1 px-4 py-2.5 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
-                                           >
-                                               {t('use_url')}
-                                           </button>
-                                           <button
-                                               onClick={() => { setShowImageUrlInput(false); setImageUrlInput(""); }}
-                                               className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition-all"
-                                           >
-                                               {t('cancel')}
-                                           </button>
-                                       </div>
-                                   </div>
-                               </div>
-                           )}
+                  {/* Image URL Input Modal */}
+                  {showImageUrlInput && (
+                    <div 
+                      className="fixed inset-0 z-[90] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
+                      onClick={() => { setShowImageUrlInput(false); setImageUrlInput(""); }}
+                    >
+                      <div 
+                        className="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                          <Globe size={20} className="text-blue-500" />
+                          {t('image_url')}
+                        </h3>
+                        <input
+                          autoFocus
+                          type="text"
+                          value={imageUrlInput}
+                          onChange={(e) => setImageUrlInput(e.target.value)}
+                          placeholder={t('image_url_placeholder')}
+                          className="w-full px-4 py-3 text-sm border border-gray-300 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          onKeyDown={(e) => e.key === 'Enter' && handleSetImageUrl()}
+                        />
+                        <div className="flex gap-3">
+                          <button
+                            onClick={handleSetImageUrl}
+                            disabled={!imageUrlInput.trim()}
+                            className="flex-1 px-4 py-2.5 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                          >
+                            {t('use_url')}
+                          </button>
+                          <button
+                            onClick={() => { setShowImageUrlInput(false); setImageUrlInput(""); }}
+                            className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition-all"
+                          >
+                            {t('cancel')}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-
-            {/* 移除了 BanksSidebar */}
           </div>
         )}
       </div>
       
-      {/* 移除了 AddBankModal */}
-
       {/* 隐藏的图片选择器 */}
       <input
         type="file"
         ref={fileInputRef}
         className="hidden"
         accept="image/*"
-        onChange={handleUploadImage}
+        onChange={imageManagement.handleUploadImage}
       />
 
-      {/* --- Settings Modal - Enhanced UI (Legacy/Mobile) --- */}
+      {/* Settings Modal - Mobile */}
       {isSettingsOpen && isMobileDevice && (
         <div 
           className="fixed inset-0 z-[110] bg-black/40 backdrop-blur-md flex items-center justify-center p-4 md:p-8 animate-in fade-in duration-200"
@@ -2534,9 +779,7 @@ const App = () => {
             className="bg-gradient-to-br from-white via-white to-gray-50/30 w-full max-w-4xl rounded-3xl shadow-2xl overflow-hidden border-2 border-white/60 animate-in zoom-in-95 duration-300"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header with gradient background */}
             <div className="relative flex items-center justify-between px-6 py-5 border-b border-gray-100/80 bg-gradient-to-r from-orange-50/50 via-white to-blue-50/30 backdrop-blur">
-              {/* Decorative gradient overlay */}
               <div className="absolute inset-0 bg-gradient-to-r from-orange-500/5 to-blue-500/5"></div>
               
               <div className="relative flex items-center gap-3 text-gray-800">
@@ -2557,8 +800,7 @@ const App = () => {
             </div>
 
             <div className="p-6 md:p-8 space-y-8 max-h-[75vh] overflow-y-auto">
-              
-              {/* Import / Export - Enhanced */}
+              {/* Import / Export */}
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
                   <div className="w-1 h-5 bg-gradient-to-b from-orange-400 to-orange-600 rounded-full"></div>
@@ -2569,7 +811,7 @@ const App = () => {
                     <input 
                       type="file" 
                       accept=".json" 
-                      onChange={handleImportTemplate}
+                      onChange={(e) => templateManagement.handleImportTemplate(e, setCategories)}
                       className="hidden" 
                       id="import-template-input-modal"
                     />
@@ -2582,7 +824,7 @@ const App = () => {
                     </div>
                   </label>
                   <button
-                    onClick={handleExportAllTemplates}
+                    onClick={() => templateManagement.handleExportAllTemplates(categories)}
                     className="w-full text-center px-5 py-4 text-sm font-semibold bg-gradient-to-br from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-2xl transition-all duration-300 border-2 border-orange-500 hover:border-orange-600 flex items-center justify-center gap-2.5 shadow-md shadow-orange-500/30 hover:shadow-lg hover:shadow-orange-500/40 hover:scale-[1.02]"
                   >
                     <Upload size={18} />
@@ -2598,7 +840,7 @@ const App = () => {
                   <p className="text-sm font-bold tracking-tight text-gray-700">{t('refresh_system')}</p>
                 </div>
                 <button
-                  onClick={handleRefreshSystemData}
+                  onClick={templateManagement.handleRefreshSystemData}
                   className="w-full text-center px-5 py-4 text-sm font-semibold bg-white hover:bg-orange-50 text-orange-600 rounded-2xl transition-all duration-300 border-2 border-orange-100 hover:border-orange-200 flex items-center justify-center gap-2.5 shadow-sm"
                 >
                   <RefreshCw size={18} />
@@ -2606,7 +848,7 @@ const App = () => {
                 </button>
               </div>
 
-              {/* Storage - Enhanced */}
+              {/* Storage */}
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
                   <div className="w-1 h-5 bg-gradient-to-b from-blue-400 to-blue-600 rounded-full"></div>
@@ -2614,7 +856,7 @@ const App = () => {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <button
-                    onClick={handleSwitchToLocalStorage}
+                    onClick={fileSystem.handleSwitchToLocalStorage}
                     className={`relative w-full px-5 py-4 text-sm font-semibold rounded-2xl transition-all duration-300 border-2 flex items-center justify-between overflow-hidden group ${
                       storageMode === 'browser' 
                         ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white border-blue-500 shadow-lg shadow-blue-500/30' 
@@ -2630,12 +872,9 @@ const App = () => {
                         <Check size={18} className="animate-in zoom-in duration-300" />
                       </div>
                     )}
-                    {storageMode === 'browser' && (
-                      <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-transparent"></div>
-                    )}
                   </button>
                   <button
-                    onClick={handleSelectDirectory}
+                    onClick={fileSystem.handleSelectDirectory}
                     disabled={!isFileSystemSupported || isMobileDevice}
                     className={`relative w-full px-5 py-4 text-sm font-semibold rounded-2xl transition-all duration-300 border-2 flex items-center justify-between overflow-hidden group ${
                       storageMode === 'folder' 
@@ -2653,9 +892,6 @@ const App = () => {
                         <Check size={18} className="animate-in zoom-in duration-300" />
                       </div>
                     )}
-                    {storageMode === 'folder' && (
-                      <div className="absolute inset-0 bg-gradient-to-r from-green-400/20 to-transparent"></div>
-                    )}
                   </button>
                 </div>
 
@@ -2668,7 +904,7 @@ const App = () => {
                       <span>{t('auto_save_enabled')}</span>
                     </div>
                     <button
-                      onClick={handleManualLoadFromFolder}
+                      onClick={fileSystem.handleManualLoadFromFolder}
                       className="px-4 py-1.5 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-lg text-xs font-semibold transition-all duration-200 shadow-md hover:shadow-lg hover:scale-105"
                     >
                       {t('load_from_folder')}
@@ -2685,7 +921,7 @@ const App = () => {
                 )}
               </div>
 
-              {/* Danger Zone - Enhanced */}
+              {/* Danger Zone */}
               <div className="space-y-4 pt-4 border-t-2 border-gray-100">
                 <div className="flex items-center gap-2">
                   <div className="w-1 h-5 bg-gradient-to-b from-red-400 to-red-600 rounded-full"></div>
@@ -2704,19 +940,17 @@ const App = () => {
         </div>
       )}
 
-      {/* --- Image Action Menu (Portal) --- */}
+      {/* Image Action Menu */}
       {showImageActionMenu && (() => {
         const buttonEl = window.__imageMenuButtonRef;
         if (!buttonEl) return null;
         const rect = buttonEl.getBoundingClientRect();
         return (
           <>
-            {/* 背景遮罩层 - 点击关闭菜单 */}
             <div 
               className="fixed inset-0 z-[9998]"
               onClick={() => setShowImageActionMenu(false)}
             />
-            {/* 菜单内容 */}
             <div 
               style={{
                 position: 'fixed',
@@ -2754,8 +988,7 @@ const App = () => {
         );
       })()}
 
-      {/* --- Image Lightbox --- */}
-      {/* --- Image View Modal --- */}
+      {/* Image View Modal */}
       {zoomedImage && (
         <ImagePopup
           isOpen={!!zoomedImage}
@@ -2784,157 +1017,146 @@ const App = () => {
         />
       )}
 
-      {/* --- Mobile Bottom Navigation - 5 Tabs --- */}
+      {/* Mobile Bottom Navigation */}
       <div className={`md:hidden fixed bottom-0 left-0 right-0 backdrop-blur-2xl border-t flex justify-around items-center z-[250] h-16 pb-safe shadow-[0_-8px_30px_rgba(0,0,0,0.05)] transition-colors duration-300 ${isDarkMode ? 'bg-[#181716]/25 border-white/5' : 'bg-white/25 border-white/30'}`}>
-          {/* 主页 */}
-          <button 
-             onClick={() => {
-               setMobileTab('home');
-               setDiscoveryView(true);
-               setZoomedImage(null);
-               setIsTemplatesDrawerOpen(false);
-               // 移除了 setIsBanksDrawerOpen
-             }}
-             className="flex flex-col items-center justify-center w-full h-full transition-all active:scale-90 group"
-          >
-             <div className={`p-2 rounded-xl transition-all ${mobileTab === 'home' ? (isDarkMode ? 'bg-white/5' : 'bg-orange-50/50') : ''}`}>
-                <div 
-                  style={{ 
-                    width: '24px', 
-                    height: '24px', 
-                    backgroundColor: mobileTab === 'home' ? '#EA580C' : (isDarkMode ? '#8E9196' : '#6B7280'),
-                    WebkitMaskImage: 'url(/home.svg)',
-                    maskImage: 'url(/home.svg)',
-                    WebkitMaskRepeat: 'no-repeat',
-                    maskRepeat: 'no-repeat',
-                    WebkitMaskPosition: 'center',
-                    maskPosition: 'center',
-                    WebkitMaskSize: 'contain',
-                    maskSize: 'contain',
-                    filter: isDarkMode ? 'none' : 'drop-shadow(1px 1px 0px rgba(255,255,255,0.3))'
-                  }}
-                />
-             </div>
-          </button>
-          
-          {/* 模版详情 (编辑器) */}
-          <button 
-             onClick={() => {
-               setDiscoveryView(false);
-               setZoomedImage(null);
-               setIsTemplatesDrawerOpen(false);
-               // 移除了 setIsBanksDrawerOpen
-               // 强制确保有模板被选中
-               if (templates.length > 0 && !activeTemplateId) {
-                 const firstId = templates[0].id;
-                 setActiveTemplateId(firstId);
-               }
-               setMobileTab('editor');
-             }}
-             className="flex flex-col items-center justify-center w-full h-full transition-all active:scale-90 group"
-          >
-             <div className={`p-2 rounded-xl transition-all ${mobileTab === 'editor' ? (isDarkMode ? 'bg-white/5' : 'bg-orange-50/50') : ''}`}>
-                <div 
-                  style={{ 
-                    width: '24px', 
-                    height: '24px', 
-                    backgroundColor: mobileTab === 'editor' ? '#EA580C' : (isDarkMode ? '#8E9196' : '#6B7280'),
-                    WebkitMaskImage: 'url(/list.svg)',
-                    maskImage: 'url(/list.svg)',
-                    WebkitMaskRepeat: 'no-repeat',
-                    maskRepeat: 'no-repeat',
-                    WebkitMaskPosition: 'center',
-                    maskPosition: 'center',
-                    WebkitMaskSize: 'contain',
-                    maskSize: 'contain',
-                    filter: isDarkMode ? 'none' : 'drop-shadow(1px 1px 0px rgba(255,255,255,0.3))'
-                  }}
-                />
-             </div>
-          </button>
-          
-          {/* 历史记录 */}
-          <button 
-             onClick={() => {
-               setMobileTab('history');
-               setDiscoveryView(false);
-               setZoomedImage(null);
-               setIsTemplatesDrawerOpen(false);
-               // 移除了 setIsBanksDrawerOpen
-             }}
-             className="flex flex-col items-center justify-center w-full h-full transition-all active:scale-90 group"
-          >
-             <div className={`p-2 rounded-xl transition-all ${mobileTab === 'history' ? (isDarkMode ? 'bg-white/5' : 'bg-orange-50/50') : ''}`}>
-                <div className={`${mobileTab === 'history' ? 'text-[#EA580C]' : (isDarkMode ? 'text-[#8E9196]' : 'text-[#6B7280]')} transition-colors`}>
-                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                     <circle cx="12" cy="12" r="10"/>
-                     <polyline points="12,6 12,12 16,14"/>
-                   </svg>
-                </div>
-             </div>
-          </button>
-          
-          {/* 设置 */}
-          <button 
-             onClick={() => {
-               setMobileTab('settings');
-               setDiscoveryView(false);
-               setZoomedImage(null);
-               setIsTemplatesDrawerOpen(false);
-               // 移除了 setIsBanksDrawerOpen
-             }}
-             className="flex flex-col items-center justify-center w-full h-full transition-all active:scale-90 group"
-          >
-             <div className={`p-2 rounded-xl transition-all ${mobileTab === 'settings' ? (isDarkMode ? 'bg-white/5' : 'bg-orange-50/50') : ''}`}>
-                <div 
-                  style={{ 
-                    width: '24px', 
-                    height: '24px', 
-                    backgroundColor: mobileTab === 'settings' ? '#EA580C' : (isDarkMode ? '#8E9196' : '#6B7280'),
-                    WebkitMaskImage: 'url(/setting.svg)',
-                    maskImage: 'url(/setting.svg)',
-                    WebkitMaskRepeat: 'no-repeat',
-                    maskRepeat: 'no-repeat',
-                    WebkitMaskPosition: 'center',
-                    maskPosition: 'center',
-                    WebkitMaskSize: 'contain',
-                    maskSize: 'contain',
-                    filter: isDarkMode ? 'none' : 'drop-shadow(1px 1px 0px rgba(255,255,255,0.3))'
-                  }}
-                />
-             </div>
-          </button>
+        <button 
+          onClick={() => {
+            setMobileTab('home');
+            setDiscoveryView(true);
+            setZoomedImage(null);
+            setIsTemplatesDrawerOpen(false);
+          }}
+          className="flex flex-col items-center justify-center w-full h-full transition-all active:scale-90 group"
+        >
+          <div className={`p-2 rounded-xl transition-all ${mobileTab === 'home' ? (isDarkMode ? 'bg-white/5' : 'bg-orange-50/50') : ''}`}>
+            <div 
+              style={{ 
+                width: '24px', 
+                height: '24px', 
+                backgroundColor: mobileTab === 'home' ? '#EA580C' : (isDarkMode ? '#8E9196' : '#6B7280'),
+                WebkitMaskImage: 'url(/home.svg)',
+                maskImage: 'url(/home.svg)',
+                WebkitMaskRepeat: 'no-repeat',
+                maskRepeat: 'no-repeat',
+                WebkitMaskPosition: 'center',
+                maskPosition: 'center',
+                WebkitMaskSize: 'contain',
+                maskSize: 'contain',
+                filter: isDarkMode ? 'none' : 'drop-shadow(1px 1px 0px rgba(255,255,255,0.3))'
+              }}
+            />
+          </div>
+        </button>
+        
+        <button 
+          onClick={() => {
+            setDiscoveryView(false);
+            setZoomedImage(null);
+            setIsTemplatesDrawerOpen(false);
+            if (templates.length > 0 && !activeTemplateId) {
+              const firstId = templates[0].id;
+              setActiveTemplateId(firstId);
+            }
+            setMobileTab('editor');
+          }}
+          className="flex flex-col items-center justify-center w-full h-full transition-all active:scale-90 group"
+        >
+          <div className={`p-2 rounded-xl transition-all ${mobileTab === 'editor' ? (isDarkMode ? 'bg-white/5' : 'bg-orange-50/50') : ''}`}>
+            <div 
+              style={{ 
+                width: '24px', 
+                height: '24px', 
+                backgroundColor: mobileTab === 'editor' ? '#EA580C' : (isDarkMode ? '#8E9196' : '#6B7280'),
+                WebkitMaskImage: 'url(/list.svg)',
+                maskImage: 'url(/list.svg)',
+                WebkitMaskRepeat: 'no-repeat',
+                maskRepeat: 'no-repeat',
+                WebkitMaskPosition: 'center',
+                maskPosition: 'center',
+                WebkitMaskSize: 'contain',
+                maskSize: 'contain',
+                filter: isDarkMode ? 'none' : 'drop-shadow(1px 1px 0px rgba(255,255,255,0.3))'
+              }}
+            />
+          </div>
+        </button>
+        
+        <button 
+          onClick={() => {
+            setMobileTab('history');
+            setDiscoveryView(false);
+            setZoomedImage(null);
+            setIsTemplatesDrawerOpen(false);
+          }}
+          className="flex flex-col items-center justify-center w-full h-full transition-all active:scale-90 group"
+        >
+          <div className={`p-2 rounded-xl transition-all ${mobileTab === 'history' ? (isDarkMode ? 'bg-white/5' : 'bg-orange-50/50') : ''}`}>
+            <div className={`${mobileTab === 'history' ? 'text-[#EA580C]' : (isDarkMode ? 'text-[#8E9196]' : 'text-[#6B7280]')} transition-colors`}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12,6 12,12 16,14"/>
+              </svg>
+            </div>
+          </div>
+        </button>
+        
+        <button 
+          onClick={() => {
+            setMobileTab('settings');
+            setDiscoveryView(false);
+            setZoomedImage(null);
+            setIsTemplatesDrawerOpen(false);
+          }}
+          className="flex flex-col items-center justify-center w-full h-full transition-all active:scale-90 group"
+        >
+          <div className={`p-2 rounded-xl transition-all ${mobileTab === 'settings' ? (isDarkMode ? 'bg-white/5' : 'bg-orange-50/50') : ''}`}>
+            <div 
+              style={{ 
+                width: '24px', 
+                height: '24px', 
+                backgroundColor: mobileTab === 'settings' ? '#EA580C' : (isDarkMode ? '#8E9196' : '#6B7280'),
+                WebkitMaskImage: 'url(/setting.svg)',
+                maskImage: 'url(/setting.svg)',
+                WebkitMaskRepeat: 'no-repeat',
+                maskRepeat: 'no-repeat',
+                WebkitMaskPosition: 'center',
+                maskPosition: 'center',
+                WebkitMaskSize: 'contain',
+                maskSize: 'contain',
+                filter: isDarkMode ? 'none' : 'drop-shadow(1px 1px 0px rgba(255,255,255,0.3))'
+              }}
+            />
+          </div>
+        </button>
 
-          {/* 暗色模式切换 */}
-          <button 
-             onClick={() => setIsDarkMode(!isDarkMode)}
-             className="flex flex-col items-center justify-center w-full h-full transition-all active:scale-90 group"
-          >
-             <div className="p-2 rounded-xl transition-all">
-                <div className={`${isDarkMode ? 'text-[#8E9196]' : 'text-[#6B7280]'} transition-colors`}>
-                   {isDarkMode ? <Sun size={24} /> : <Moon size={24} />}
-                </div>
-             </div>
-          </button>
+        <button 
+          onClick={() => setIsDarkMode(!isDarkMode)}
+          className="flex flex-col items-center justify-center w-full h-full transition-all active:scale-90 group"
+        >
+          <div className="p-2 rounded-xl transition-all">
+            <div className={`${isDarkMode ? 'text-[#8E9196]' : 'text-[#6B7280]'} transition-colors`}>
+              {isDarkMode ? <Sun size={24} /> : <Moon size={24} />}
+            </div>
+          </div>
+        </button>
       </div>
 
-      {/* 移除了 CategoryManager Modal */}
-
-{/* --- Insert Variable Modal --- */}
+      {/* Insert Variable Modal */}
       <InsertVariableModal
         isOpen={isInsertModalOpen}
         onClose={() => setIsInsertModalOpen(false)}
         categories={categories}
         banks={banks}
         onSelect={(key) => {
-            insertVariableToTemplate(key);
-            setIsInsertModalOpen(false);
+          editor.insertVariableToTemplate(key);
+          setIsInsertModalOpen(false);
         }}
         t={t}
-        language={templateLanguage} // 注意这里通常使用 templateLanguage 以匹配内容
+        language={templateLanguage}
         isDarkMode={isDarkMode}
       />
-      {/* --- AI Generated Images Modal --- */}
+
+      {/* AI Generated Images Modal */}
       <ImageModal
         images={generatedImages}
         isOpen={showImageModal}
@@ -2946,44 +1168,22 @@ const App = () => {
           try {
             switch (action) {
               case 'download':
-                // 使用文件管理器下载图片
                 const { default: fileManager } = await import('./utils/fileManager.js');
-                
-                // 获取图片blob
                 const response = await fetch(image.url);
                 const blob = await response.blob();
-                
-                // 生成文件名
-                const filename = fileManager.generateFilename(
-                  image.provider, 
-                  'png'
-                );
-                
-                // 保存文件
+                const filename = fileManager.generateFilename(image.provider, 'png');
                 await fileManager.saveImageFile(blob, filename);
                 break;
-                
               case 'copy':
-                // 使用文件管理器复制图片到剪贴板
                 const { default: fileManagerCopy } = await import('./utils/fileManager.js');
-                
-                // 获取图片blob
                 const responseCopy = await fetch(image.url);
                 const blobCopy = await responseCopy.blob();
-                
-                // 复制到剪贴板
                 await fileManagerCopy.copyImageToClipboard(blobCopy);
                 break;
-                
               case 'history':
-                // 使用存储管理器保存到历史记录
                 const { default: storageAdapter } = await import('./utils/storage.js');
-                
-                // 获取图片blob
                 const responseHistory = await fetch(image.url);
                 const blobHistory = await responseHistory.blob();
-                
-                // 准备元数据
                 const metadata = {
                   prompt: image.prompt,
                   images: [{
@@ -2998,17 +1198,13 @@ const App = () => {
                   parameters: image.parameters || {},
                   createdAt: image.timestamp || Date.now()
                 };
-                
-                // 保存到历史记录
                 await storageAdapter.saveImage(image.id, blobHistory, metadata);
                 break;
-                
               default:
                 console.warn('Unknown save action:', action);
             }
           } catch (error) {
             console.error('Save operation failed:', error);
-            // 这里可以添加用户友好的错误提示
             alert(`保存失败: ${error.message}`);
           }
         }}
@@ -3017,72 +1213,40 @@ const App = () => {
         language={language}
       />
 
-      {/* --- 数据更新提示 (模板和词库) --- */}
-      {showDataUpdateNotice && (
-        <div className="fixed inset-0 z-[200] bg-black/70 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 transition-all">
-            <div className="flex items-center gap-3 mb-4 text-orange-600">
-              <div className="p-2 bg-orange-100 rounded-lg">
-                <RefreshCw size={24} />
-              </div>
-              <h3 className="text-xl font-bold">{t('update_available_title')}</h3>
-            </div>
-            <p className="text-gray-600 mb-6 leading-relaxed">
-              {t('update_available_msg')}
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => {
-                  setLastAppliedDataVersion(SYSTEM_DATA_VERSION);
-                  setShowDataUpdateNotice(false);
-                }}
-                className="flex-1 px-4 py-2.5 border border-gray-200 text-gray-500 rounded-xl hover:bg-gray-50 transition-colors font-medium"
-              >
-                {t('later')}
-              </button>
-              <button
-                onClick={handleAutoUpdate}
-                className="flex-1 px-4 py-2.5 bg-orange-500 text-white rounded-xl hover:bg-orange-600 transition-colors shadow-lg shadow-orange-500/20 font-bold"
-              >
-                {t('update_now')}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* 数据更新提示 */}
+      <UpdateNotice
+        isOpen={showDataUpdateNotice}
+        onClose={() => {
+          setLastAppliedDataVersion(SYSTEM_DATA_VERSION);
+          setShowDataUpdateNotice(false);
+        }}
+        onUpdate={() => {
+          templateManagement.handleAutoUpdate();
+          setShowDataUpdateNotice(false);
+        }}
+        t={t}
+      />
 
-      {/* --- 应用刷新提示 (应用版本更新) --- */}
-      {showAppUpdateNotice && (
-        <div className="fixed bottom-20 left-4 right-4 md:left-auto md:right-8 md:bottom-8 z-[150]">
-          <div className="bg-blue-600 text-white p-4 rounded-2xl shadow-2xl flex items-center gap-4 max-w-md ml-auto border border-blue-400">
-            <div className="p-2 bg-white/20 rounded-xl">
-              <Sparkles size={24} />
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-medium leading-snug">
-                {updateNoticeType === 'app' ? t('app_update_available_msg') : t('data_update_available_msg')}
-              </p>
-            </div>
-            <button
-              onClick={() => {
-                window.location.reload();
-              }}
-              className="px-4 py-2 bg-white text-blue-600 rounded-xl text-sm font-bold hover:bg-blue-50 transition-colors shadow-lg shadow-black/10 whitespace-nowrap"
-            >
-              {t('refresh_now')}
-            </button>
-            <button 
-              onClick={() => setShowAppUpdateNotice(false)}
-              className="p-1 hover:bg-white/10 rounded-full transition-colors"
-            >
-              <X size={18} />
-            </button>
-          </div>
-        </div>
-      )}
-
+      {/* 应用更新提示 */}
+      <AppUpdateNotice
+        isOpen={showAppUpdateNotice}
+        onClose={() => setShowAppUpdateNotice(false)}
+        onRefresh={() => window.location.reload()}
+        updateNoticeType={updateNoticeType}
+        t={t}
+      />
     </div>
   );
 };
 
+// App 组件（包装 Provider）
+const App = () => {
+  return (
+    <AppProvider>
+      <AppContent />
+    </AppProvider>
+  );
+};
+
 export default App;
+

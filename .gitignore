@@ -42,3 +42,4 @@ Backup/
 *.git_latest
 App-clean.jsx
 重构完成-*.md
+backend/config/ai-providers.json
