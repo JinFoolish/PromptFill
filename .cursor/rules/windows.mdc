@@ -1,0 +1,7 @@
+---
+alwaysApply: true
+---
+
+shell is a power shell
+
+use 'npm run web:dev' to start a test 

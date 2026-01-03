@@ -5,6 +5,7 @@ import { getSystemLanguage } from '../utils/helpers';
 import { INITIAL_TEMPLATES_CONFIG, SYSTEM_DATA_VERSION } from '../data/templates';
 import { INITIAL_BANKS, INITIAL_DEFAULTS, INITIAL_CATEGORIES } from '../data/banks';
 import { MASONRY_STYLES } from '../constants/masonryStyles';
+import { toggleDarkMode } from '../utils/themeManager';
 
 /**
  * 核心应用状态管理 Hook
@@ -33,6 +34,11 @@ export const useAppState = () => {
   const [isDarkMode, setIsDarkMode] = useStickyState(false, "app_dark_mode_v1");
   const [showDataUpdateNotice, setShowDataUpdateNotice] = useState(false);
   const [showAppUpdateNotice, setShowAppUpdateNotice] = useState(false);
+
+  // 同步 dark mode 状态到 HTML 根元素
+  useEffect(() => {
+    toggleDarkMode(isDarkMode);
+  }, [isDarkMode]);
 
   // UI State
   const [isEditing, setIsEditing] = useState(false);

@@ -2,6 +2,11 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { X, ChevronLeft, ChevronRight, Sparkles, ImageIcon } from 'lucide-react';
 import { getLocalized } from '../utils/helpers';
 import { Button } from './ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogClose,
+} from './ui/dialog';
 
 const ImagePopup = React.memo(({ 
   isOpen,
@@ -37,6 +42,14 @@ const ImagePopup = React.memo(({
   });
 
   const currentImageUrl = allImages[currentIndex] || imageUrl;
+
+  // 截断标题到最多六个字
+  const truncateTitle = (title) => {
+    if (!title) return '';
+    const titleStr = String(title);
+    if (titleStr.length <= 6) return titleStr;
+    return titleStr.slice(0, 6) + '...';
+  };
 
   // 锁定/解锁背景滚动
   useEffect(() => {
@@ -104,42 +117,70 @@ const ImagePopup = React.memo(({
     touchStartY.current = 0;
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div 
-        className={`fixed inset-0 z-[200] flex items-center justify-center p-4 md:p-10 animate-in fade-in duration-500 overflow-hidden ${className}`}
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent 
+        className={`!max-w-none !w-screen !h-screen md:!w-auto md:!h-auto md:!max-w-7xl !p-0 !gap-0 !border-0 !bg-transparent !overflow-hidden !fixed !left-0 !top-0 md:!left-[50%] md:!top-[50%] md:!translate-x-[-50%] md:!translate-y-[-50%] !translate-x-0 !translate-y-0 !shadow-none !z-[210] !grid-cols-none [&>button]:hidden ${className}`}
         onMouseMove={(e) => setModalMousePos({ x: e.clientX, y: e.clientY })}
-        onClick={onClose}
-    >
-        {/* Background Layer - Static image + deep mask to prevent flickering from discovery view */}
+        onEscapeKeyDown={(e) => {
+          e.preventDefault();
+          onClose();
+        }}
+      >
+        {/* Override DialogContent and DialogOverlay styles */}
+        <style>{`
+          [data-radix-dialog-content] {
+            grid-template-columns: none !important;
+            display: block !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            max-width: none !important;
+            position: relative !important;
+          }
+          [data-radix-dialog-content] > button[aria-label] {
+            display: none !important;
+          }
+          [data-radix-dialog-overlay] {
+            background-image: url(/background1.png) !important;
+            background-size: cover !important;
+            background-position: center !important;
+            background-repeat: no-repeat !important;
+            background-color: rgba(0, 0, 0, 0.85) !important;
+            backdrop-filter: blur(32px) !important;
+            -webkit-backdrop-filter: blur(32px) !important;
+          }
+          @media (min-width: 768px) {
+            [data-radix-dialog-content] {
+              width: auto !important;
+              height: auto !important;
+              max-width: 80rem !important;
+            }
+          }
+        `}</style>
+
         <div 
-          className="absolute inset-0 z-[-1] bg-cover bg-center bg-no-repeat"
-          style={{ 
-            backgroundImage: 'url(/background1.png)',
+          className="w-full h-full md:h-auto flex flex-col md:flex-row items-center justify-center gap-6 md:gap-20 z-[110] p-4 md:p-10 pointer-events-auto relative"
+          onClick={(e) => {
+            // 阻止内容区域的点击事件冒泡，防止关闭对话框
+            e.stopPropagation();
           }}
         >
-          <div className="absolute inset-0 bg-black/85 backdrop-blur-3xl"></div>
-        </div>
-
-        <button 
-            className="absolute top-6 right-6 md:top-8 md:right-8 text-white/40 hover:text-white transition-colors p-2 rounded-full hover:bg-white/10 z-[120]"
+          {/* Custom Close Button - 放在内容区域内部，确保在最上层 */}
+          <button 
+            className="absolute top-6 right-6 md:top-8 md:right-8 text-white/60 hover:text-white transition-all p-3 rounded-full hover:bg-white/20 z-[200] cursor-pointer backdrop-blur-sm border border-white/10 shadow-lg"
             onClick={onClose}
-        >
-            <X size={32} />
-        </button>
-        
-        <div 
-            className="max-w-7xl w-full h-full md:h-auto flex flex-col md:flex-row items-center justify-center gap-6 md:gap-20 z-[110]"
-            onClick={(e) => e.stopPropagation()}
-        >
+            aria-label="关闭"
+            style={{ position: 'absolute' }}
+          >
+            <X size={28} strokeWidth={2.5} />
+          </button>
             {/* Left: Image Section with 3D Effect */}
             <div 
-              className={`flex-shrink-0 flex justify-center items-center perspective-[1000px] relative group/modal-img flex-1`}
+              className={`flex-shrink-0 flex justify-center items-center perspective-[1000px] relative group/modal-img flex-1 min-w-0 w-full md:w-auto`}
               style={{ perspective: '1200px' }}
             >
                 <div 
-                  className="relative transition-transform duration-200 ease-out h-full flex items-center justify-center"
+                  className="relative transition-transform duration-200 ease-out h-full w-full flex items-center justify-center"
                   style={{ 
                     transform: `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`,
                     transformStyle: 'preserve-3d'
@@ -154,7 +195,7 @@ const ImagePopup = React.memo(({
                       key={currentImageUrl}
                       src={currentImageUrl} 
                       alt="Preview" 
-                      className={`max-w-full rounded-2xl shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] border border-white/20 animate-in fade-in duration-300 max-h-[75vh] object-contain`}
+                      className={`w-auto h-auto max-w-[30vw] md:max-w-[30vw] max-h-[60vh] md:max-h-[60vh] rounded-2xl shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] border border-white/20 animate-in fade-in duration-300 object-contain`}
                       style={{ transform: 'translateZ(20px)' }}
                   />
                 </div>
@@ -193,9 +234,9 @@ const ImagePopup = React.memo(({
             {showTemplateInfo && template && (
               <div className={`flex flex-col items-start animate-in slide-in-from-right-10 duration-700 delay-150 overflow-hidden w-full md:w-[450px] mt-auto`}>
                   <div className={`mb-4 md:mb-8`}>
-                      <h2 className={`font-bold text-white mb-2 md:mb-3 tracking-tight leading-tight text-4xl md:text-5xl`}>
-                          {getLocalized(template.name, language)}
-                      </h2>
+                      <h3 className={`font-bold text-white mb-2 md:mb-3 tracking-tight leading-tight text-3xl md:text-4xl`}>
+                          {truncateTitle(getLocalized(template.name, language))}
+                      </h3>
                       {template.author && (
                         <div className="mb-4 opacity-70">
                           <span className="text-sm font-bold text-white/90 tracking-wide">{template.author}</span>
@@ -264,7 +305,8 @@ const ImagePopup = React.memo(({
               </div>
             )}
         </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 });
 
