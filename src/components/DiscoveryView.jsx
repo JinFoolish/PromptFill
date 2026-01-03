@@ -30,66 +30,8 @@ export const DiscoveryView = React.memo(({
   globalContainerStyle,
   masonryStyleKey
 }) => {
-    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-
-  if (isMobile) {
-    // ... 保持移动端逻辑不变
-    return (
-      <div 
-        className={`fixed inset-0 z-10 flex flex-col overflow-y-auto pb-32 md:pb-20 ${isDarkMode ? '' : 'mesh-gradient-bg'}`}
-        style={isDarkMode ? { background: 'linear-gradient(180deg, #323131 0%, #181716 100%)' } : {}}
-      >
-        <div className="flex flex-col w-full min-h-full px-5 py-8 gap-6">
-          {/* 1. 顶部 SVG 标题区域 */}
-          <div className="w-full flex justify-center px-4">
-            <img 
-              src={isDarkMode ? "/Title_Dark.svg" : "/Title.svg"} 
-              alt="Prompt Fill Logo" 
-              className="w-full max-w-[280px] h-auto"
-            />
-          </div>
-
-          {/* 2. 动态文字区 */}
-          <div className="w-full">
-            <AnimatedSlogan isActive={isSloganActive} language={language} isDarkMode={isDarkMode} />
-          </div>
-
-          {/* 3. 图像展示（单列） */}
-          <div className="flex flex-col gap-6 mt-2">
-            {filteredTemplates.map(t_item => (
-              <div 
-                key={t_item.id}
-                onClick={() => {
-                  setZoomedImage(t_item.imageUrl);
-                }}
-                className={`w-full rounded-3xl overflow-hidden shadow-sm border active:scale-[0.98] transition-all ${isDarkMode ? 'bg-[#2A2726] border-white/5' : 'bg-white border-gray-100'}`}
-              >
-                <div className="relative w-full bg-gray-50/5">
-                  {t_item.imageUrl ? (
-                    <img 
-                      src={t_item.imageUrl} 
-                      alt={getLocalized(t_item.name, language)} 
-                      className="w-full h-auto block"
-                      referrerPolicy="no-referrer"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div className="w-full aspect-[4/3] flex items-center justify-center text-gray-300">
-                      <ImageIcon size={48} strokeWidth={1} />
-                    </div>
-                  )}
-                  {/* Title Overlay */}
-                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-5 pt-10 rounded-b-3xl">
-                    <h3 className="text-white font-bold text-lg">{getLocalized(t_item.name, language)}</h3>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // 移动端适配已禁用，通过配置接口可重新启用
+  // 如需启用移动端视图，请修改 src/config/mobileConfig.js 中的 ENABLE_MOBILE_ADAPTATION
 
   return (
     <div 

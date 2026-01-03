@@ -14,11 +14,12 @@ export const exportTemplate = async (template, language, showToast = alert) => {
     const dataBlob = new Blob([dataStr], { type: 'application/json' });
     const filename = `${templateName.replace(/\s+/g, '_')}_template.json`;
     
-    // 检测是否为移动设备（尤其是iOS）
-    const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
-    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+    // 移动端适配已禁用，通过配置接口可重新启用
+    // import { isMobileDevice, isMobileUserAgent } from '../config/mobileConfig';
+    const isMobileDevice = false; // 使用配置接口
+    const isIOS = false; // 使用配置接口
     
-    if (isMobileDevice && navigator.share) {
+    if (false && isMobileDevice && navigator.share) {
       // 移动端：使用 Web Share API
       try {
         const file = new File([dataBlob], filename, { type: 'application/json' });
@@ -83,11 +84,11 @@ export const exportAllTemplates = async (templates, banks, categories, showToast
     const dataBlob = new Blob([dataStr], { type: 'application/json' });
     const filename = `prompt_fill_backup_${Date.now()}.json`;
     
-    // 检测是否为移动设备（尤其是iOS）
-    const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
-    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+    // 移动端适配已禁用，通过配置接口可重新启用
+    const isMobileDevice = false; // 使用配置接口
+    const isIOS = false; // 使用配置接口
     
-    if (isMobileDevice && navigator.share) {
+    if (false && isMobileDevice && navigator.share) {
       // 移动端：使用 Web Share API
       try {
         const file = new File([dataBlob], filename, { type: 'application/json' });

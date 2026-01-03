@@ -21,11 +21,12 @@ const ImagePopup = React.memo(({
   const [modalMousePos, setModalMousePos] = useState({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
   const [isTextExpanded, setIsTextExpanded] = useState(false);
   const touchStartY = useRef(0);
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  // 移动端适配已禁用，通过配置接口可重新启用
+  const isMobile = false; // 使用配置接口: import { isMobileDevice } from '../config/mobileConfig';
 
-  // 陀螺仪支持
+  // 陀螺仪支持 (已禁用)
   useEffect(() => {
-    if (!isMobile || !isOpen) return;
+    if (true || !isMobile || !isOpen) return; // 移动端适配已禁用
 
     const handleOrientation = (e) => {
       // 当卡片展开时，暂停陀螺仪 3D 效果更新，优先保证文字滚动
@@ -128,7 +129,8 @@ const ImagePopup = React.memo(({
 
   if (!isOpen) return null;
 
-  if (isMobile) {
+  // 移动端视图已禁用，通过配置接口可重新启用
+  if (false && isMobile) {
     return (
       <div 
           className={`fixed inset-0 z-[200] flex flex-col animate-in fade-in duration-500 overflow-hidden ${className}`}
@@ -282,7 +284,7 @@ const ImagePopup = React.memo(({
   return (
     <div 
         className={`fixed inset-0 z-[200] flex items-center justify-center p-4 md:p-10 animate-in fade-in duration-500 overflow-hidden ${className}`}
-        onMouseMove={(e) => !isMobile && setModalMousePos({ x: e.clientX, y: e.clientY })}
+        onMouseMove={(e) => setModalMousePos({ x: e.clientX, y: e.clientY })}
         onClick={onClose}
     >
         {/* Background Layer - Static image + deep mask to prevent flickering from discovery view */}
@@ -299,7 +301,7 @@ const ImagePopup = React.memo(({
             className="absolute top-6 right-6 md:top-8 md:right-8 text-white/40 hover:text-white transition-colors p-2 rounded-full hover:bg-white/10 z-[120]"
             onClick={onClose}
         >
-            <X size={isMobile ? 24 : 32} />
+            <X size={32} />
         </button>
         
         <div 

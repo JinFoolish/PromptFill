@@ -28,19 +28,16 @@ import {
   TemplatesSidebar,
   BanksView,
   DiscoveryView,
-  MobileSettingsView,
   SettingsView,
   Sidebar,
   ImageModal,
   ImagePopup,
   HistoryManager,
   AnimatedSlogan,
-  MobileAnimatedSlogan,
   UpdateNotice,
   AppUpdateNotice,
   DarkModeLamp
 } from './components';
-import MobileTabBar from './components/MobileTabBar';
 
 // Toast 消息函数（简单实现）
 const showToastMessage = (message) => {
@@ -305,13 +302,11 @@ const AppContent = () => {
       className={`flex h-screen w-screen overflow-hidden ${isDarkMode ? '' : 'mesh-gradient-bg md:p-4'}`}
       style={isDarkMode ? { 
         background: 'linear-gradient(180deg, #323131 0%, #181716 100%)',
-        padding: isMobileDevice ? '0' : '16px'
+        padding: '16px'
       } : {}}
     >
-      {/* 桌面端全局侧边栏 */}
-      {!isMobileDevice && (
-        <>
-          <Sidebar 
+      {/* 全局侧边栏 */}
+      <Sidebar 
             activeTab={isSettingsOpen ? 'settings' : (isHistoryOpen ? 'history' : (isBanksViewOpen ? 'banks' : (showDiscoveryOverlay ? 'home' : 'details')))}
             onHome={() => {
               setIsSettingsOpen(false);
@@ -357,12 +352,10 @@ const AppContent = () => {
             setLampRotation={setLampRotation}
             setIsLampHovered={setIsLampHovered}
           />
-        </>
-      )}
 
       {/* 主视图区域 */}
       <div className="flex-1 relative flex overflow-hidden">
-        {isSettingsOpen && !isMobileDevice ? (
+        {isSettingsOpen ? (
           <SettingsView
             language={language}
             setLanguage={setLanguage}
@@ -379,7 +372,7 @@ const AppContent = () => {
             globalContainerStyle={globalContainerStyle}
             isDarkMode={isDarkMode}
           />
-        ) : isHistoryOpen && !isMobileDevice ? (
+        ) : isHistoryOpen ? (
           <div 
             style={globalContainerStyle}
             className={`flex-1 flex flex-col overflow-hidden ${isDarkMode ? 'bg-black/20 backdrop-blur-sm rounded-2xl' : 'bg-white/30 backdrop-blur-sm rounded-2xl'}`}
@@ -390,7 +383,7 @@ const AppContent = () => {
               className="flex-1"
             />
           </div>
-        ) : isBanksViewOpen && !isMobileDevice ? (
+        ) : isBanksViewOpen ? (
           <BanksView
             categories={categories}
             banks={banks}
@@ -416,7 +409,7 @@ const AppContent = () => {
             setIsPosterAutoScrollPaused={setIsPosterAutoScrollPaused}
             currentMasonryStyle={currentMasonryStyle}
             masonryStyleKey={masonryStyleKey}
-            AnimatedSlogan={isMobileDevice ? MobileAnimatedSlogan : AnimatedSlogan}
+            AnimatedSlogan={AnimatedSlogan}
             isSloganActive={!zoomedImage}
             t={t}
             TAG_STYLES={TAG_STYLES}
@@ -473,30 +466,12 @@ const AppContent = () => {
 
             {/* 主编辑器 */}
             <div 
-              style={!isMobileDevice ? globalContainerStyle : {}}
-              className={`
-                ${(mobileTab === 'editor' || mobileTab === 'settings' || mobileTab === 'history') ? 'flex fixed inset-0 z-50 md:static md:bg-transparent' : 'hidden'} 
-                ${(mobileTab === 'editor' || mobileTab === 'settings' || mobileTab === 'history') && isMobileDevice ? (isDarkMode ? 'bg-[#242120]' : 'bg-white') : ''}
-                md:flex flex-1 flex-col h-full overflow-hidden relative
-                md:rounded-2xl origin-left
-              `}
+              style={globalContainerStyle}
+              className="flex flex-1 flex-col h-full overflow-hidden relative rounded-2xl origin-left"
             >
-              <div className={`flex flex-col w-full h-full ${!isMobileDevice ? (isDarkMode ? 'bg-black/20 backdrop-blur-sm rounded-2xl' : 'bg-white/30 backdrop-blur-sm rounded-2xl') : ''}`}>
-                {/* Mobile Side Drawer Triggers */}
-                {isMobileDevice && (
-                  <div className={`md:hidden absolute left-0 top-1/2 -translate-y-1/2 z-40 transition-all duration-300 ${mobileTab === 'editor' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-                    <button 
-                      onClick={() => setIsTemplatesDrawerOpen(true)}
-                      className={`p-3 backdrop-blur-md rounded-r-2xl shadow-lg border border-l-0 active:scale-95 transition-all ${isDarkMode ? 'bg-black/40 border-white/5 text-gray-600' : 'bg-white/60 border-white/40 text-gray-400'}`}
-                    >
-                      <ChevronRight size={20} />
-                    </button>
-                  </div>
-                )}
-              
+              <div className={`flex flex-col w-full h-full ${isDarkMode ? 'bg-black/20 backdrop-blur-sm rounded-2xl' : 'bg-white/30 backdrop-blur-sm rounded-2xl'}`}>
                 {/* 顶部工具栏 */}
-                {(!isMobileDevice || mobileTab !== 'settings') && (
-                  <div className={`px-4 md:px-8 py-3 md:py-4 border-b flex justify-between items-center z-20 h-auto min-h-[60px] md:min-h-[72px] ${isDarkMode ? 'border-white/5' : 'border-gray-100/50'}`}>
+                <div className={`px-4 md:px-8 py-3 md:py-4 border-b flex justify-between items-center z-20 h-auto min-h-[60px] md:min-h-[72px] ${isDarkMode ? 'border-white/5' : 'border-gray-100/50'}`}>
                     <div className="min-w-0 flex-1 mr-4 flex items-center gap-6">
                       <h1 className={`text-xl md:text-2xl font-black truncate tracking-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{getLocalized(activeTemplate.name, language)}</h1>
                       
@@ -596,39 +571,11 @@ const AppContent = () => {
                         <span className="hidden md:inline ml-1">{copied ? t('copied') : t('copy_result')}</span>
                       </PremiumButton>
                     </div>
-                  </div>
-                )}
+                </div>
 
                 {/* 核心内容区 */}
-                <div className={`flex-1 overflow-hidden relative pb-24 md:pb-0 flex flex-col ${mobileTab === 'settings' || mobileTab === 'history' ? 'pt-0' : ''}`}>
-                  {mobileTab === 'settings' ? (
-                    <div className={`flex-1 flex flex-col overflow-hidden transition-colors duration-300 ${isDarkMode ? 'bg-[#181716]' : 'bg-white'}`}>
-                      <MobileSettingsView 
-                        language={language}
-                        setLanguage={setLanguage}
-                        storageMode={storageMode}
-                        setStorageMode={setStorageMode}
-                        handleImportTemplate={(e) => templateManagement.handleImportTemplate(e, app.setCategories)}
-                        handleExportAllTemplates={() => templateManagement.handleExportAllTemplates(categories)}
-                        handleCompleteBackup={() => templateManagement.handleExportAllTemplates(categories)}
-                        handleImportAllData={(e) => templateManagement.handleImportTemplate(e, app.setCategories)}
-                        handleResetSystemData={templateManagement.handleRefreshSystemData}
-                        handleClearAllData={handleClearAllData}
-                        SYSTEM_DATA_VERSION={SYSTEM_DATA_VERSION}
-                        t={t}
-                        isDarkMode={isDarkMode}
-                      />
-                    </div>
-                  ) : mobileTab === 'history' ? (
-                    <div className={`flex-1 flex flex-col overflow-hidden transition-colors duration-300 ${isDarkMode ? 'bg-[#181716]' : 'bg-white'}`}>
-                      <HistoryManager 
-                        isDarkMode={isDarkMode}
-                        t={t}
-                        onBack={() => setMobileTab('home')}
-                      />
-                    </div>
-                  ) : (
-                    <>
+                <div className="flex-1 overflow-hidden relative flex flex-col">
+                  <>
                       {isEditing && (
                         <div className={`backdrop-blur-sm ${isDarkMode ? 'bg-black/20' : 'bg-white/30'}`}>
                           <EditorToolbar 
@@ -709,8 +656,7 @@ const AppContent = () => {
                           isDarkMode={isDarkMode}
                         />
                       )}
-                    </>
-                  )}
+                  </>
                            
                   {/* Image URL Input Modal */}
                   {showImageUrlInput && (
@@ -769,8 +715,8 @@ const AppContent = () => {
         onChange={imageManagement.handleUploadImage}
       />
 
-      {/* Settings Modal - Mobile */}
-      {isSettingsOpen && isMobileDevice && (
+      {/* Settings Modal - Mobile (已禁用，通过配置接口可重新启用) */}
+      {false && isSettingsOpen && isMobileDevice && (
         <div 
           className="fixed inset-0 z-[110] bg-black/40 backdrop-blur-md flex items-center justify-center p-4 md:p-8 animate-in fade-in duration-200"
           onClick={() => setIsSettingsOpen(false)}
@@ -875,13 +821,13 @@ const AppContent = () => {
                   </button>
                   <button
                     onClick={fileSystem.handleSelectDirectory}
-                    disabled={!isFileSystemSupported || isMobileDevice}
+                    disabled={!isFileSystemSupported}
                     className={`relative w-full px-5 py-4 text-sm font-semibold rounded-2xl transition-all duration-300 border-2 flex items-center justify-between overflow-hidden group ${
                       storageMode === 'folder' 
                         ? 'bg-gradient-to-br from-green-500 to-green-600 text-white border-green-500 shadow-lg shadow-green-500/30' 
-                        : `bg-gradient-to-br from-white to-gray-50 text-gray-700 border-gray-200 ${(!isFileSystemSupported || isMobileDevice) ? 'opacity-50 cursor-not-allowed' : 'hover:border-green-300 hover:shadow-md hover:scale-[1.02]'}`
+                        : `bg-gradient-to-br from-white to-gray-50 text-gray-700 border-gray-200 ${!isFileSystemSupported ? 'opacity-50 cursor-not-allowed' : 'hover:border-green-300 hover:shadow-md hover:scale-[1.02]'}`
                     }`}
-                    title={isMobileDevice ? t('use_browser_storage') : (!isFileSystemSupported ? t('browser_not_supported') : '')}
+                    title={!isFileSystemSupported ? t('browser_not_supported') : ''}
                   >
                     <div className="flex items-center gap-3 relative z-10">
                       <Download size={18} />
@@ -1010,136 +956,19 @@ const AppContent = () => {
           onUseTemplate={(template) => {
             setActiveTemplateId(template.id);
             setDiscoveryView(false);
-            if (isMobileDevice) setMobileTab('editor');
+            // 移动端适配已禁用，通过配置接口可重新启用
           }}
           isDarkMode={isDarkMode}
           showTemplateInfo={true}
         />
       )}
 
-      {/* Mobile Bottom Navigation */}
-      <div className={`md:hidden fixed bottom-0 left-0 right-0 backdrop-blur-2xl border-t flex justify-around items-center z-[250] h-16 pb-safe shadow-[0_-8px_30px_rgba(0,0,0,0.05)] transition-colors duration-300 ${isDarkMode ? 'bg-[#181716]/25 border-white/5' : 'bg-white/25 border-white/30'}`}>
-        <button 
-          onClick={() => {
-            setMobileTab('home');
-            setDiscoveryView(true);
-            setZoomedImage(null);
-            setIsTemplatesDrawerOpen(false);
-          }}
-          className="flex flex-col items-center justify-center w-full h-full transition-all active:scale-90 group"
-        >
-          <div className={`p-2 rounded-xl transition-all ${mobileTab === 'home' ? (isDarkMode ? 'bg-white/5' : 'bg-orange-50/50') : ''}`}>
-            <div 
-              style={{ 
-                width: '24px', 
-                height: '24px', 
-                backgroundColor: mobileTab === 'home' ? '#EA580C' : (isDarkMode ? '#8E9196' : '#6B7280'),
-                WebkitMaskImage: 'url(/home.svg)',
-                maskImage: 'url(/home.svg)',
-                WebkitMaskRepeat: 'no-repeat',
-                maskRepeat: 'no-repeat',
-                WebkitMaskPosition: 'center',
-                maskPosition: 'center',
-                WebkitMaskSize: 'contain',
-                maskSize: 'contain',
-                filter: isDarkMode ? 'none' : 'drop-shadow(1px 1px 0px rgba(255,255,255,0.3))'
-              }}
-            />
-          </div>
-        </button>
-        
-        <button 
-          onClick={() => {
-            setDiscoveryView(false);
-            setZoomedImage(null);
-            setIsTemplatesDrawerOpen(false);
-            if (templates.length > 0 && !activeTemplateId) {
-              const firstId = templates[0].id;
-              setActiveTemplateId(firstId);
-            }
-            setMobileTab('editor');
-          }}
-          className="flex flex-col items-center justify-center w-full h-full transition-all active:scale-90 group"
-        >
-          <div className={`p-2 rounded-xl transition-all ${mobileTab === 'editor' ? (isDarkMode ? 'bg-white/5' : 'bg-orange-50/50') : ''}`}>
-            <div 
-              style={{ 
-                width: '24px', 
-                height: '24px', 
-                backgroundColor: mobileTab === 'editor' ? '#EA580C' : (isDarkMode ? '#8E9196' : '#6B7280'),
-                WebkitMaskImage: 'url(/list.svg)',
-                maskImage: 'url(/list.svg)',
-                WebkitMaskRepeat: 'no-repeat',
-                maskRepeat: 'no-repeat',
-                WebkitMaskPosition: 'center',
-                maskPosition: 'center',
-                WebkitMaskSize: 'contain',
-                maskSize: 'contain',
-                filter: isDarkMode ? 'none' : 'drop-shadow(1px 1px 0px rgba(255,255,255,0.3))'
-              }}
-            />
-          </div>
-        </button>
-        
-        <button 
-          onClick={() => {
-            setMobileTab('history');
-            setDiscoveryView(false);
-            setZoomedImage(null);
-            setIsTemplatesDrawerOpen(false);
-          }}
-          className="flex flex-col items-center justify-center w-full h-full transition-all active:scale-90 group"
-        >
-          <div className={`p-2 rounded-xl transition-all ${mobileTab === 'history' ? (isDarkMode ? 'bg-white/5' : 'bg-orange-50/50') : ''}`}>
-            <div className={`${mobileTab === 'history' ? 'text-[#EA580C]' : (isDarkMode ? 'text-[#8E9196]' : 'text-[#6B7280]')} transition-colors`}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="10"/>
-                <polyline points="12,6 12,12 16,14"/>
-              </svg>
-            </div>
-          </div>
-        </button>
-        
-        <button 
-          onClick={() => {
-            setMobileTab('settings');
-            setDiscoveryView(false);
-            setZoomedImage(null);
-            setIsTemplatesDrawerOpen(false);
-          }}
-          className="flex flex-col items-center justify-center w-full h-full transition-all active:scale-90 group"
-        >
-          <div className={`p-2 rounded-xl transition-all ${mobileTab === 'settings' ? (isDarkMode ? 'bg-white/5' : 'bg-orange-50/50') : ''}`}>
-            <div 
-              style={{ 
-                width: '24px', 
-                height: '24px', 
-                backgroundColor: mobileTab === 'settings' ? '#EA580C' : (isDarkMode ? '#8E9196' : '#6B7280'),
-                WebkitMaskImage: 'url(/setting.svg)',
-                maskImage: 'url(/setting.svg)',
-                WebkitMaskRepeat: 'no-repeat',
-                maskRepeat: 'no-repeat',
-                WebkitMaskPosition: 'center',
-                maskPosition: 'center',
-                WebkitMaskSize: 'contain',
-                maskSize: 'contain',
-                filter: isDarkMode ? 'none' : 'drop-shadow(1px 1px 0px rgba(255,255,255,0.3))'
-              }}
-            />
-          </div>
-        </button>
-
-        <button 
-          onClick={() => setIsDarkMode(!isDarkMode)}
-          className="flex flex-col items-center justify-center w-full h-full transition-all active:scale-90 group"
-        >
-          <div className="p-2 rounded-xl transition-all">
-            <div className={`${isDarkMode ? 'text-[#8E9196]' : 'text-[#6B7280]'} transition-colors`}>
-              {isDarkMode ? <Sun size={24} /> : <Moon size={24} />}
-            </div>
-          </div>
-        </button>
-      </div>
+      {/* Mobile Bottom Navigation (已禁用，通过配置接口可重新启用) */}
+      {false && (
+        <div className={`md:hidden fixed bottom-0 left-0 right-0 backdrop-blur-2xl border-t flex justify-around items-center z-[250] h-16 pb-safe shadow-[0_-8px_30px_rgba(0,0,0,0.05)] transition-colors duration-300 ${isDarkMode ? 'bg-[#181716]/25 border-white/5' : 'bg-white/25 border-white/30'}`}>
+          {/* 移动端导航栏代码已移除，可通过配置接口重新启用 */}
+        </div>
+      )}
 
       {/* Insert Variable Modal */}
       <InsertVariableModal

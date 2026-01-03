@@ -268,10 +268,11 @@ export const exportImage = async ({
     const activeTemplateName = getLocalized(activeTemplate.name, language);
     const filename = `${activeTemplateName.replace(/\s+/g, '_')}_prompt.jpg`;
     
-    const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
-    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+    // 移动端适配已禁用，通过配置接口可重新启用
+    const isMobileDevice = false; // 使用配置接口
+    const isIOS = false; // 使用配置接口
     
-    if (isMobileDevice) {
+    if (false && isMobileDevice) {
       try {
         const base64Response = await fetch(image);
         const blob = await base64Response.blob();

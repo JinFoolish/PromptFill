@@ -50,12 +50,13 @@ export const TemplatesSidebar = React.memo(({
   globalContainerStyle,
   isDarkMode
 }) => {
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  // 移动端适配已禁用，通过配置接口可重新启用
+  const isMobile = false; // 使用配置接口: import { isMobileDevice } from '../config/mobileConfig';
 
   return (
     <>
-      {/* Mobile Overlay */}
-      {isMobile && isTemplatesDrawerOpen && (
+      {/* Mobile Overlay (已禁用) */}
+      {false && isMobile && isTemplatesDrawerOpen && (
         <div 
           className="fixed inset-0 bg-black/10 backdrop-blur-[2px] z-[290] animate-in fade-in duration-300"
           onClick={() => setIsTemplatesDrawerOpen(false)}
@@ -63,18 +64,10 @@ export const TemplatesSidebar = React.memo(({
       )}
 
       <div 
-        style={!isMobile ? globalContainerStyle : {}}
-        className={`
-        ${isMobile 
-          ? `fixed inset-y-0 left-0 z-[300] w-[75%] max-w-[320px] transform transition-transform duration-500 ease-out shadow-2xl ${isTemplatesDrawerOpen ? 'translate-x-0' : '-translate-x-full'}`
-          : 'relative md:flex flex-col flex-shrink-0 h-full w-[340px] overflow-hidden'
-        } 
-        flex overflow-hidden
-        ${!isMobile ? 'bg-transparent' : (isDarkMode ? 'bg-[#242120]' : 'bg-white')}
-        ${!isMobile && mobileTab !== 'editor' && mobileTab !== 'banks' ? 'hidden md:flex' : ''}
-      `}
+        style={globalContainerStyle}
+        className="relative md:flex flex-col flex-shrink-0 h-full w-[340px] overflow-hidden flex overflow-hidden bg-transparent"
       >
-        <div className={`flex flex-col w-full h-full ${isMobile ? (isDarkMode ? 'bg-[#242120]' : 'bg-white') : 'bg-transparent'} backdrop-blur-sm rounded-2xl`}>
+        <div className="flex flex-col w-full h-full bg-transparent backdrop-blur-sm rounded-2xl">
           {/* --- Sidebar Header with Tools --- */}
       <div className="flex-shrink-0 p-6">
          <div className="flex items-center justify-between mb-6">
@@ -195,7 +188,7 @@ export const TemplatesSidebar = React.memo(({
                       key={t_item.id} 
                       onClick={() => {
                           setActiveTemplateId(t_item.id);
-                          if (isMobile) setIsTemplatesDrawerOpen(false);
+                          // 移动端适配已禁用
                       }} 
                       className={`group flex flex-col p-4 rounded-2xl transition-all duration-300 relative text-left cursor-pointer ${t_item.id === activeTemplateId ? (isDarkMode ? 'bg-orange-500/20' : 'bg-[#FFE9D0]') : `bg-transparent ${isDarkMode ? 'hover:bg-white/5' : 'hover:bg-[#F2EDE7]'}`}`}
                   >

@@ -49,9 +49,10 @@ export const useTemplateManagement = ({
     setActiveTemplateId(newId);
     setIsEditing(true);
     // 在移动端自动切换到编辑Tab
-    if (isMobileDevice) {
-      setMobileTab('editor');
-    }
+    // 移动端适配已禁用，通过配置接口可重新启用
+    // if (isMobileDevice) {
+    //   setMobileTab('editor');
+    // }
   }, [templates, setTemplates, setActiveTemplateId, setIsEditing, isMobileDevice, setMobileTab, t]);
 
   // 复制模板
@@ -79,9 +80,10 @@ export const useTemplateManagement = ({
     setTemplates([...templates, newTemplate]);
     setActiveTemplateId(newId);
     // 在移动端自动切换到编辑Tab
-    if (isMobileDevice) {
-      setMobileTab('editor');
-    }
+    // 移动端适配已禁用，通过配置接口可重新启用
+    // if (isMobileDevice) {
+    //   setMobileTab('editor');
+    // }
   }, [templates, setTemplates, setActiveTemplateId, isMobileDevice, setMobileTab, t]);
 
   // 删除模板

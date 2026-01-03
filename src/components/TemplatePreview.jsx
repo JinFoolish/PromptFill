@@ -46,7 +46,8 @@ export const TemplatePreview = React.memo(({
   isDarkMode
 }) => {
   const [editImageIndex, setEditImageIndex] = React.useState(0);
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  // 移动端适配已禁用，通过配置接口可重新启用
+  const isMobile = false; // 使用配置接口: import { isMobileDevice } from '../config/mobileConfig';
 
   // 统一的底层容器样式
   const unifiedStyle = isDarkMode ? {
@@ -344,7 +345,7 @@ export const TemplatePreview = React.memo(({
         <div className="w-full h-full overflow-y-auto px-3 py-4 md:p-8 custom-scrollbar relative z-10">
             <div 
                 id="preview-card"
-                className={`max-w-4xl mx-auto p-4 sm:p-6 md:p-12 min-h-[500px] md:min-h-[600px] transition-all duration-500 relative ${isMobile ? (isDarkMode ? 'bg-[#242120]/90 border border-white/5 rounded-2xl shadow-2xl' : 'bg-white/90 border border-white/60 rounded-2xl shadow-xl') : (isDarkMode ? 'bg-black/20 backdrop-blur-md rounded-2xl border border-white/5 shadow-2xl' : 'bg-white/40 backdrop-blur-sm rounded-2xl border border-white/40 shadow-sm')}`}
+                className={`max-w-4xl mx-auto p-4 sm:p-6 md:p-12 min-h-[500px] md:min-h-[600px] transition-all duration-500 relative ${isDarkMode ? 'bg-black/20 backdrop-blur-md rounded-2xl border border-white/5 shadow-2xl' : 'bg-white/40 backdrop-blur-sm rounded-2xl border border-white/40 shadow-sm'}`}
             >
                 {/* --- Top Section: Title & Image --- */}
                 <div className="flex flex-col md:flex-row justify-between items-start mb-6 md:mb-10 relative">

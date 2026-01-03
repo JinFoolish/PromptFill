@@ -5,6 +5,7 @@ import { getSystemLanguage } from '../utils/helpers';
 import { INITIAL_TEMPLATES_CONFIG, SYSTEM_DATA_VERSION } from '../data/templates';
 import { INITIAL_BANKS, INITIAL_DEFAULTS, INITIAL_CATEGORIES } from '../data/banks';
 import { MASONRY_STYLES } from '../constants/masonryStyles';
+import { isMobileDevice } from '../config/mobileConfig';
 
 /**
  * 核心应用状态管理 Hook
@@ -34,9 +35,9 @@ export const useAppState = () => {
   const [showDataUpdateNotice, setShowDataUpdateNotice] = useState(false);
   const [showAppUpdateNotice, setShowAppUpdateNotice] = useState(false);
   
-  // 检测是否为移动设备
-  const isMobileDevice = typeof window !== 'undefined' && window.innerWidth < 768;
-  const [mobileTab, setMobileTab] = useState(isMobileDevice ? "home" : "editor"); // 'home', 'editor', 'history', 'settings'
+  // 检测是否为移动设备（基于配置接口）
+  const mobileDevice = isMobileDevice();
+  const [mobileTab, setMobileTab] = useState(mobileDevice ? "home" : "editor"); // 'home', 'editor', 'history', 'settings'
   const [isTemplatesDrawerOpen, setIsTemplatesDrawerOpen] = useState(false);
 
   // UI State
@@ -80,19 +81,19 @@ export const useAppState = () => {
     return (val) => {
       setDiscoveryView(val);
       // 移动端：侧边栏里的"回到发现页"按钮需要同步切回 mobileTab
-      if (isMobileDevice && val) {
+      if (mobileDevice && val) {
         setMobileTab('home');
-      } else if (isMobileDevice && !val && mobileTab === 'home') {
+      } else if (mobileDevice && !val && mobileTab === 'home') {
         setMobileTab('editor');
       }
     };
-  }, [isMobileDevice, mobileTab]);
+  }, [mobileDevice, mobileTab]);
   
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isBanksViewOpen, setIsBanksViewOpen] = useState(false);
   
-  const showDiscoveryOverlay = isMobileDevice ? mobileTab === "home" : isDiscoveryView;
+  const showDiscoveryOverlay = mobileDevice ? mobileTab === "home" : isDiscoveryView;
   
   // Template Sort State
   const [sortOrder, setSortOrder] = useState("newest"); // newest, oldest, a-z, z-a, random
@@ -230,8 +231,8 @@ export const useAppState = () => {
     updateNoticeType,
     setUpdateNoticeType,
     
-    // 移动端相关
-    isMobileDevice,
+    // 移动端相关（基于配置接口）
+    isMobileDevice: mobileDevice,
     mobileTab,
     setMobileTab,
     isTemplatesDrawerOpen,
