@@ -4,7 +4,7 @@
  */
 
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { HistoryManager } from './HistoryManager';
+import { HistoryManager } from '../components/HistoryManager';
 
 // Mock storage adapter
 vi.mock('../utils/storage', () => ({

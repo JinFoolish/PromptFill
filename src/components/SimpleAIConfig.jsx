@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Check, AlertCircle } from 'lucide-react';
-import { PremiumButton } from './PremiumButton';
+import { Button } from './ui/button';
 
 export const SimpleAIConfig = ({ language, isDarkMode, onClose }) => {
   const [provider, setProvider] = useState('dashscope');
@@ -218,19 +218,17 @@ export const SimpleAIConfig = ({ language, isDarkMode, onClose }) => {
 
       {/* Save Button */}
         <div className="flex justify-center">
-          <PremiumButton
+          <Button
             onClick={handleSave}
             disabled={!apiKey.trim() && !hasExistingKey}
-            active={true} // 让按钮保持填充颜色（主按钮样式）
-            color="orange"
-            isDarkMode={isDarkMode}
-            className="w-1/2 !py-3 !rounded-xl font-bold text-sm" // 调整尺寸以匹配原设计
+            variant="default"
+            className="w-1/2 py-3 rounded-xl font-bold text-sm"
           >
             {hasExistingKey && !apiKey.trim() 
               ? (language === 'cn' ? '保持当前配置' : 'Keep Current Config')
               : (language === 'cn' ? '保存配置' : 'Save Configuration')
             }
-          </PremiumButton>
+          </Button>
         </div>
     </div>
   );

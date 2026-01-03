@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { X, ChevronLeft, ChevronRight, Sparkles, ImageIcon } from 'lucide-react';
 import { getLocalized } from '../utils/helpers';
-import { PremiumButton } from './index';
+import { Button } from './ui/button';
 
 const ImagePopup = React.memo(({ 
   isOpen,
@@ -397,20 +397,17 @@ const ImagePopup = React.memo(({
 
                   {onUseTemplate && (
                     <div className={`w-full flex flex-col gap-4 mt-auto`}>
-                        <PremiumButton
+                        <Button
                             onClick={() => {
                                 onUseTemplate(template);
                                 onClose();
                             }}
-                            icon={Sparkles}
-                            color="slate"
-                            hoverColor="orange"
-                            active={true}
-                            isDarkMode={true}
-                            className={`w-full font-black shadow-2xl transition-all duration-300 transform active:scale-95 flex items-center justify-center gap-3 !py-5 !rounded-2xl !text-lg hover:-translate-y-1`}
+                            variant="default"
+                            className="w-full font-black shadow-2xl transition-all duration-300 transform active:scale-95 flex items-center justify-center gap-3 py-5 rounded-2xl text-lg hover:-translate-y-1"
                         >
+                            <Sparkles className="h-4 w-4" />
                             {t('use_template') || '使用此模板'}
-                        </PremiumButton>
+                        </Button>
                         
                         <div className="flex items-center justify-between px-2">
                           <p className="text-[10px] text-white/30 font-bold tracking-widest uppercase">

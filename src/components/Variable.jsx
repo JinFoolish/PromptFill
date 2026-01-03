@@ -3,6 +3,11 @@ import React, { useState, useEffect } from 'react';
 import { Check, Plus, X } from 'lucide-react';
 import { CATEGORY_STYLES, PREMIUM_STYLES } from '../constants/styles';
 import { getLocalized } from '../utils/helpers';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from './ui/popover';
 
 export const Variable = ({ 
   id, 
@@ -73,126 +78,127 @@ export const Variable = ({
   };
 
   return (
-    <div className="relative inline-block mx-1.5 align-baseline group text-base">
-      <span 
-        data-export-pill="true"
-        onClick={onToggle}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-        className={`
-          relative cursor-pointer px-3 py-1 rounded-full transition-all duration-300 select-none font-medium text-white
-          ${isOpen ? (isDarkMode ? `ring-2 ring-orange-500/50 ring-offset-2 ring-offset-[#242120]` : `ring-2 ring-offset-2 ${style.ring}`) : ''}
-          hover:scale-105 active:scale-95
-        `}
-        style={{
-          background: `linear-gradient(135deg, ${premium.from} 0%, ${premium.to} 100%)`,
-          boxShadow: isHovered 
-            ? `inset 0px 2px 4px 0px rgba(255, 255, 255, 0.2), 0 4px 12px ${premium.glowColor}`
-            : `inset 0px 2px 4px 0px rgba(0, 0, 0, 0.1), 0 2px 5px ${premium.shadowColor}`,
-          border: '1px solid rgba(255, 255, 255, 0.3)',
-          textShadow: '0 1px 2px rgba(0,0,0,0.1)'
-        }}
-      >
-        {getLocalized(currentVal, language) || <span className="opacity-70 italic">{t('please_select')}</span>}
-        
-        {/* 分组标识 - 右上角显示 groupId */}
-        {groupId && (
-          <span 
-            className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full text-[10px] font-bold text-white shadow-lg border-2 border-white"
-            style={{
-              background: `linear-gradient(135deg, ${premium.from}, ${premium.to})`,
-              boxShadow: `0 2px 6px ${premium.shadowColor}, 0 0 0 2px rgba(255, 255, 255, 0.3)`
-            }}
-            title={`联动组 ${groupId}`}
-          >
-            {groupId}
-          </span>
-        )}
-      </span>
-      
-      {/* Popover - 词库选择器 */}
-      {isOpen && (
-        <div 
-          ref={popoverRef}
-          className="absolute left-0 top-full mt-2 w-72 rounded-xl shadow-2xl z-50 overflow-hidden flex flex-col text-left animate-in fade-in zoom-in-95 duration-200 origin-top-left"
-          style={{ 
-            minWidth: '280px',
-            backdropFilter: 'blur(20px)',
-            backgroundColor: isDarkMode ? 'rgba(36, 33, 32, 0.95)' : 'rgba(255, 255, 255, 0.85)',
-            border: isDarkMode ? '1px solid rgba(255, 255, 255, 0.05)' : '1px solid rgba(255, 255, 255, 0.5)',
-            boxShadow: isDarkMode 
-              ? `0 10px 40px -10px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05)`
-              : `0 10px 40px -10px ${premium.shadowColor}, 0 0 0 1px rgba(0,0,0,0.05)`
+    <Popover open={isOpen} onOpenChange={onToggle}>
+      <PopoverTrigger asChild>
+        <span 
+          data-export-pill="true"
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+          className={`
+            relative inline-block mx-1.5 align-baseline group text-base cursor-pointer px-3 py-1 rounded-full transition-all duration-300 select-none font-medium text-white
+            ${isOpen ? (isDarkMode ? `ring-2 ring-orange-500/50 ring-offset-2 ring-offset-[#242120]` : `ring-2 ring-offset-2 ${style.ring}`) : ''}
+            hover:scale-105 active:scale-95
+          `}
+          style={{
+            background: `linear-gradient(135deg, ${premium.from} 0%, ${premium.to} 100%)`,
+            boxShadow: isHovered 
+              ? `inset 0px 2px 4px 0px rgba(255, 255, 255, 0.2), 0 4px 12px ${premium.glowColor}`
+              : `inset 0px 2px 4px 0px rgba(0, 0, 0, 0.1), 0 2px 5px ${premium.shadowColor}`,
+            border: '1px solid rgba(255, 255, 255, 0.3)',
+            textShadow: '0 1px 2px rgba(0,0,0,0.1)'
           }}
         >
-          <div className={`px-4 py-3 border-b flex justify-between items-center backdrop-blur-sm ${isDarkMode ? 'border-white/5 bg-black/20' : 'border-gray-100/50 bg-white/50'}`}>
-            <span className={`text-xs font-bold uppercase tracking-wider ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>
-              {t('select')} {getLocalized(config.label, language)}
-            </span>
+          {getLocalized(currentVal, language) || <span className="opacity-70 italic">{t('please_select')}</span>}
+          
+          {/* 分组标识 - 右上角显示 groupId */}
+          {groupId && (
             <span 
-              className="text-[10px] px-2 py-0.5 rounded-full font-bold text-white shadow-sm"
-              style={{ background: `linear-gradient(135deg, ${premium.from}, ${premium.to})` }}
+              className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full text-[10px] font-bold text-white shadow-lg border-2 border-white"
+              style={{
+                background: `linear-gradient(135deg, ${premium.from}, ${premium.to})`,
+                boxShadow: `0 2px 6px ${premium.shadowColor}, 0 0 0 2px rgba(255, 255, 255, 0.3)`
+              }}
+              title={`联动组 ${groupId}`}
             >
-              {getLocalized(categories[categoryId]?.label, language) || categoryId}
+              {groupId}
             </span>
-          </div>
-          
-          <div className="max-h-64 overflow-y-auto p-2 space-y-1 custom-scrollbar">
-            {config.options.length > 0 ? config.options.map((opt, idx) => (
-              <button
-                key={idx}
-                onClick={() => onSelect(opt)}
-                className={`w-full text-left px-3 py-2.5 rounded-lg text-sm transition-all duration-200 group flex items-center justify-between
-                  ${isSelected(opt) 
-                    ? (isDarkMode ? 'bg-orange-500/10 shadow-lg font-bold' : 'bg-white shadow-md ring-1 ring-black/5 font-bold') 
-                    : (isDarkMode ? 'hover:bg-white/5 text-gray-400 hover:text-white' : 'hover:bg-white/60 hover:shadow-sm text-gray-600 hover:text-gray-900')}`}
-                style={isSelected(opt) ? { color: premium.to } : {}}
-              >
-                <span>{getLocalized(opt, language)}</span>
-                {isSelected(opt) && <Check size={14} style={{ color: premium.to }} />}
-              </button>
-            )) : (
-              <div className="px-3 py-8 text-center text-gray-400 text-sm italic">
-                {t('no_options')}
-              </div>
-            )}
-          </div>
-          
-          {/* Add Custom Option Footer */}
-          <div className={`p-2 border-t backdrop-blur-sm ${isDarkMode ? 'border-white/5 bg-black/20' : 'border-gray-100/50 bg-white/50'}`}>
-            {isAdding ? (
-              <div className="flex gap-2">
-                <input 
-                  autoFocus
-                  type="text"
-                  value={customVal}
-                  onChange={(e) => setCustomVal(e.target.value)}
-                  placeholder={t('add_option_placeholder')}
-                  className={`flex-1 min-w-0 px-3 py-1.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all ${isDarkMode ? 'bg-white/5 border-white/10 text-white' : 'border-gray-200 bg-white/80'}`}
-                  onKeyDown={(e) => e.key === 'Enter' && handleAddSubmit()}
-                />
-                <button 
-                  onClick={handleAddSubmit}
-                  disabled={!customVal.trim()}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium disabled:opacity-50 transition-colors shadow-sm ${isDarkMode ? 'bg-orange-600 text-white hover:bg-orange-700' : 'bg-gray-900 text-white hover:bg-gray-800'}`}
-                >
-                  {t('confirm')}
-                </button>
-              </div>
-            ) : (
-              <button 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsAdding(true);
-                }}
-                className={`w-full flex items-center justify-center gap-1.5 px-3 py-2 text-xs transition-all font-medium rounded-lg border border-dashed ${isDarkMode ? 'text-gray-500 hover:text-orange-400 hover:bg-white/5 border-white/10 hover:border-orange-500/50' : 'text-gray-500 hover:text-orange-600 hover:bg-orange-50/50 border-gray-300 hover:border-orange-300'}`}
-              >
-                <Plus size={12} /> {t('add_custom_option')}
-              </button>
-            )}
-          </div>
+          )}
+        </span>
+      </PopoverTrigger>
+      
+      {/* Popover - 词库选择器 */}
+      <PopoverContent 
+        ref={popoverRef}
+        align="start"
+        sideOffset={8}
+        className="w-72 p-0 rounded-xl shadow-2xl overflow-hidden flex flex-col text-left"
+        style={{ 
+          minWidth: '280px',
+          backdropFilter: 'blur(20px)',
+          backgroundColor: isDarkMode ? 'rgba(36, 33, 32, 0.95)' : 'rgba(255, 255, 255, 0.85)',
+          border: isDarkMode ? '1px solid rgba(255, 255, 255, 0.05)' : '1px solid rgba(255, 255, 255, 0.5)',
+          boxShadow: isDarkMode 
+            ? `0 10px 40px -10px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05)`
+            : `0 10px 40px -10px ${premium.shadowColor}, 0 0 0 1px rgba(0,0,0,0.05)`
+        }}
+      >
+        <div className={`px-4 py-3 border-b flex justify-between items-center backdrop-blur-sm ${isDarkMode ? 'border-white/5 bg-black/20' : 'border-gray-100/50 bg-white/50'}`}>
+          <span className={`text-xs font-bold uppercase tracking-wider ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>
+            {t('select')} {getLocalized(config.label, language)}
+          </span>
+          <span 
+            className="text-[10px] px-2 py-0.5 rounded-full font-bold text-white shadow-sm"
+            style={{ background: `linear-gradient(135deg, ${premium.from}, ${premium.to})` }}
+          >
+            {getLocalized(categories[categoryId]?.label, language) || categoryId}
+          </span>
         </div>
-      )}
-    </div>
+        
+        <div className="max-h-64 overflow-y-auto p-2 space-y-1 custom-scrollbar">
+          {config.options.length > 0 ? config.options.map((opt, idx) => (
+            <button
+              key={idx}
+              onClick={() => onSelect(opt)}
+              className={`w-full text-left px-3 py-2.5 rounded-lg text-sm transition-all duration-200 group flex items-center justify-between
+                ${isSelected(opt) 
+                  ? (isDarkMode ? 'bg-orange-500/10 shadow-lg font-bold' : 'bg-white shadow-md ring-1 ring-black/5 font-bold') 
+                  : (isDarkMode ? 'hover:bg-white/5 text-gray-400 hover:text-white' : 'hover:bg-white/60 hover:shadow-sm text-gray-600 hover:text-gray-900')}`}
+              style={isSelected(opt) ? { color: premium.to } : {}}
+            >
+              <span>{getLocalized(opt, language)}</span>
+              {isSelected(opt) && <Check size={14} style={{ color: premium.to }} />}
+            </button>
+          )) : (
+            <div className="px-3 py-8 text-center text-gray-400 text-sm italic">
+              {t('no_options')}
+            </div>
+          )}
+        </div>
+        
+        {/* Add Custom Option Footer */}
+        <div className={`p-2 border-t backdrop-blur-sm ${isDarkMode ? 'border-white/5 bg-black/20' : 'border-gray-100/50 bg-white/50'}`}>
+          {isAdding ? (
+            <div className="flex gap-2">
+              <input 
+                autoFocus
+                type="text"
+                value={customVal}
+                onChange={(e) => setCustomVal(e.target.value)}
+                placeholder={t('add_option_placeholder')}
+                className={`flex-1 min-w-0 px-3 py-1.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all ${isDarkMode ? 'bg-white/5 border-white/10 text-white' : 'border-gray-200 bg-white/80'}`}
+                onKeyDown={(e) => e.key === 'Enter' && handleAddSubmit()}
+              />
+              <button 
+                onClick={handleAddSubmit}
+                disabled={!customVal.trim()}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium disabled:opacity-50 transition-colors shadow-sm ${isDarkMode ? 'bg-orange-600 text-white hover:bg-orange-700' : 'bg-gray-900 text-white hover:bg-gray-800'}`}
+              >
+                {t('confirm')}
+              </button>
+            </div>
+          ) : (
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsAdding(true);
+              }}
+              className={`w-full flex items-center justify-center gap-1.5 px-3 py-2 text-xs transition-all font-medium rounded-lg border border-dashed ${isDarkMode ? 'text-gray-500 hover:text-orange-400 hover:bg-white/5 border-white/10 hover:border-orange-500/50' : 'text-gray-500 hover:text-orange-600 hover:bg-orange-50/50 border-gray-300 hover:border-orange-300'}`}
+            >
+              <Plus size={12} /> {t('add_custom_option')}
+            </button>
+          )}
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 };

@@ -20,6 +20,17 @@ import storageAdapter from '../utils/storage';
 // 假设 ImagePopup 在同一目录下，如果不是请调整路径
 import ImagePopup from './ImagePopup'; 
 import MasonryGrid from './MasonryGrid';
+import { Input } from './ui/input';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from './ui/alert-dialog';
 
 export const HistoryManager = ({ 
   isDarkMode = false, 
@@ -262,7 +273,7 @@ export const HistoryManager = ({
       <div className={`flex-1 flex items-center justify-center ${className}`}>
         <div className="flex flex-col items-center gap-4">
           <RefreshCw className="w-8 h-8 animate-spin text-orange-500" />
-          <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+          <p className="text-sm text-gray-600 dark:text-gray-400">
             {t('loading_history') || '加载历史记录...'}
           </p>
         </div>
@@ -276,10 +287,10 @@ export const HistoryManager = ({
       <div className={`flex-1 flex items-center justify-center ${className}`}>
         <div className="flex flex-col items-center gap-4 p-6 text-center">
           <AlertCircle className="w-12 h-12 text-red-500" />
-          <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
             {t('error_loading_history') || '加载失败'}
           </h3>
-          <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>{error}</p>
+          <p className="text-sm text-gray-600 dark:text-gray-400">{error}</p>
           <button
             onClick={loadHistory}
             className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600"
@@ -302,14 +313,12 @@ export const HistoryManager = ({
             {onBack && (
               <button
                 onClick={onBack}
-                className={`p-2 rounded-lg transition-colors ${
-                  isDarkMode ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-100 text-gray-600'
-                }`}
+                className="p-2 rounded-lg transition-colors hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400"
               >
                 <ChevronLeft size={20} />
               </button>
             )}
-            <h1 className={`text-lg font-bold whitespace-nowrap ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+            <h1 className="text-lg font-bold whitespace-nowrap text-gray-900 dark:text-white">
               {t('history_title') || '历史记录'}
             </h1>
           </div>
@@ -317,9 +326,7 @@ export const HistoryManager = ({
           {records.length > 0 && (
             <button
               onClick={() => setShowClearAllConfirm(true)}
-              className={`lg:hidden px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                isDarkMode ? 'bg-red-600/20 text-red-400' : 'bg-red-50 text-red-600'
-              }`}
+              className="lg:hidden px-3 py-1.5 rounded-lg text-xs font-medium transition-colors bg-red-50 dark:bg-red-600/20 text-red-600 dark:text-red-400"
             >
               {t('clear_all') || '清空'}
             </button>
@@ -330,19 +337,13 @@ export const HistoryManager = ({
         {records.length > 0 && (
           <div className="flex flex-col lg:flex-row items-center gap-2 w-full lg:w-auto justify-start">
             <div className="relative w-full lg:w-64 shrink-0">
-              <Search size={16} className={`absolute left-3 top-1/2 -translate-y-1/2 ${
-                isDarkMode ? 'text-gray-400' : 'text-gray-500'
-              }`} />
-              <input
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 z-10 dark:text-gray-400 text-gray-500" />
+              <Input
                 type="text"
                 placeholder={t('search_history') || '搜索...'}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className={`w-full pl-9 pr-4 py-2 rounded-lg border text-sm transition-all ${
-                  isDarkMode 
-                    ? 'bg-gray-800 border-gray-600 text-white placeholder-gray-400 focus:border-orange-500' 
-                    : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500 focus:border-orange-500'
-                } focus:outline-none focus:ring-2 focus:ring-orange-500/20`}
+                className="w-full pl-9 pr-4 py-2 rounded-lg text-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20"
               />
             </div>
 
@@ -350,9 +351,7 @@ export const HistoryManager = ({
               <select
                 value={filterProvider}
                 onChange={(e) => setFilterProvider(e.target.value)}
-                className={`flex-1 lg:flex-none w-auto max-w-[120px] px-2 py-2 rounded-lg text-xs border cursor-pointer ${
-                  isDarkMode ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'
-                } focus:outline-none focus:border-orange-500`}
+                className="flex-1 lg:flex-none w-auto max-w-[120px] px-2 py-2 rounded-lg text-xs border cursor-pointer bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white focus:outline-none focus:border-orange-500"
               >
                 <option value="all">{t('all_providers') || '全部厂商'}</option>
                 {availableProviders.map(provider => (
@@ -363,9 +362,7 @@ export const HistoryManager = ({
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className={`flex-1 lg:flex-none w-auto max-w-[120px] px-2 py-2 rounded-lg text-xs border cursor-pointer ${
-                  isDarkMode ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'
-                } focus:outline-none focus:border-orange-500`}
+                className="flex-1 lg:flex-none w-auto max-w-[120px] px-2 py-2 rounded-lg text-xs border cursor-pointer bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white focus:outline-none focus:border-orange-500"
               >
                 <option value="newest">{t('sort_newest') || '最新'}</option>
                 <option value="oldest">{t('sort_oldest') || '最旧'}</option>
@@ -376,22 +373,20 @@ export const HistoryManager = ({
         )}
 
         {/* 3. 存储状态 */}
-        <div className={`w-full lg:flex-1 flex flex-col justify-center gap-1.5 px-4 py-2 rounded-lg border lg:mx-2 ${
-           isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'
-        }`}>
+        <div className="w-full lg:flex-1 flex flex-col justify-center gap-1.5 px-4 py-2 rounded-lg border lg:mx-2 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between text-xs">
             <div className="flex items-center gap-2">
-              <HardDrive size={12} className={isDarkMode ? 'text-gray-400' : 'text-gray-500'} />
-              <span className={`font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+              <HardDrive size={12} className="text-gray-500 dark:text-gray-400" />
+              <span className="font-medium text-gray-600 dark:text-gray-300">
                 {t('storage_usage') || '存储'}
               </span>
             </div>
-            <span className={isDarkMode ? 'text-gray-500' : 'text-gray-400'}>
+            <span className="text-gray-400 dark:text-gray-500">
               {formatFileSize(storageUsage.used)} / {storageUsage.quota > 0 ? formatFileSize(storageUsage.quota) : '∞'}
             </span>
           </div>
           {storageUsage.quota > 0 && (
-            <div className={`w-full h-1.5 rounded-full ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'}`}>
+            <div className="w-full h-1.5 rounded-full bg-gray-200 dark:bg-gray-700">
               <div 
                 className={`h-full rounded-full transition-all duration-300 ${
                   (storageUsage.used / storageUsage.quota) > 0.9 ? 'bg-red-500' : 'bg-orange-500'
@@ -406,9 +401,7 @@ export const HistoryManager = ({
         {records.length > 0 && (
           <button
             onClick={() => setShowClearAllConfirm(true)}
-            className={`hidden lg:flex shrink-0 px-3 py-2 rounded-lg text-xs font-medium transition-colors items-center gap-2 ${
-              isDarkMode ? 'bg-red-600/20 hover:bg-red-600/30 text-red-400' : 'bg-red-50 hover:bg-red-100 text-red-600'
-            }`}
+            className="hidden lg:flex shrink-0 px-3 py-2 rounded-lg text-xs font-medium transition-colors items-center gap-2 bg-red-50 dark:bg-red-600/20 hover:bg-red-100 dark:hover:bg-red-600/30 text-red-600 dark:text-red-400"
             title={t('clear_all')}
           >
             <Trash2 size={14} />
@@ -421,12 +414,10 @@ export const HistoryManager = ({
       <div className="flex-1 overflow-auto">
         {filteredAndSortedRecords.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full p-8 text-center">
-            <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 ${
-              isDarkMode ? 'bg-gray-800' : 'bg-gray-100'
-            }`}>
-              <Sparkles size={24} className={isDarkMode ? 'text-gray-600' : 'text-gray-400'} />
+            <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4 bg-gray-100 dark:bg-gray-800">
+              <Sparkles size={24} className="text-gray-400 dark:text-gray-600" />
             </div>
-            <h3 className={`text-lg font-semibold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+            <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">
               {searchQuery || filterProvider !== 'all' 
                 ? (t('no_matching_records') || '没有匹配的记录')
                 : (t('no_history_records') || '暂无历史记录')
@@ -494,32 +485,46 @@ export const HistoryManager = ({
       )}
 
       {/* Delete Confirmation Modal */}
-      {showDeleteConfirm && (
-        <ConfirmModal
-          title={t('confirm_delete_record') || '确认删除'}
-          message={t('confirm_delete_record_message') || '确定要删除这条记录吗？此操作无法撤销。'}
-          confirmText={t('delete') || '删除'}
-          cancelText={t('cancel') || '取消'}
-          onConfirm={() => handleDeleteRecord(showDeleteConfirm)}
-          onCancel={() => setShowDeleteConfirm(null)}
-          isDarkMode={isDarkMode}
-          isDestructive={true}
-        />
-      )}
+      <AlertDialog open={!!showDeleteConfirm} onOpenChange={(open) => !open && setShowDeleteConfirm(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('confirm_delete_record') || '确认删除'}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('confirm_delete_record_message') || '确定要删除这条记录吗？此操作无法撤销。'}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('cancel') || '取消'}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => handleDeleteRecord(showDeleteConfirm)}
+              className="bg-red-500 hover:bg-red-600 text-white"
+            >
+              {t('delete') || '删除'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Clear All Confirmation Modal */}
-      {showClearAllConfirm && (
-        <ConfirmModal
-          title={t('confirm_clear_all') || '确认清空全部'}
-          message={t('confirm_clear_all_message') || '确定要清空所有历史记录吗？此操作无法撤销。'}
-          confirmText={t('clear_all') || '清空全部'}
-          cancelText={t('cancel') || '取消'}
-          onConfirm={handleClearAll}
-          onCancel={() => setShowClearAllConfirm(false)}
-          isDarkMode={isDarkMode}
-          isDestructive={true}
-        />
-      )}
+      <AlertDialog open={showClearAllConfirm} onOpenChange={(open) => !open && setShowClearAllConfirm(false)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('confirm_clear_all') || '确认清空全部'}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('confirm_clear_all_message') || '确定要清空所有历史记录吗？此操作无法撤销。'}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('cancel') || '取消'}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleClearAll}
+              className="bg-red-500 hover:bg-red-600 text-white"
+            >
+              {t('clear_all') || '清空全部'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
@@ -550,7 +555,7 @@ const ImageCard = ({ record, onClick, onDelete, isDarkMode }) => {
       onClick={onClick}
     >
       {/* Image */}
-      <div className={`w-full aspect-auto relative ${isDarkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
+      <div className="w-full aspect-auto relative bg-gray-100 dark:bg-gray-700">
         {imageUrl && !imageError ? (
           <img 
             src={imageUrl} 
@@ -582,32 +587,6 @@ const ImageCard = ({ record, onClick, onDelete, isDarkMode }) => {
             <div className="text-white text-sm font-medium">
               {record.provider && record.model ? `${record.provider} / ${record.model}` : record.model || record.provider || 'Unknown Model'}
             </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Confirm Modal (保持不变)
-const ConfirmModal = ({ 
-  title, message, confirmText, cancelText, onConfirm, onCancel, isDarkMode, isDestructive = false 
-}) => {
-  return (
-    <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className={`w-full max-w-sm rounded-2xl shadow-2xl scale-100 animate-in zoom-in-95 duration-200 ${
-        isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white'
-      }`}>
-        <div className="p-6">
-          <h3 className={`text-lg font-bold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{title}</h3>
-          <p className={`text-sm mb-6 leading-relaxed ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>{message}</p>
-          <div className="flex gap-3 justify-end">
-            <button onClick={onCancel} className={`px-4 py-2 rounded-xl text-sm font-bold transition-colors ${
-                isDarkMode ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-              }`}>{cancelText}</button>
-            <button onClick={onConfirm} className={`px-4 py-2 rounded-xl text-sm font-bold transition-colors ${
-                isDestructive ? 'bg-red-500 hover:bg-red-600 text-white shadow-red-500/20 shadow-lg' : 'bg-orange-500 hover:bg-orange-600 text-white'
-              }`}>{confirmText}</button>
           </div>
         </div>
       </div>

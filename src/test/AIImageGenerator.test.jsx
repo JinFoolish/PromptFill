@@ -4,7 +4,7 @@
  */
 
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { AIImageGenerator } from './AIImageGenerator';
+import { AIImageGenerator } from '../components/AIImageGenerator';
 
 // Mock fetch globally
 global.fetch = vi.fn();

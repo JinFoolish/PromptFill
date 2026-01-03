@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   ImageIcon, ArrowUpRight
 } from 'lucide-react';
+import { Card } from './ui/card';
 import { getLocalized } from '../utils/helpers';
 import MasonryGrid from './MasonryGrid';
 
@@ -27,7 +28,6 @@ export const DiscoveryView = React.memo(({
   setLanguage,
   setIsSettingsOpen,
   isDarkMode,
-  globalContainerStyle,
   masonryStyleKey
 }) => {
   // 移动端适配已禁用，通过配置接口可重新启用
@@ -38,8 +38,8 @@ export const DiscoveryView = React.memo(({
       className="flex-1 flex items-center justify-center overflow-hidden"
     >
       {/* Poster Content Container */}
-      <div 
-        style={globalContainerStyle}
+      <Card 
+        variant="container"
         className="flex flex-col w-full h-full overflow-hidden relative z-10 p-4 md:p-6 lg:p-9"
       >
           <div className="flex-1 flex flex-col lg:flex-row gap-8 lg:gap-20 overflow-hidden py-6 lg:py-10 px-4 lg:px-8">
@@ -79,8 +79,7 @@ export const DiscoveryView = React.memo(({
                   </div>
               </div>
           </div>
-
-      </div>
+      </Card>
     </div>
   );
 });

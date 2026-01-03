@@ -4,7 +4,9 @@ import {
   ChevronRight, ChevronDown, ImageIcon, ArrowUpRight, Plus,
   Pencil, Copy as CopyIcon, Download, Trash2, ListFilter // [新增] 引入 ListFilter 图标
 } from 'lucide-react';
-import { PremiumButton } from './PremiumButton';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Card } from './ui/card';
 import { getLocalized } from '../utils/helpers';
 
 /**
@@ -47,7 +49,6 @@ export const TemplatesSidebar = React.memo(({
   setTempTemplateAuthor,
   saveTemplateName,
   setEditingTemplateNameId,
-  globalContainerStyle,
   isDarkMode
 }) => {
   // 移动端适配已禁用，通过配置接口可重新启用
@@ -63,8 +64,8 @@ export const TemplatesSidebar = React.memo(({
         />
       )}
 
-      <div 
-        style={globalContainerStyle}
+      <Card 
+        variant="container"
         className="relative md:flex flex-col flex-shrink-0 h-full w-[340px] overflow-hidden flex overflow-hidden bg-transparent"
       >
         <div className="flex flex-col w-full h-full bg-transparent backdrop-blur-sm rounded-2xl">
@@ -74,7 +75,7 @@ export const TemplatesSidebar = React.memo(({
              <div className="flex flex-col items-start gap-1">
                   <h1 className={`${isMobile ? 'text-[18px]' : 'text-[22px]'} font-black tracking-tight text-orange-500 flex items-baseline gap-2`}>
                       提示词填空器
-                      <span className={`${isDarkMode ? 'text-gray-600' : 'text-gray-400'} text-xs font-bold tracking-widest`}>V0.6.1</span>
+                      <span className="text-gray-400 dark:text-gray-600 text-xs font-bold tracking-widest">V0.6.1</span>
                   </h1>
              </div>
              
@@ -89,43 +90,30 @@ export const TemplatesSidebar = React.memo(({
             <div className="flex items-center gap-2">
                 {/* 极简搜索框 - 添加 flex-1 占据剩余空间 */}
                 <div className="relative group flex-1">
-                    <Search className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors pointer-events-none ${isDarkMode ? 'text-gray-600 group-focus-within:text-orange-500' : 'text-gray-400 group-focus-within:text-orange-500'}`} size={16} />
-                    <input 
+                    <Search className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors pointer-events-none z-10 dark:text-gray-600 text-gray-400 group-focus-within:text-orange-500`} size={16} />
+                    <Input 
                       type="text" 
                       placeholder={t('search_templates')} 
                       value={searchQuery} 
                       onChange={(e) => setSearchQuery(e.target.value)} 
-                      style={isDarkMode ? {
-                        background: '#2A2726',
-                        border: '1px solid transparent',
-                        backgroundImage: 'linear-gradient(#2A2726, #2A2726), linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 100%)',
-                        backgroundOrigin: 'border-box',
-                        backgroundClip: 'padding-box, border-box',
-                      } : {
-                        background: '#E8E3DD',
-                        border: '1px solid transparent',
-                        backgroundImage: 'linear-gradient(#E8E3DD, #E8E3DD), linear-gradient(0deg, #FFFFFF 0%, rgba(255, 255, 255, 0) 100%)',
-                        backgroundOrigin: 'border-box',
-                        backgroundClip: 'padding-box, border-box',
-                      }}
-                      className={`w-full pl-11 pr-4 py-3 rounded-2xl text-[14px] font-medium transition-all outline-none focus:ring-4 focus:ring-orange-500/5 ${isDarkMode ? 'text-gray-200 placeholder-gray-600' : 'text-gray-700 placeholder-gray-400'}`} 
+                      className="w-full pl-11 pr-4 py-3 rounded-2xl text-[14px] font-medium shadow-sm" 
                     />
                 </div>
 
-                {/* Sort Button (PremiumButton) */}
+                {/* Sort Button */}
                 <div className="relative">
-                  <PremiumButton
+                  <Button
                     onClick={() => setIsSortMenuOpen(!isSortMenuOpen)}
-                    active={isSortMenuOpen}
-                    isDarkMode={isDarkMode}
-                    icon={ListFilter} // 使用 Lucide 图标
-                    color="gray" // 未选中时为灰色，选中时(active=true)会自动变色
+                    variant={isSortMenuOpen ? "default" : "outline"}
+                    size="icon"
                     title={t('sort')}
-                    className="!p-0 w-[46px] h-[46px] flex items-center justify-center rounded-2xl" // 设置固定宽高以匹配搜索框高度
-                  />
+                    className="w-[46px] h-[46px] flex items-center justify-center rounded-2xl"
+                  >
+                    <ListFilter className="h-4 w-4" />
+                  </Button>
                   
                   {isSortMenuOpen && (
-                    <div className={`absolute top-full right-0 mt-2 backdrop-blur-xl rounded-2xl shadow-2xl border py-2 min-w-[160px] z-[110] animate-in slide-in-from-top-2 duration-200 ${isDarkMode ? 'bg-black/80 border-white/10' : 'bg-white/95 border-white/60'}`}>
+                    <div className="absolute top-full right-0 mt-2 backdrop-blur-xl rounded-2xl shadow-2xl border py-2 min-w-[160px] z-[110] animate-in slide-in-from-top-2 duration-200 bg-white/95 dark:bg-black/80 border-white/60 dark:border-white/10">
                       {[
                         { value: 'newest', label: t('sort_newest') },
                         { value: 'oldest', label: t('sort_oldest') },
@@ -140,7 +128,7 @@ export const TemplatesSidebar = React.memo(({
                             if (option.value === 'random') setRandomSeed(Date.now());
                             setIsSortMenuOpen(false);
                           }}
-                          className={`w-full text-left px-5 py-2.5 text-sm transition-colors ${sortOrder === option.value ? 'text-orange-600 font-semibold' : (isDarkMode ? 'text-gray-400 hover:bg-white/10' : 'text-gray-700 hover:bg-orange-50')}`}
+                          className={`w-full text-left px-5 py-2.5 text-sm transition-colors ${sortOrder === option.value ? 'text-orange-600 font-semibold' : 'text-gray-700 dark:text-gray-400 hover:bg-orange-50 dark:hover:bg-white/10'}`}
                         >
                           {option.label}
                         </button>
@@ -159,7 +147,7 @@ export const TemplatesSidebar = React.memo(({
                     language === 'cn' 
                       ? 'text-[11px] font-black' 
                       : 'text-[8px] font-medium'
-                  } ${selectedTags === "" ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/20' : (isDarkMode ? 'text-gray-500 hover:text-gray-300 hover:bg-white/5' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100')}`}
+                  } ${selectedTags === "" ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/20' : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5'}`}
                 >
                   {t('all_templates')}
                 </button>
@@ -190,18 +178,18 @@ export const TemplatesSidebar = React.memo(({
                           setActiveTemplateId(t_item.id);
                           // 移动端适配已禁用
                       }} 
-                      className={`group flex flex-col p-4 rounded-2xl transition-all duration-300 relative text-left cursor-pointer ${t_item.id === activeTemplateId ? (isDarkMode ? 'bg-orange-500/20' : 'bg-[#FFE9D0]') : `bg-transparent ${isDarkMode ? 'hover:bg-white/5' : 'hover:bg-[#F2EDE7]'}`}`}
+                      className={`group flex flex-col p-4 rounded-2xl transition-all duration-300 relative text-left cursor-pointer ${t_item.id === activeTemplateId ? 'bg-[#FFE9D0] dark:bg-orange-500/20' : 'bg-transparent hover:bg-[#F2EDE7] dark:hover:bg-white/5'}`}
                   >
                       <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2 overflow-hidden flex-1">
                               {editingTemplateNameId === t_item.id ? (
                                 <div className="flex-1 flex flex-col gap-2" onClick={(e) => e.stopPropagation()}>
-                                    <input 
+                                    <Input 
                                         autoFocus
                                         type="text" 
                                         value={tempTemplateName}
                                         onChange={(e) => setTempTemplateName(e.target.value)}
-                                        className={`w-full px-2 py-1 text-base font-black border-b-2 border-orange-500 bg-transparent focus:outline-none ${isDarkMode ? 'text-white' : 'text-gray-900'}`}
+                                        className="w-full px-2 py-1 text-base font-black border-b-2 border-orange-500 bg-transparent focus:outline-none"
                                         placeholder={t('label_placeholder')}
                                         onKeyDown={(e) => e.key === 'Enter' && saveTemplateName()}
                                     />
@@ -278,20 +266,18 @@ export const TemplatesSidebar = React.memo(({
       {/* --- Footer & Create Button --- */}
       <div className="flex-shrink-0">
           <div className="p-6 pb-10 md:pb-8">
-            <PremiumButton
+            <Button
                 onClick={handleAddTemplate}
-                icon={Plus}
-                color="orange"
-                active={true}
-                isDarkMode={isDarkMode}
-                className="w-full !py-3 text-[15px] font-black transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl hover:shadow-orange-500/20"
+                variant="default"
+                className="w-full py-3 text-[15px] font-black transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl hover:shadow-orange-500/20"
             >
+                <Plus className="h-4 w-4" />
                 {t('new_template')}
-            </PremiumButton>
+            </Button>
           </div>
       </div>
     </div>
-  </div>
+  </Card>
   </>
   );
 });

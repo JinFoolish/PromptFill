@@ -3,9 +3,16 @@ import {
   Database, Download, Upload, 
   Trash2, Mail, MessageCircle, Github, 
   ChevronRight, RefreshCw, FolderOpen,
-  Image as ImageIcon, FileText
+  Image as ImageIcon, FileText, Languages
 } from 'lucide-react';
-import { Modal } from './Modal';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from './ui/dialog';
+import { Card } from './ui/card';
 import { SimpleAIConfig } from './SimpleAIConfig';
 import { updateLogsCN, updateLogsEN } from '../constants/updateLogs';
 
@@ -16,7 +23,6 @@ export const SettingsView = ({
   handleResetSystemData, handleClearAllData,
   handleSelectDirectory, handleSwitchToLocalStorage,
   SYSTEM_DATA_VERSION, t,
-  globalContainerStyle,
   isDarkMode
 }) => {
   const [showWechatQR, setShowWechatQR] = useState(false);
@@ -88,7 +94,7 @@ export const SettingsView = ({
   );
 
   return (
-    <div style={globalContainerStyle} className="flex-1 flex flex-col h-full overflow-hidden relative">
+    <Card variant="container" className="flex-1 flex flex-col h-full overflow-hidden relative">
       
       {/* 1. Header Area */}
       <div className="px-8 pt-10 pb-6 flex-shrink-0 flex items-center justify-between max-w-5xl mx-auto w-full">
@@ -113,16 +119,7 @@ export const SettingsView = ({
           <div className="flex flex-col gap-6">
             <SettingCard title={t('general')}>
               <SettingItem 
-                icon={() => <img 
-                  src="/translate.svg" 
-                  alt="translate" 
-                  className="w-5 h-5" 
-                  style={{
-                    filter: isDarkMode 
-                      ? 'brightness(0) saturate(100%) invert(60%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(60%) contrast(100%)' 
-                      : 'brightness(0) saturate(100%) invert(40%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(60%) contrast(100%)'
-                  }}
-                />} 
+                icon={Languages}
                 label={t('interface_language')} 
                 description={t('switch_ui_language')}
                 value={t(language === 'cn' ? 'chinese' : 'english')} 
@@ -224,17 +221,14 @@ export const SettingsView = ({
 
       {/* --- Modals --- */}
 
-      {/* Update Logs Modal */}
-      <Modal
-        isOpen={showUpdateLogs}
-        onClose={() => setShowUpdateLogs(false)}
-        title={t('changelog')}
-        subtitle={t('timeline_changes_improvements')}
-        isDarkMode={isDarkMode}
-        maxWidth="max-w-3xl"
-        maxHeight="h-[85vh]"
-      >
-        <div className="flex-1 overflow-y-auto custom-scrollbar">
+      {/* Update Logs Dialog */}
+      <Dialog open={showUpdateLogs} onOpenChange={(open) => !open && setShowUpdateLogs(false)}>
+        <DialogContent className="max-w-3xl h-[85vh]">
+          <DialogHeader>
+            <DialogTitle>{t('changelog')}</DialogTitle>
+            <DialogDescription>{t('timeline_changes_improvements')}</DialogDescription>
+          </DialogHeader>
+          <div className="flex-1 overflow-y-auto custom-scrollbar">
           <div className="space-y-10 pl-2">
             {currentLogs.map((log, idx) => (
               <div key={idx} className="flex gap-6 group">
@@ -280,30 +274,27 @@ export const SettingsView = ({
             ))}
           </div>
         </div>
-      </Modal>
+        </DialogContent>
+      </Dialog>
 
-      {/* AI Config Modal */}
-      <Modal
-        isOpen={showAIConfig}
-        onClose={() => setShowAIConfig(false)}
-        title={t('ai_config_title')}
-        subtitle={t('ai_config_subtitle')}
-        isDarkMode={isDarkMode}
-      >
-        <SimpleAIConfig 
-          language={language}
-          isDarkMode={isDarkMode}
-          onClose={() => setShowAIConfig(false)}
-        />
-      </Modal>
+      {/* AI Config Dialog */}
+      <Dialog open={showAIConfig} onOpenChange={(open) => !open && setShowAIConfig(false)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('ai_config_title')}</DialogTitle>
+            <DialogDescription>{t('ai_config_subtitle')}</DialogDescription>
+          </DialogHeader>
+          <SimpleAIConfig 
+            language={language}
+            isDarkMode={isDarkMode}
+            onClose={() => setShowAIConfig(false)}
+          />
+        </DialogContent>
+      </Dialog>
 
-      {/* WeChat QR Modal */}
-      <Modal
-        isOpen={showWechatQR}
-        onClose={() => setShowWechatQR(false)}
-        isDarkMode={isDarkMode}
-        maxWidth="max-w-sm"
-      >
+      {/* WeChat QR Dialog */}
+      <Dialog open={showWechatQR} onOpenChange={(open) => !open && setShowWechatQR(false)}>
+        <DialogContent className="max-w-sm">
         <div className="flex flex-col items-center">
           <div className={`w-56 h-56 rounded-2xl overflow-hidden mb-6 border p-2 shadow-inner ${isDarkMode ? 'bg-black/20 border-white/5' : 'bg-gray-50 border-gray-100'}`}>
             <img 
@@ -319,8 +310,9 @@ export const SettingsView = ({
             TanShilongMario
           </p>
         </div>
-      </Modal>
+        </DialogContent>
+      </Dialog>
 
-    </div>
+    </Card>
   );
 };

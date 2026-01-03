@@ -4,7 +4,7 @@
  */
 
 import { render, screen, fireEvent } from '@testing-library/react';
-import { ImageModal } from './ImageModal';
+import { ImageModal } from '../components/ImageModal';
 
 // Mock ImagePopup component
 vi.mock('./ImagePopup', () => ({

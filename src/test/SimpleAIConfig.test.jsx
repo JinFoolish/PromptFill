@@ -1,10 +1,9 @@
-/**
- * Tests for Simple AI Config Component
- * Requirements: 2.1, 2.2
- */
+//  * Tests for Simple AI Config Component
+//  * Requirements: 2.1, 2.2
+//  */
 
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { SimpleAIConfig } from './SimpleAIConfig';
+import { SimpleAIConfig } from '../components/SimpleAIConfig';
 
 // Mock fetch globally
 global.fetch = vi.fn();

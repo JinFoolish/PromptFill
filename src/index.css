@@ -2,11 +2,107 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  background: linear-gradient(180deg, #D6D6D6 0%, #DFDFDF 100%);
-  background-attachment: fixed;
-  margin: 0;
-  min-height: 100vh;
+@layer base {
+  :root {
+    /* 颜色系统 - 浅色模式 */
+    --background: 0 0% 100%;
+    --foreground: 222.2 47.4% 11.2%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 47.4% 11.2%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 47.4% 11.2%;
+    --primary: 24.6 95% 53.1%; /* 橙色主色调 */
+    --primary-foreground: 0 0% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 24.6 95% 53.1%; /* 橙色，与 primary 一致 */
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    /* 颜色系统 - 暗色模式 */
+    --background: 222.2 47.4% 11.2%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 47.4% 11.2%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 47.4% 11.2%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 24.6 95% 53.1%; /* 橙色主色调（暗色模式） */
+    --primary-foreground: 0 0% 98%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 24.6 95% 53.1%; /* 橙色，与 primary 一致 */
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    background: linear-gradient(180deg, #D6D6D6 0%, #DFDFDF 100%);
+    background-attachment: fixed;
+    margin: 0;
+    min-height: 100vh;
+  }
+  .dark body {
+    background: linear-gradient(180deg, #323131 0%, #181716 100%);
+  }
+  
+  /* 背景渐变变量 */
+  :root {
+    --background-gradient: linear-gradient(180deg, #D6D6D6 0%, #DFDFDF 100%);
+  }
+  .dark {
+    --background-gradient: linear-gradient(180deg, #323131 0%, #181716 100%);
+  }
+  
+  /* Mesh gradient background */
+  .mesh-gradient-bg-dark {
+    background: linear-gradient(180deg, #323131 0%, #181716 100%);
+  }
+  
+  /* Bank card gradient variables */
+  :root {
+    --bank-card-bg: linear-gradient(#F8F9FA, #F8F9FA);
+    --bank-card-border: linear-gradient(0deg, #E5E7EB 0%, #FFFFFF 100%);
+    /* Global container gradient */
+    --container-gradient: linear-gradient(180deg, #FAF5F1 0%, #F6EBE6 100%);
+    --container-border-gradient: linear-gradient(180deg, #FFFFFF 0%, rgba(255, 255, 255, 0) 100%);
+  }
+  .dark {
+    --bank-card-bg: linear-gradient(#2A2726, #2A2726);
+    --bank-card-border: linear-gradient(0deg, #3E3E3E 0%, rgba(255, 255, 255, 0.1) 100%);
+    /* Global container gradient */
+    --container-gradient: linear-gradient(180deg, #3B3B3B 0%, #242120 100%);
+    --container-border-gradient: linear-gradient(180deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 100%);
+  }
+  
+  /* Global container card style */
+  .global-container-card {
+    background: var(--container-gradient) padding-box, var(--container-border-gradient) border-box;
+    border: 1px solid transparent;
+    border-radius: 16px;
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+  }
 }
 
 /* Custom Scrollbar Styles */

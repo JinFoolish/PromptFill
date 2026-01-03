@@ -5,8 +5,15 @@ import {
 } from 'lucide-react';
 import { CATEGORY_STYLES, PREMIUM_STYLES } from '../constants/styles';
 import { getLocalized } from '../utils/helpers';
-import { Modal } from './Modal';
-import { PremiumButton } from './PremiumButton';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from './ui/dialog';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Card } from './ui/card';
 
 // --- Internal Sub-components ---
 
@@ -55,11 +62,7 @@ const BankGroup = ({
             <div 
                 className="rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300"
                 style={{
-                    background: `linear-gradient(${isDarkMode ? '#2A2726' : '#F8F9FA'}, ${isDarkMode ? '#2A2726' : '#F8F9FA'}) padding-box, ${
-                        isDarkMode 
-                            ? 'linear-gradient(0deg, #3E3E3E 0%, rgba(255, 255, 255, 0.1) 100%) border-box' 
-                            : 'linear-gradient(0deg, #E5E7EB 0%, #FFFFFF 100%) border-box'
-                    }`,
+                    background: `var(--bank-card-bg) padding-box, var(--bank-card-border) border-box`,
                     border: '1px solid transparent',
                 }}
             >
@@ -69,11 +72,11 @@ const BankGroup = ({
                     onClick={() => setIsCollapsed(!isCollapsed)}
                 >
                     <div className="flex items-center gap-3 overflow-hidden flex-1">
-                        <div className={`flex-shrink-0 transition-transform duration-300 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                        <div className="flex-shrink-0 transition-transform duration-300 text-gray-400 dark:text-gray-500">
                             {isCollapsed ? <ChevronDown size={18} /> : <ChevronUp size={18} />}
                         </div>
                         <div className="flex flex-col min-w-0">
-                            <span className={`text-[14px] font-bold truncate ${isDarkMode ? 'text-gray-200 group-hover/card:text-white' : 'text-gray-700 group-hover/card:text-gray-900'}`}>
+                            <span className="text-[14px] font-bold truncate text-gray-700 dark:text-gray-200 group-hover/card:text-gray-900 dark:group-hover/card:text-white">
                                 {getLocalized(bank.label, language)}
                             </span>
                             <code className="text-[10px] font-black tracking-wider mt-0.5 opacity-60" style={{ color: premium.to }}>{`{{${bankKey}}}`}</code>
@@ -86,13 +89,13 @@ const BankGroup = ({
                             <>
                                 <button 
                                     onClick={(e) => { e.stopPropagation(); setIsEditingCategory(!isEditingCategory); }}
-                                    className={`p-2 rounded-xl transition-all ${isDarkMode ? 'text-gray-500 hover:text-white hover:bg-white/10' : 'text-gray-400 hover:text-gray-700 hover:bg-gray-100'}`}
+                                    className="p-2 rounded-xl transition-all text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10"
                                 >
                                     <Settings size={16} />
                                 </button>
                                 <button 
                                     onClick={(e) => { e.stopPropagation(); onDeleteBank(bankKey); }}
-                                    className={`p-2 rounded-xl transition-all ${isDarkMode ? 'text-gray-500 hover:text-red-400 hover:bg-red-500/10' : 'text-gray-400 hover:text-red-600 hover:bg-red-50'}`}
+                                    className="p-2 rounded-xl transition-all text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10"
                                 >
                                     <Trash2 size={16} />
                                 </button>
@@ -104,25 +107,25 @@ const BankGroup = ({
                 {/* Expanded Content */}
                 {!isCollapsed && (
                     <div className="px-4 pb-4 slide-in-from-top-1 duration-200">
-                        <div className={`h-px mb-4 ${isDarkMode ? 'bg-white/5' : 'bg-gray-100'}`}></div>
+                        <div className="h-px mb-4 bg-gray-100 dark:bg-white/5"></div>
                         
                         {/* Category Edit */}
                         {isEditingCategory && (
                             <div className="mb-4">
-                                <label className={`block text-[10px] uppercase font-black mb-2 px-1 tracking-widest ${isDarkMode ? 'text-gray-600' : 'text-gray-500'}`}>
+                                <label className="block text-[10px] uppercase font-black mb-2 px-1 tracking-widest text-gray-500 dark:text-gray-600">
                                     {t('category_label')}
                                 </label>
                                 <div className="relative">
                                     <select 
                                         value={categoryId}
                                         onChange={(e) => { onUpdateBankCategory(bankKey, e.target.value); setIsEditingCategory(false); }}
-                                        className={`w-full text-xs font-bold rounded-xl px-3 py-2.5 outline-none transition-all appearance-none ${isDarkMode ? 'bg-black/20 text-gray-300 hover:bg-black/30' : 'bg-gray-50 text-gray-700 hover:bg-gray-100'}`}
+                                        className="w-full text-xs font-bold rounded-xl px-3 py-2.5 outline-none transition-all appearance-none bg-gray-50 dark:bg-black/20 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-black/30"
                                     >
                                         {Object.values(categories).map(cat => (
                                             <option key={cat.id} value={cat.id}>{getLocalized(cat.label, language)}</option>
                                         ))}
                                     </select>
-                                    <ChevronDown size={14} className={`absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`} />
+                                    <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 dark:text-gray-500" />
                                 </div>
                             </div>
                         )}
@@ -130,7 +133,7 @@ const BankGroup = ({
                         {/* Options List */}
                         <div className="flex flex-col gap-1 mb-3">
                             {filteredOptions.map((opt, idx) => (
-                                <div key={idx} className={`group/opt flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-[13px] font-medium transition-all ${isDarkMode ? 'hover:bg-white/5 text-gray-400 hover:text-gray-200' : 'hover:bg-gray-50 text-gray-600 hover:text-gray-900'}`}>
+                                <div key={idx} className="group/opt flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-[13px] font-medium transition-all hover:bg-gray-50 dark:hover:bg-white/5 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200">
                                     <span className="truncate select-text">{getLocalized(opt, language)}</span>
                                     <button 
                                         onClick={() => onDeleteOption(bankKey, opt)}
@@ -144,10 +147,10 @@ const BankGroup = ({
 
                         {/* Add Option Input */}
                         <div className="flex gap-2">
-                            <input
+                            <Input
                                 type="text"
                                 placeholder={t('add_option_placeholder')}
-                                className={`flex-1 px-3 py-2 text-[13px] rounded-xl outline-none transition-all focus:ring-2 focus:ring-orange-500/20 ${isDarkMode ? 'bg-black/20 text-gray-200 placeholder:text-gray-600' : 'bg-gray-50 text-gray-700 placeholder:text-gray-400'}`}
+                                className="flex-1 px-3 py-2 text-[13px] rounded-xl focus:ring-2 focus:ring-orange-500/20"
                                 onKeyDown={(e) => {
                                     if (e.key === 'Enter') {
                                         onAddOption(bankKey, e.target.value);
@@ -156,7 +159,7 @@ const BankGroup = ({
                                 }}
                             />
                             <button 
-                                className={`p-2 rounded-xl transition-all active:scale-95 hover:shadow-sm ${isDarkMode ? 'bg-white/10 text-gray-400 hover:bg-orange-500 hover:text-white' : 'bg-gray-100 text-gray-500 hover:bg-orange-500 hover:text-white'}`}
+                                className="p-2 rounded-xl transition-all active:scale-95 hover:shadow-sm bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-gray-400 hover:bg-orange-500 hover:text-white"
                                 onClick={(e) => {
                                     const input = e.currentTarget.previousSibling;
                                     onAddOption(bankKey, input.value);
@@ -209,13 +212,13 @@ const CategorySection = ({
     return (
         <div className={`break-inside-avoid mb-6 transition-opacity duration-300 ${catBanks.length === 0 ? 'opacity-50' : 'opacity-100'}`}>
             <div 
-                className={`flex items-center gap-2 mb-3 cursor-pointer group select-none py-2 px-2 rounded-lg transition-colors ${isDarkMode ? 'hover:bg-white/5' : 'hover:bg-gray-100'}`}
+                className="flex items-center gap-2 mb-3 cursor-pointer group select-none py-2 px-2 rounded-lg transition-colors hover:bg-gray-100 dark:hover:bg-white/5"
                 onClick={() => setIsCollapsed(!isCollapsed)}
             >
-                <div className={`${isDarkMode ? 'text-gray-600 group-hover:text-gray-400' : 'text-gray-400 group-hover:text-gray-600'} transition-colors`}>
+                <div className="text-gray-400 dark:text-gray-600 group-hover:text-gray-600 dark:group-hover:text-gray-400 transition-colors">
                     {isCollapsed ? <ChevronRight size={16} /> : <ChevronDown size={16} />}
                 </div>
-                <h3 className={`text-[11px] font-black uppercase tracking-[0.2em] flex items-center gap-2 flex-1 ${isDarkMode ? 'text-gray-500 group-hover:text-gray-300' : 'text-gray-500 group-hover:text-gray-700'}`}>
+                <h3 className="text-[11px] font-black uppercase tracking-[0.2em] flex items-center gap-2 flex-1 text-gray-500 group-hover:text-gray-700 dark:group-hover:text-gray-300">
                     <span className={`w-2 h-2 rounded-full ${style.dotBg}`}></span>
                     {getLocalized(category.label, language)}
                     <span className="ml-auto bg-gray-500/10 px-1.5 rounded text-[9px] tabular-nums opacity-60">
@@ -246,17 +249,16 @@ const CategorySection = ({
                     {/* Add Bank Button inside Category */}
                     {!bankSearchQuery && (
                          <div className="pl-3 mt-2">
-                            <PremiumButton
+                            <Button
                                 onClick={() => onStartAddBank(catId)}
-                                className="w-full justify-center !py-3 !border-dashed !bg-transparent opacity-60 hover:opacity-100"
-                                isDarkMode={isDarkMode}
-                                color="gray"
+                                variant="outline"
+                                className="w-full justify-center py-3 border-dashed bg-transparent opacity-60 hover:opacity-100"
                             >
                                 {/* 2. children 中只保留文本 */}
                                 <span className="text-[12px] font-black uppercase tracking-widest">
                                     {t('add_bank_group')}
                                 </span>
-                            </PremiumButton>
+                            </Button>
                         </div>
                     )}
                 </div>
@@ -329,129 +331,132 @@ export const CategoryManager = ({ isOpen, onClose, categories, setCategories, ba
     };
   
     return (
-        <Modal
-            isOpen={isOpen}
-            onClose={onClose}
-            title={t('manage_categories')}
-            icon={List}
-            isDarkMode={isDarkMode}
-            maxWidth="max-w-md"
-        >
+        <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+            <DialogContent className="max-w-md">
+                <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                        <List className="h-5 w-5" />
+                        {t('manage_categories')}
+                    </DialogTitle>
+                </DialogHeader>
+                <div className="overflow-y-auto custom-scrollbar max-h-[calc(90vh-120px)]">
              {/* Add New */}
-             <div className={`flex gap-2 items-center mb-6 p-1.5 rounded-xl border ${isDarkMode ? 'bg-black/20 border-white/5' : 'bg-gray-50 border-gray-200'}`}>
-                <input 
+             <div className="flex gap-2 items-center mb-6 p-1.5 rounded-xl border dark:bg-black/20 dark:border-white/5 bg-gray-50 border-gray-200">
+                <Input 
                   value={newCatName}
                   onChange={(e) => setNewCatName(e.target.value)}
                   placeholder={t('category_name_placeholder')}
-                  className={`flex-1 text-sm rounded-lg px-3 py-2 outline-none transition-all ${isDarkMode ? 'bg-transparent text-gray-200 placeholder-gray-600' : 'bg-transparent text-gray-800 placeholder-gray-400'}`}
+                  className="flex-1 text-sm rounded-lg px-3 py-2 bg-transparent"
                 />
                 <select 
                   value={newCatColor}
                   onChange={(e) => setNewCatColor(e.target.value)}
-                  className={`text-xs font-bold border rounded-lg px-2 py-2 outline-none cursor-pointer ${isDarkMode ? 'bg-[#2A2726] border-white/10 text-gray-300' : 'border-gray-200 bg-white text-gray-600'}`}
+                  className="text-xs font-bold border rounded-lg px-2 py-2 outline-none cursor-pointer border-gray-200 dark:border-white/10 bg-white dark:bg-[#2A2726] text-gray-600 dark:text-gray-300"
                 >
                   {availableColors.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
-                <PremiumButton 
+                <Button 
                   onClick={handleAddCategory}
                   disabled={!newCatName.trim()}
-                  className="!p-2 !rounded-lg"
-                  color="orange"
-                  isDarkMode={isDarkMode}
-                  active={true}
+                  variant="default"
+                  size="icon"
+                  className="p-2 rounded-lg"
                 >
-                  <Plus size={16} />
-                </PremiumButton>
+                  <Plus className="h-4 w-4" />
+                </Button>
              </div>
   
              {/* List */}
              <div className="space-y-2">
                {Object.values(categories).map(cat => (
-                 <div key={cat.id} className={`group flex items-center gap-3 p-3 rounded-xl border transition-all ${isDarkMode ? 'border-white/5 bg-white/5 hover:border-white/10' : 'border-gray-100 bg-white hover:border-gray-200 hover:shadow-sm'}`}>
+                 <div key={cat.id} className="group flex items-center gap-3 p-3 rounded-xl border transition-all border-gray-100 dark:border-white/5 bg-white dark:bg-white/5 hover:border-gray-200 dark:hover:border-white/10 hover:shadow-sm">
                     <div className={`w-2.5 h-2.5 rounded-full shadow-sm ${CATEGORY_STYLES[cat.color].dotBg}`}></div>
                     
                     {editingCatId === cat.id ? (
-                        <input 
+                        <Input 
                           autoFocus
                           value={tempCatName}
                           onChange={(e) => setTempCatName(e.target.value)}
                           onBlur={saveEditing}
                           onKeyDown={(e) => e.key === 'Enter' && saveEditing()}
-                          className={`flex-1 text-sm bg-transparent border-b-2 border-orange-500 outline-none px-1 py-0.5 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}
+                          className="flex-1 text-sm bg-transparent border-b-2 border-orange-500 outline-none px-1 py-0.5"
                         />
                     ) : (
-                        <span className={`flex-1 text-sm font-bold ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{getLocalized(cat.label, language)}</span>
+                        <span className="flex-1 text-sm font-bold text-gray-700 dark:text-gray-300">{getLocalized(cat.label, language)}</span>
                     )}
   
                     <div className="flex items-center gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
                         {/* Color Picker */}
                         <div className="relative group/color">
-                            <button className={`w-6 h-6 rounded-lg flex items-center justify-center hover:bg-black/10 transition-colors`}>
+                            <button className="w-6 h-6 rounded-lg flex items-center justify-center hover:bg-black/10 transition-colors">
                                 <div className={`w-3 h-3 rounded-full ${CATEGORY_STYLES[cat.color].bg}`}></div>
                             </button>
-                            <div className={`absolute right-0 top-full mt-2 hidden group-hover/color:grid grid-cols-5 gap-1.5 p-3 border shadow-xl rounded-xl z-50 w-[140px] slide-in-from-top-2 ${isDarkMode ? 'bg-[#1E1E1E] border-white/10' : 'bg-white border-gray-100'}`}>
+                            <div className="absolute right-0 top-full mt-2 hidden group-hover/color:grid grid-cols-5 gap-1.5 p-3 border shadow-xl rounded-xl z-50 w-[140px] slide-in-from-top-2 bg-white dark:bg-[#1E1E1E] border-gray-100 dark:border-white/10">
                                 {availableColors.map(c => (
                                     <div 
                                       key={c} 
                                       onClick={() => changeColor(cat.id, c)}
-                                      className={`w-5 h-5 rounded-full cursor-pointer hover:scale-110 transition-transform ring-1 ring-offset-2 ${isDarkMode ? 'ring-offset-[#1E1E1E]' : 'ring-offset-white'} ${CATEGORY_STYLES[c].dotBg} ${cat.color === c ? 'ring-gray-400' : 'ring-transparent'}`}
+                                      className={`w-5 h-5 rounded-full cursor-pointer hover:scale-110 transition-transform ring-1 ring-offset-2 ring-offset-white dark:ring-offset-[#1E1E1E] ${CATEGORY_STYLES[c].dotBg} ${cat.color === c ? 'ring-gray-400' : 'ring-transparent'}`}
                                       title={c}
                                     />
                                 ))}
                             </div>
                         </div>
   
-                        <button onClick={() => startEditing(cat)} className={`p-1.5 rounded-lg hover:text-orange-500 transition-colors ${isDarkMode ? 'hover:bg-white/10' : 'hover:bg-gray-100'}`}><Pencil size={14}/></button>
+                        <button onClick={() => startEditing(cat)} className="p-1.5 rounded-lg hover:text-orange-500 transition-colors hover:bg-gray-100 dark:hover:bg-white/10"><Pencil size={14}/></button>
                         {cat.id !== 'other' && (
-                            <button onClick={() => handleDeleteCategory(cat.id)} className={`p-1.5 rounded-lg hover:text-red-500 transition-colors ${isDarkMode ? 'hover:bg-white/10' : 'hover:bg-gray-100'}`}><Trash2 size={14}/></button>
+                            <button onClick={() => handleDeleteCategory(cat.id)} className="p-1.5 rounded-lg hover:text-red-500 transition-colors hover:bg-gray-100 dark:hover:bg-white/10"><Trash2 size={14}/></button>
                         )}
                     </div>
                  </div>
                ))}
              </div>
-        </Modal>
+                </div>
+            </DialogContent>
+        </Dialog>
     );
 };
 
 export const AddBankModal = ({ isOpen, onClose, t, categories, newBankLabel, setNewBankLabel, newBankKey, setNewBankKey, newBankCategory, setNewBankCategory, onConfirm, language, isDarkMode }) => {
     return (
-        <Modal
-            isOpen={isOpen}
-            onClose={onClose}
-            title={t('add_bank_title')}
-            icon={Database}
-            isDarkMode={isDarkMode}
-            maxWidth="max-w-md"
-        >
+        <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+            <DialogContent className="max-w-md">
+                <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                        <Database className="h-5 w-5" />
+                        {t('add_bank_title')}
+                    </DialogTitle>
+                </DialogHeader>
+                <div className="overflow-y-auto custom-scrollbar max-h-[calc(90vh-120px)]">
             <div className="space-y-5 pt-1">
                 <div className="space-y-1.5">
-                    <label className={`text-[10px] font-black uppercase tracking-widest pl-1 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>{t('label_name')}</label>
-                    <input 
+                    <label className="text-[10px] font-black uppercase tracking-widest pl-1 dark:text-gray-500 text-gray-400">{t('label_name')}</label>
+                    <Input 
                         autoFocus
                         type="text" 
-                        className={`w-full text-sm rounded-xl px-4 py-3 outline-none transition-all border-2 focus:border-orange-500/50 ${isDarkMode ? 'bg-black/20 border-white/5 text-gray-200 focus:bg-black/40' : 'bg-gray-50 border-gray-100 text-gray-800 focus:bg-white'}`}
+                        className="w-full text-sm rounded-xl px-4 py-3 border-2 focus:border-orange-500/50"
                         placeholder={t('label_placeholder')}
                         value={newBankLabel}
                         onChange={e => setNewBankLabel(e.target.value)}
                     />
                 </div>
                 <div className="space-y-1.5">
-                    <label className={`text-[10px] font-black uppercase tracking-widest pl-1 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>{t('id_name')}</label>
-                    <input 
+                    <label className="text-[10px] font-black uppercase tracking-widest pl-1 dark:text-gray-500 text-gray-400">{t('id_name')}</label>
+                    <Input 
                         type="text" 
-                        className={`w-full text-sm font-mono rounded-xl px-4 py-3 outline-none transition-all border-2 focus:border-orange-500/50 ${isDarkMode ? 'bg-black/20 border-white/5 text-gray-200 focus:bg-black/40' : 'bg-gray-50 border-gray-100 text-gray-800 focus:bg-white'}`}
+                        className="w-full text-sm font-mono rounded-xl px-4 py-3 border-2 focus:border-orange-500/50"
                         placeholder={t('id_placeholder')}
                         value={newBankKey}
                         onChange={e => setNewBankKey(e.target.value)} 
                     />
                 </div>
                 <div className="space-y-1.5">
-                    <label className={`text-[10px] font-black uppercase tracking-widest pl-1 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>{t('category_label')}</label>
+                    <label className="text-[10px] font-black uppercase tracking-widest pl-1 text-gray-400 dark:text-gray-500">{t('category_label')}</label>
                     <div className="relative">
                         <select 
                             value={newBankCategory}
                             onChange={e => setNewBankCategory(e.target.value)}
-                            className={`w-full text-sm appearance-none rounded-xl px-4 py-3 outline-none transition-all border-2 focus:border-orange-500/50 ${isDarkMode ? 'bg-black/20 border-white/5 text-gray-200 focus:bg-black/40' : 'bg-gray-50 border-gray-100 text-gray-800 focus:bg-white'}`}
+                            className="w-full text-sm appearance-none rounded-xl px-4 py-3 outline-none transition-all border-2 focus:border-orange-500/50 bg-gray-50 dark:bg-black/20 border-gray-100 dark:border-white/5 text-gray-800 dark:text-gray-200 focus:bg-white dark:focus:bg-black/40"
                         >
                             {Object.values(categories).map(cat => (
                                 <option key={cat.id} value={cat.id}>{getLocalized(cat.label, language)}</option>
@@ -462,27 +467,26 @@ export const AddBankModal = ({ isOpen, onClose, t, categories, newBankLabel, set
                 </div>
 
                 <div className="pt-4 flex gap-3">
-                    <PremiumButton 
+                    <Button 
                         onClick={onClose}
+                        variant="outline"
                         className="flex-1 justify-center"
-                        color="gray"
-                        isDarkMode={isDarkMode}
                     >
                         {t('cancel')}
-                    </PremiumButton>
-                    <PremiumButton 
+                    </Button>
+                    <Button 
                         onClick={onConfirm}
                         disabled={!newBankLabel.trim() || !newBankKey.trim()}
+                        variant="default"
                         className="flex-1 justify-center"
-                        color="orange"
-                        active={true}
-                        isDarkMode={isDarkMode}
                     >
                         {t('confirm_add')}
-                    </PremiumButton>
+                    </Button>
                 </div>
             </div>
-        </Modal>
+                </div>
+            </DialogContent>
+        </Dialog>
     );
 };
 
@@ -495,7 +499,7 @@ export const BanksView = ({
   categories, banks, setCategories, setBanks,
   handleDeleteOption, handleAddOption, handleDeleteBank, 
   handleUpdateBankCategory,
-  t, language, isDarkMode, globalContainerStyle
+  t, language, isDarkMode
 }) => {
   // Modal States
   const [showCategoryManager, setShowCategoryManager] = useState(false);
@@ -534,47 +538,39 @@ export const BanksView = ({
   };
 
   return (
-    <div style={globalContainerStyle} className="flex-1 flex flex-col h-full overflow-hidden relative">
+    <Card variant="container" className="flex-1 flex flex-col h-full overflow-hidden relative">
       
       {/* 1. Header Area */}
       <div className="px-8 pt-10 pb-6 flex-shrink-0 flex flex-col gap-6 max-w-5xl mx-auto w-full">
         <div className="flex items-center justify-between">
             <div>
-              <h1 className={`text-3xl font-black tracking-tighter ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+              <h1 className="text-3xl font-black tracking-tighter text-gray-900 dark:text-white">
                 {t('bank_config') || 'Bank Library'}
               </h1>
-              <p className={`text-[11px] font-bold mt-2 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+              <p className="text-[11px] font-bold mt-2 text-gray-400 dark:text-gray-500">
                 Manage your reusable prompt variables
               </p>
             </div>
             
-            <PremiumButton 
+            <Button 
                 onClick={() => setShowCategoryManager(true)}
-                icon={Settings}
-                color="orange"
-                isDarkMode={isDarkMode}
+                variant="default"
                 className="font-bold"
             >
+                <Settings className="h-4 w-4" />
                 {t('manage_categories')}
-            </PremiumButton>
+            </Button>
         </div>
 
         {/* Search Bar */}
         <div className="relative group w-full">
-            <Search className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors pointer-events-none ${isDarkMode ? 'text-gray-600 group-focus-within:text-orange-500' : 'text-gray-400 group-focus-within:text-orange-500'}`} size={16} />
-            <input 
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 transition-colors pointer-events-none z-10 dark:text-gray-600 text-gray-400 group-focus-within:text-orange-500" size={16} />
+            <Input 
               type="text" 
               placeholder={t('search_templates') || "Search banks..."} 
               value={bankSearchQuery} 
               onChange={(e) => setBankSearchQuery(e.target.value)} 
-              style={isDarkMode ? {
-                background: '#1E1E1E',
-                border: '1px solid rgba(255,255,255,0.05)',
-              } : {
-                background: '#FFFFFF',
-                border: '1px solid rgba(0,0,0,0.05)',
-              }}
-              className={`w-full pl-11 pr-4 py-3.5 rounded-2xl text-[14px] font-medium transition-all outline-none focus:ring-4 focus:ring-orange-500/5 shadow-sm ${isDarkMode ? 'text-gray-200 placeholder-gray-600' : 'text-gray-700 placeholder-gray-400'}`} 
+              className="w-full pl-11 pr-4 py-3.5 rounded-2xl text-[14px] font-medium shadow-sm" 
             />
         </div>
       </div>
@@ -635,7 +631,7 @@ export const BanksView = ({
           isDarkMode={isDarkMode}
       />
 
-    </div>
+    </Card>
   );
 };
 
@@ -670,14 +666,15 @@ export const InsertVariableModal = ({ isOpen, onClose, categories, banks, onSele
     };
 
     return (
-        <Modal
-            isOpen={isOpen}
-            onClose={onClose}
-            title={t('insert')}
-            icon={List}
-            isDarkMode={isDarkMode}
-            maxWidth="max-w-md"
-        >
+        <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+            <DialogContent className="max-w-md">
+                <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                        <List className="h-5 w-5" />
+                        {t('insert')}
+                    </DialogTitle>
+                </DialogHeader>
+                <div className="overflow-y-auto custom-scrollbar max-h-[calc(90vh-120px)]">
              <div className="space-y-6 pt-2">
                {Object.keys(categories).map(catId => {
                    const catBanks = Object.entries(banks).filter(([_, bank]) => (bank.category || 'other') === catId);
@@ -690,7 +687,7 @@ export const InsertVariableModal = ({ isOpen, onClose, categories, banks, onSele
                    return (
                        <div key={catId}>
                            <h4 
-                               className={`text-[10px] font-black uppercase tracking-[0.2em] mb-3 flex items-center gap-2 cursor-pointer group/header transition-colors ${style.text} ${isDarkMode ? 'hover:text-gray-300' : 'hover:text-gray-700'}`}
+                               className={`text-[10px] font-black uppercase tracking-[0.2em] mb-3 flex items-center gap-2 cursor-pointer group/header transition-colors ${style.text} hover:text-gray-700 dark:hover:text-gray-300`}
                                onClick={() => toggleCategory(catId)}
                            >
                                <div className={`transition-transform duration-200 ${isCollapsed ? '' : 'rotate-90'}`}>
@@ -708,16 +705,13 @@ export const InsertVariableModal = ({ isOpen, onClose, categories, banks, onSele
                                        <button
                                            key={key}
                                            onClick={() => onSelect(key)}
-                                           className={`
-                                             flex items-center justify-between p-3 rounded-xl border text-left transition-all group
-                                             ${isDarkMode ? 'bg-white/5 border-white/5 hover:border-orange-500/50 hover:bg-orange-500/10' : 'bg-white border-gray-100 hover:border-orange-200 hover:bg-orange-50'}
-                                           `}
+                                           className="flex items-center justify-between p-3 rounded-xl border text-left transition-all group bg-white dark:bg-white/5 border-gray-100 dark:border-white/5 hover:border-orange-200 dark:hover:border-orange-500/50 hover:bg-orange-50 dark:hover:bg-orange-500/10"
                                        >
                                            <div>
-                                               <span className={`block text-sm font-bold transition-colors ${isDarkMode ? 'text-gray-300 group-hover:text-orange-400' : 'text-gray-700 group-hover:text-orange-700'}`}>{getLocalized(bank.label, language)}</span>
-                                               <code className={`text-[10px] font-black tracking-wide opacity-50 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>{`{{${key}}}`}</code>
+                                               <span className="block text-sm font-bold transition-colors text-gray-700 dark:text-gray-300 group-hover:text-orange-700 dark:group-hover:text-orange-400">{getLocalized(bank.label, language)}</span>
+                                               <code className="text-[10px] font-black tracking-wide opacity-50 text-gray-400 dark:text-gray-500">{`{{${key}}}`}</code>
                                            </div>
-                                           <Plus size={16} className={`transition-colors ${isDarkMode ? 'text-gray-600 group-hover:text-orange-500' : 'text-gray-300 group-hover:text-orange-500'}`} />
+                                           <Plus size={16} className="transition-colors text-gray-300 dark:text-gray-600 group-hover:text-orange-500" />
                                        </button>
                                    ))}
                                </div>
@@ -726,6 +720,8 @@ export const InsertVariableModal = ({ isOpen, onClose, categories, banks, onSele
                    );
                })}
             </div>
-        </Modal>
+                </div>
+            </DialogContent>
+        </Dialog>
     );
 };

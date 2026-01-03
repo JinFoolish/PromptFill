@@ -3,9 +3,8 @@
 
 export { Variable } from './Variable';
 export { VisualEditor } from './VisualEditor';
-export { PremiumButton } from './PremiumButton';
 export { EditorToolbar } from './EditorToolbar';
-export { Lightbox } from './Lightbox';
+// export { Lightbox } from './Lightbox';
 export { TemplatePreview } from './TemplatePreview';
 export { TemplatesSidebar } from './TemplatesSidebar';
 // export { BanksSidebar, CategoryManager, InsertVariableModal, AddBankModal } from './BanksSidebar';

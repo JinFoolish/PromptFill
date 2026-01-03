@@ -1,8 +1,13 @@
 // AI 图像生成器组件
 import { useState, useEffect } from 'react';
 import { Sparkles, Settings, Loader2, AlertCircle, X } from 'lucide-react';
-import { PremiumButton } from './PremiumButton';
-import { Modal } from './Modal';
+import { Button } from './ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from './ui/dialog';
 
 export const AIImageGenerator = ({ 
   prompt, 
@@ -264,14 +269,15 @@ export const AIImageGenerator = ({
               {error.message}
             </div>
           </div>
-          <PremiumButton
+          <Button
             onClick={() => setError(null)}
+            variant="ghost"
+            size="icon"
             className="p-1 flex-shrink-0"
-            isDarkMode={isDarkMode}
-            color="rose"
             title={t('close_error') || '关闭错误'}
-            icon={X}
-          />
+          >
+            <X className="h-4 w-4" />
+          </Button>
         </div>
       </div>
     );
@@ -345,23 +351,20 @@ export const AIImageGenerator = ({
 
         {/* 按钮组 */}
         <div className="flex gap-3 pt-4">
-          <PremiumButton
+          <Button
             onClick={handleCancelConfig}
+            variant="outline"
             className="flex-1 py-3 px-4"
-            isDarkMode={isDarkMode}
-            color="slate"
           >
             {t('cancel') || '取消'}
-          </PremiumButton>
-          <PremiumButton
+          </Button>
+          <Button
             onClick={handleConfirmConfig}
+            variant="default"
             className="flex-1 py-3 px-4"
-            active={true}
-            isDarkMode={isDarkMode}
-            color="orange"
           >
             {t('confirm') || '确认'}
-          </PremiumButton>
+          </Button>
         </div>
       </div>
     );
@@ -375,45 +378,45 @@ export const AIImageGenerator = ({
         {/* 按钮行 */}
         <div className="flex gap-2 mb-3">
           {/* 生成按钮 */}
-          <PremiumButton
+          <Button
             onClick={handleGenerate}
             disabled={isGenerating || !prompt?.trim() || isLoadingConfig}
-            active={true}
-            color="orange"
-            isDarkMode={isDarkMode}
+            variant="default"
             className="w-32 py-2.5 px-4 text-sm font-bold justify-center"
-            icon={isGenerating ? Loader2 : Sparkles}
           >
+            {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
             {isGenerating ? (
               `${t('generating') || '生成中'}...`
             ) : (
               t('generate_image') || '生成图片'
             )}
-          </PremiumButton>
+          </Button>
 
           {/* 配置按钮 */}
-          <PremiumButton
+          <Button
             onClick={handleOpenConfig}
             disabled={isLoadingConfig}
+            variant="outline"
+            size="icon"
             className="p-2.5"
-            isDarkMode={isDarkMode}
-            color="slate"
             title={t('generation_settings') || '生成设置'}
-            icon={isLoadingConfig ? Loader2 : Settings}
-          />
+          >
+            {isLoadingConfig ? <Loader2 className="h-4 w-4 animate-spin" /> : <Settings className="h-4 w-4" />}
+          </Button>
         </div>
 
 
-      {/* 配置Modal */}
-      <Modal
-        isOpen={isConfigOpen}
-        onClose={handleCancelConfig}
-        title={t('generation_settings') || '生成设置'}
-        isDarkMode={isDarkMode}
-        maxWidth="max-w-md"
-      >
-        {renderConfigContent()}
-      </Modal>
+      {/* 配置Dialog */}
+      <Dialog open={isConfigOpen} onOpenChange={(open) => !open && handleCancelConfig()}>
+        <DialogContent className="max-w-md max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle>{t('generation_settings') || '生成设置'}</DialogTitle>
+          </DialogHeader>
+          <div className="overflow-y-auto custom-scrollbar max-h-[calc(90vh-120px)]">
+            {renderConfigContent()}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -13,6 +13,7 @@ import { MASONRY_STYLES } from './constants/masonryStyles';
 import { getLocalized } from './utils/helpers';
 import { exportImage } from './services/exportService';
 import { getStorageSize, clearAllData } from './services/storageService';
+import { toggleDarkMode } from './utils/themeManager';
 
 // 导入 Context
 import { AppProvider, useApp } from './contexts/AppContext';
@@ -21,7 +22,6 @@ import { AppProvider, useApp } from './contexts/AppContext';
 import {
   Variable,
   VisualEditor,
-  PremiumButton,
   EditorToolbar,
   InsertVariableModal,
   TemplatePreview,
@@ -38,17 +38,23 @@ import {
   AppUpdateNotice,
   DarkModeLamp
 } from './components';
-
-// Toast 消息函数（简单实现）
-const showToastMessage = (message) => {
-  // 简单的 alert 实现，可以后续替换为更好的 Toast 组件
-  console.log(message);
-  // 如果需要，可以使用 alert(message) 或实现一个 Toast 组件
-};
+import { Button } from './components/ui/button';
+import { Card } from './components/ui/card';
+import { Toaster } from './components/ui/toaster';
+import { useToast } from './hooks/use-toast';
 
 // App 主组件（使用 Context）
 const AppContent = () => {
   const app = useApp();
+  const { toast } = useToast();
+  
+  // Toast 消息函数
+  const showToastMessage = (message) => {
+    toast({
+      title: message,
+      duration: 3000,
+    });
+  };
   
   // 从 Context 中解构所有需要的状态和函数
   const {
@@ -165,6 +171,11 @@ const AppContent = () => {
     setDefaults,
   } = app;
 
+  // 同步暗色模式到 document.documentElement
+  useEffect(() => {
+    toggleDarkMode(isDarkMode);
+  }, [isDarkMode]);
+
   // Refs
   const popoverRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -280,30 +291,15 @@ const AppContent = () => {
     clearAllData(t);
   };
 
-  // 全局容器样式
-  const globalContainerStyle = isDarkMode ? {
-    background: 'linear-gradient(180deg, #3B3B3B 0%, #242120 100%)',
-    borderRadius: '16px',
-    border: '1px solid transparent',
-    backgroundImage: 'linear-gradient(180deg, #3B3B3B, #242120), linear-gradient(180deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 100%)',
-    backgroundOrigin: 'border-box',
-    backgroundClip: 'padding-box, border-box',
-  } : {
-    background: 'linear-gradient(180deg, #FAF5F1 0%, #F6EBE6 100%)',
-    borderRadius: '16px',
-    border: '1px solid transparent',
-    backgroundImage: 'linear-gradient(180deg, #FAF5F1, #F6EBE6), linear-gradient(180deg, #FFFFFF 0%, rgba(255, 255, 255, 0) 100%)',
-    backgroundOrigin: 'border-box',
-    backgroundClip: 'padding-box, border-box',
-  };
+  // globalContainerStyle 已迁移到 Card 组件的 container variant
 
   return (
     <div 
-      className={`flex h-screen w-screen overflow-hidden ${isDarkMode ? '' : 'mesh-gradient-bg md:p-4'}`}
-      style={isDarkMode ? { 
-        background: 'linear-gradient(180deg, #323131 0%, #181716 100%)',
+      className="flex h-screen w-screen overflow-hidden mesh-gradient-bg md:p-4 dark:mesh-gradient-bg-dark dark:md:p-4"
+      style={{
+        background: 'var(--background-gradient)',
         padding: '16px'
-      } : {}}
+      }}
     >
       {/* 全局侧边栏 */}
       <Sidebar 
@@ -369,20 +365,19 @@ const AppContent = () => {
             handleSwitchToLocalStorage={fileSystem.handleSwitchToLocalStorage}
             SYSTEM_DATA_VERSION={SYSTEM_DATA_VERSION}
             t={t}
-            globalContainerStyle={globalContainerStyle}
             isDarkMode={isDarkMode}
           />
         ) : isHistoryOpen ? (
-          <div 
-            style={globalContainerStyle}
-            className={`flex-1 flex flex-col overflow-hidden ${isDarkMode ? 'bg-black/20 backdrop-blur-sm rounded-2xl' : 'bg-white/30 backdrop-blur-sm rounded-2xl'}`}
+          <Card 
+            variant="container"
+            className="flex-1 flex flex-col overflow-hidden bg-white/30 dark:bg-black/20 backdrop-blur-sm"
           >
             <HistoryManager 
               isDarkMode={isDarkMode}
               t={t}
               className="flex-1"
             />
-          </div>
+          </Card>
         ) : isBanksViewOpen ? (
           <BanksView
             categories={categories}
@@ -397,7 +392,6 @@ const AppContent = () => {
             t={t}
             language={language}
             isDarkMode={isDarkMode}
-            globalContainerStyle={globalContainerStyle}
           />
         ) : showDiscoveryOverlay ? (
           <DiscoveryView 
@@ -419,7 +413,6 @@ const AppContent = () => {
             setLanguage={setLanguage}
             setIsSettingsOpen={setIsSettingsOpen}
             isDarkMode={isDarkMode}
-            globalContainerStyle={globalContainerStyle}
           />
         ) : (
           <div className="flex-1 flex gap-4 overflow-hidden">
@@ -461,19 +454,18 @@ const AppContent = () => {
               setTempTemplateAuthor={setTempTemplateAuthor}
               saveTemplateName={templateManagement.saveTemplateName}
               setEditingTemplateNameId={setEditingTemplateNameId}
-              globalContainerStyle={globalContainerStyle}
             />
 
             {/* 主编辑器 */}
-            <div 
-              style={globalContainerStyle}
-              className="flex flex-1 flex-col h-full overflow-hidden relative rounded-2xl origin-left"
+            <Card 
+              variant="container"
+              className="flex flex-1 flex-col h-full overflow-hidden relative origin-left"
             >
-              <div className={`flex flex-col w-full h-full ${isDarkMode ? 'bg-black/20 backdrop-blur-sm rounded-2xl' : 'bg-white/30 backdrop-blur-sm rounded-2xl'}`}>
+              <div className="flex flex-col w-full h-full bg-white/30 dark:bg-black/20 backdrop-blur-sm rounded-2xl">
                 {/* 顶部工具栏 */}
-                <div className={`px-4 md:px-8 py-3 md:py-4 border-b flex justify-between items-center z-20 h-auto min-h-[60px] md:min-h-[72px] ${isDarkMode ? 'border-white/5' : 'border-gray-100/50'}`}>
+                <div className="px-4 md:px-8 py-3 md:py-4 border-b border-gray-100/50 dark:border-white/5 flex justify-between items-center z-20 h-auto min-h-[60px] md:min-h-[72px]">
                     <div className="min-w-0 flex-1 mr-4 flex items-center gap-6">
-                      <h1 className={`text-xl md:text-2xl font-black truncate tracking-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{getLocalized(activeTemplate.name, language)}</h1>
+                      <h1 className="text-xl md:text-2xl font-black truncate tracking-tight text-gray-900 dark:text-white">{getLocalized(activeTemplate.name, language)}</h1>
                       
                       {/* Language Toggle */}
                       {activeTemplate && (() => {
@@ -485,7 +477,7 @@ const AppContent = () => {
                         if (!showLanguageToggle) return null;
 
                         return (
-                          <div className={`flex items-center p-1 rounded-xl border shadow-inner shrink-0 ${isDarkMode ? 'bg-black/20 border-white/5' : 'bg-gray-100/80 border-gray-200'}`}>
+                          <div className="flex items-center p-1 rounded-xl border shadow-inner shrink-0 bg-gray-100/80 dark:bg-black/20 border-gray-200 dark:border-white/5">
                             <button 
                               onClick={() => supportsChinese && setTemplateLanguage('cn')}
                               disabled={!supportsChinese}
@@ -494,8 +486,8 @@ const AppContent = () => {
                                 ${!supportsChinese 
                                   ? 'text-gray-600 cursor-not-allowed opacity-30' 
                                   : templateLanguage === 'cn' 
-                                    ? (isDarkMode ? 'bg-white/10 text-orange-400 shadow-lg' : 'bg-white text-orange-600 shadow-sm ring-1 ring-black/5') 
-                                    : (isDarkMode ? 'text-gray-500 hover:text-gray-300 hover:bg-white/5' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50')}
+                                    ? 'bg-white dark:bg-white/10 text-orange-600 dark:text-orange-400 shadow-sm dark:shadow-lg ring-1 ring-black/5' 
+                                    : 'text-gray-500 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5'}
                               `}
                             >
                               CN
@@ -508,8 +500,8 @@ const AppContent = () => {
                                 ${!supportsEnglish 
                                   ? 'text-gray-600 cursor-not-allowed opacity-30' 
                                   : templateLanguage === 'en' 
-                                    ? (isDarkMode ? 'bg-white/10 text-orange-400 shadow-lg' : 'bg-white text-orange-600 shadow-sm ring-1 ring-black/5') 
-                                    : (isDarkMode ? 'text-gray-500 hover:text-gray-300 hover:bg-white/5' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50')}
+                                    ? 'bg-white dark:bg-white/10 text-orange-600 dark:text-orange-400 shadow-sm dark:shadow-lg ring-1 ring-black/5' 
+                                    : 'text-gray-500 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5'}
                               `}
                             >
                               EN
@@ -520,14 +512,14 @@ const AppContent = () => {
                     </div>
                     
                     <div className="flex items-center gap-2 md:gap-3 shrink-0">
-                      <div className={`flex p-1 rounded-xl border shadow-inner ${isDarkMode ? 'bg-black/20 border-white/5' : 'bg-gray-100/80 border-gray-200'}`}>
+                      <div className="flex p-1 rounded-xl border shadow-inner bg-gray-100/80 dark:bg-black/20 border-gray-200 dark:border-white/5">
                         <button
                           onClick={() => setIsEditing(false)}
                           className={`
                             p-1.5 md:px-3 md:py-1.5 rounded-lg text-sm font-medium transition-all duration-300 flex items-center gap-1.5
                             ${!isEditing 
-                              ? (isDarkMode ? 'bg-white/10 text-orange-400 shadow-lg' : 'bg-white text-orange-600 shadow-sm ring-1 ring-black/5') 
-                              : (isDarkMode ? 'text-gray-600 hover:text-gray-300 hover:bg-white/5' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50')}
+                              ? 'bg-white dark:bg-white/10 text-orange-600 dark:text-orange-400 shadow-sm dark:shadow-lg ring-1 ring-black/5' 
+                              : 'text-gray-500 dark:text-gray-600 hover:text-gray-900 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5'}
                           `}
                           title={t('preview_mode')}
                         >
@@ -538,8 +530,8 @@ const AppContent = () => {
                           className={`
                             p-1.5 md:px-3 md:py-1.5 rounded-lg text-sm font-medium transition-all duration-300 flex items-center gap-1.5
                             ${isEditing 
-                              ? (isDarkMode ? 'bg-white/10 text-orange-400 shadow-lg' : 'bg-white text-orange-600 shadow-sm ring-1 ring-black/5') 
-                              : (isDarkMode ? 'text-gray-600 hover:text-gray-300 hover:bg-white/5' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50')}
+                              ? 'bg-white dark:bg-white/10 text-orange-600 dark:text-orange-400 shadow-sm dark:shadow-lg ring-1 ring-black/5' 
+                              : 'text-gray-500 dark:text-gray-600 hover:text-gray-900 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5'}
                           `}
                           title={t('edit_mode')}
                         >
@@ -547,29 +539,26 @@ const AppContent = () => {
                         </button>
                       </div>
 
-                      <div className={`h-6 w-px mx-1 hidden md:block ${isDarkMode ? 'bg-white/5' : 'bg-gray-200'}`}></div>
+                      <div className={`h-6 w-px mx-1 hidden md:block dark:bg-white/5 bg-gray-200`}></div>
 
-                      <PremiumButton 
+                      <Button 
                         onClick={handleExportImage} 
                         disabled={isEditing || isExporting} 
                         title={isExporting ? t('exporting') : t('export_image')} 
-                        icon={ImageIcon} 
-                        color="orange"
-                        isDarkMode={isDarkMode}
+                        variant="default"
                       >
+                        <ImageIcon className="h-4 w-4" />
                         <span className="hidden sm:inline">{isExporting ? t('exporting') : t('export_image')}</span>
-                      </PremiumButton>
-                      <PremiumButton 
+                      </Button>
+                      <Button 
                         onClick={handleCopy} 
                         title={copied ? t('copied') : t('copy_result')} 
-                        icon={copied ? Check : CopyIcon} 
-                        color={copied ? "emerald" : "orange"}
-                        active={true}
-                        isDarkMode={isDarkMode}
+                        variant={copied ? "secondary" : "default"}
                         className="transition-all duration-300 transform hover:-translate-y-0.5"
                       >
+                        {copied ? <Check className="h-4 w-4" /> : <CopyIcon className="h-4 w-4" />}
                         <span className="hidden md:inline ml-1">{copied ? t('copied') : t('copy_result')}</span>
-                      </PremiumButton>
+                      </Button>
                     </div>
                 </div>
 
@@ -577,7 +566,7 @@ const AppContent = () => {
                 <div className="flex-1 overflow-hidden relative flex flex-col">
                   <>
                       {isEditing && (
-                        <div className={`backdrop-blur-sm ${isDarkMode ? 'bg-black/20' : 'bg-white/30'}`}>
+                        <div className="backdrop-blur-sm bg-white/30 dark:bg-black/20">
                           <EditorToolbar 
                             onInsertClick={() => setIsInsertModalOpen(true)}
                             canUndo={history.canUndo}
@@ -585,7 +574,6 @@ const AppContent = () => {
                             onUndo={history.handleUndo}
                             onRedo={history.handleRedo}
                             t={t}
-                            isDarkMode={isDarkMode}
                             cursorInVariable={editor.cursorInVariable}
                             currentGroupId={editor.currentGroupId}
                             onSetGroup={editor.handleSetGroup}
@@ -651,7 +639,6 @@ const AppContent = () => {
                           saveTemplateName={templateManagement.saveTemplateName}
                           startRenamingTemplate={templateManagement.startRenamingTemplate}
                           setEditingTemplateNameId={setEditingTemplateNameId}
-                          globalContainerStyle={globalContainerStyle}
                           onImageGenerated={handleImageGenerated}
                           isDarkMode={isDarkMode}
                         />
@@ -701,7 +688,7 @@ const AppContent = () => {
                   )}
                 </div>
               </div>
-            </div>
+            </Card>
           </div>
         )}
       </div>
@@ -965,7 +952,7 @@ const AppContent = () => {
 
       {/* Mobile Bottom Navigation (已禁用，通过配置接口可重新启用) */}
       {false && (
-        <div className={`md:hidden fixed bottom-0 left-0 right-0 backdrop-blur-2xl border-t flex justify-around items-center z-[250] h-16 pb-safe shadow-[0_-8px_30px_rgba(0,0,0,0.05)] transition-colors duration-300 ${isDarkMode ? 'bg-[#181716]/25 border-white/5' : 'bg-white/25 border-white/30'}`}>
+        <div className="md:hidden fixed bottom-0 left-0 right-0 backdrop-blur-2xl border-t flex justify-around items-center z-[250] h-16 pb-safe shadow-[0_-8px_30px_rgba(0,0,0,0.05)] transition-colors duration-300 bg-white/25 dark:bg-[#181716]/25 border-white/30 dark:border-white/5">
           {/* 移动端导航栏代码已移除，可通过配置接口重新启用 */}
         </div>
       )}
@@ -1071,6 +1058,9 @@ const AppContent = () => {
         updateNoticeType={updateNoticeType}
         t={t}
       />
+      
+      {/* Toast 通知 */}
+      <Toaster />
     </div>
   );
 };

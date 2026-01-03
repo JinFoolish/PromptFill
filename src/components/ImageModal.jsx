@@ -1,7 +1,7 @@
 // 图像显示模态框组件
 import React from 'react';
 import { Download, Copy, Save } from 'lucide-react';
-import { PremiumButton } from './PremiumButton';
+import { Button } from './ui/button';
 import ImagePopup from './ImagePopup';
 
 export const ImageModal = ({ 
@@ -87,35 +87,32 @@ export const ImageModal = ({
 
         {/* 操作按钮 */}
         <div className="flex gap-3 justify-center">
-          <PremiumButton
+          <Button
             onClick={() => handleSaveAction('download')}
-            icon={Download}
-            color="blue"
-            isDarkMode={true}
+            variant="default"
             className="px-6 py-3"
           >
+            <Download className="h-4 w-4" />
             {/* {t('download') || '另存为'} */}
-          </PremiumButton>
+          </Button>
 
-          <PremiumButton
+          <Button
             onClick={() => handleSaveAction('copy')}
-            icon={Copy}
-            color="emerald"
-            isDarkMode={true}
+            variant="secondary"
             className="px-6 py-3"
           >
+            <Copy className="h-4 w-4" />
             {/* {t('copy') || '复制图片'} */}
-          </PremiumButton>
+          </Button>
 
-          <PremiumButton
+          <Button
             onClick={() => handleSaveAction('history')}
-            icon={Save}
-            color="orange"
-            isDarkMode={true}
+            variant="default"
             className="px-6 py-3"
           >
+            <Save className="h-4 w-4" />
             {/* {t('save_to_history') || '保存到历史记录'} */}
-          </PremiumButton>
+          </Button>
         </div>
 
         {/* 多图片提示 */}
