@@ -1101,39 +1101,6 @@
       }
     ]
   },
-  "ratio": {
-    "label": {
-      "cn": "画幅比例",
-      "en": "Aspect Ratio"
-    },
-    "category": "visual",
-    "options": [
-      {
-        "cn": "3:4竖构图",
-        "en": "3:4 Vertical"
-      },
-      {
-        "cn": "9:16竖构图",
-        "en": "9:16 Vertical"
-      },
-      {
-        "cn": "1:1",
-        "en": "1:1 Square"
-      },
-      {
-        "cn": "4:3横构图",
-        "en": "4:3 Horizontal"
-      },
-      {
-        "cn": "16:9横构图",
-        "en": "16:9 Horizontal"
-      },
-      {
-        "cn": "圆形画幅",
-        "en": "Circular Aspect Ratio"
-      }
-    ]
-  },
   "fashion_deconstruct": {
     "label": {
       "cn": "穿搭解构",
