@@ -33,27 +33,31 @@ func (a *App) GetConfig() (*ConfigResponse, error) {
 
 // LoadCategories loads the category definitions
 func (a *App) LoadCategories() (CategoryMap, error) {
-	// Try config dir first
-	categoriesFile := filepath.Join(filepath.Dir(a.configPath), "categories.json")
-
-	// Check if file exists in config dir
-	if _, err := os.Stat(categoriesFile); os.IsNotExist(err) {
-		// Fallback to dev source path if running locally
-		if wd, err := os.Getwd(); err == nil {
-			categoriesFile = filepath.Join(wd, "backend", "json", "categories.json")
-		}
-	}
-
-	data, err := os.ReadFile(categoriesFile)
+	data, err := os.ReadFile(a.categoriesPath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read categories.json: %w", err)
+		if os.IsNotExist(err) {
+			// Fallback to embedded default categories
+			embeddedData, embedErr := defaultConfigFS.ReadFile("json/categories.json")
+			if embedErr != nil {
+				return make(CategoryMap), nil
+			}
+
+			// Ensure directory exists before writing
+			if err := os.MkdirAll(filepath.Dir(a.categoriesPath), 0755); err == nil {
+				// Write to disk for user customization
+				_ = os.WriteFile(a.categoriesPath, embeddedData, 0644)
+			}
+
+			data = embeddedData
+		} else {
+			return nil, fmt.Errorf("failed to read categories file: %w", err)
+		}
 	}
 
 	var categories CategoryMap
 	if err := json.Unmarshal(data, &categories); err != nil {
-		return nil, fmt.Errorf("failed to parse categories: %w", err)
+		return make(CategoryMap), nil
 	}
-
 	return categories, nil
 }
 

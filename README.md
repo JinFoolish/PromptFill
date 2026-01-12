@@ -1,9 +1,21 @@
 <div align="center">
 
 # SparkPrompt
-
 [中文](#-sparkprompt---中文介绍) | [English](#-sparkprompt---english-introduction)
 
+
+![alt text](docs/image.png)
+
+<table align="center">
+  <tr>
+    <td align="center"><img src="docs/image-1.png" width="100%" /></td>
+    <td align="center"><img src="docs/image-2.png" width="100%" /></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/image-3.png" width="100%" /></td>
+    <td align="center"><img src="docs/image-4.png" width="100%" /></td>
+  </tr>
+</table>
 </div>
 
 ---
@@ -11,7 +23,7 @@
 <a name="-sparkprompt---中文介绍"></a>
 ## ✨ SparkPrompt - 中文介绍
 
-SparkPrompt 是一款现代化的桌面端提示词（Prompt）管理与生图应用。它旨在帮助用户高效地创建、管理和复用复杂的 AI 绘画提示词，并直接集成主流 AI 绘画模型进行创作。
+SparkPrompt 是一款现代化的桌面端提示词（Prompt）管理与生图应用。它旨在帮助用户高效地创建、管理和复用复杂的 AI 绘画提示词，并直接集成主流 AI 绘画模型进行创作。打包后的exe文件仅11MB，无需依赖任何运行时环境。
 
 ### 核心功能 (Features)
 
@@ -75,12 +87,15 @@ SparkPrompt 是一款现代化的桌面端提示词（Prompt）管理与生图�
     wails build
     ```
 
+### 🙏 致谢 (Acknowledgments)
+*   本项目的提示词模板变量功能灵感来源于 [TanShilongMario/PromptFill](https://github.com/TanShilongMario/PromptFill)。
+
 ---
 
 <a name="-sparkprompt---english-introduction"></a>
 ## ✨ SparkPrompt - English Introduction
 
-SparkPrompt is a modern desktop application for AI prompt management and image generation. It is designed to help users efficiently create, manage, and reuse complex AI image generation prompts, integrating directly with mainstream AI models.
+SparkPrompt is a modern desktop application for AI prompt management and image generation. It is designed to help users efficiently create, manage, and reuse complex AI image generation prompts, integrating directly with mainstream AI models. The exe file is only 11MB, no need to depend on any runtime environment.
 
 ### Key Features
 
@@ -152,3 +167,6 @@ You can configure API Keys for AI services in the settings:
 2.  Find the **AI Providers** section.
 3.  Enter your **Aliyun DashScope API Key** or **Google Gemini API Key**.
 4.  Save and start generating images.
+
+### 🙏 Acknowledgments
+*   The prompt template variable functionality in this project is inspired by [TanShilongMario/PromptFill](https://github.com/TanShilongMario/PromptFill).

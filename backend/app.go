@@ -13,11 +13,12 @@ var defaultConfigFS embed.FS
 
 // App struct - flattened design with direct method implementation
 type App struct {
-	ctx           context.Context
-	configPath    string
-	historyPath   string
-	templatesPath string
-	banksPath     string
+	ctx            context.Context
+	configPath     string
+	historyPath    string
+	templatesPath  string
+	banksPath      string
+	categoriesPath string
 }
 
 // NewApp creates a new App application struct
@@ -51,6 +52,7 @@ func (a *App) OnStartup(ctx context.Context) {
 	a.historyPath = filepath.Join(appDir, "json", "ai-history.json")
 	a.templatesPath = filepath.Join(appDir, "json", "templates.json")
 	a.banksPath = filepath.Join(appDir, "json", "banks.json")
+	a.categoriesPath = filepath.Join(appDir, "json", "categories.json")
 }
 
 // OnDomReady is called after front-end resources have been loaded

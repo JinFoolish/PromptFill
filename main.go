@@ -11,7 +11,8 @@ import (
 )
 
 // Embed the frontend assets
-// Note: Assets will be embedded by Wails build process
+//
+//go:embed all:frontend/dist
 var assets embed.FS
 
 func main() {
