@@ -1,0 +1,35 @@
+import { ReactNode } from "react";
+import { AppSidebar } from "./AppSidebar";
+import { BubbleBackground } from "@/components/animate-ui/components/backgrounds/bubble";
+import { WindowControls } from "@/components/WindowControls";
+
+interface LayoutProps {
+    children: ReactNode;
+    currentView: string;
+    onNavigate: (view: string) => void;
+}
+
+export function Layout({ children, currentView, onNavigate }: LayoutProps) {
+    return (
+        <BubbleBackground className="h-screen w-screen text-foreground flex border border-border/40 rounded-lg shadow-2xl">
+            {/* Sidebar (Left) */}
+            <AppSidebar currentView={currentView} onNavigate={onNavigate} className="flex-shrink-0 z-20" />
+
+            {/* Main Content (Right) */}
+            <div className="flex-1 flex flex-col min-w-0 bg-background/30 relative">
+                {/* Drag Region & Window Controls */}
+                <header className="h-10 flex items-center justify-end px-4 select-none z-50">
+                    <div className="absolute top-0 left-0 w-full h-10" style={{ "--wails-draggable": "drag" } as any} />
+                    {/* Placeholder for custom window controls if we want them in top right content area */}
+                    <WindowControls />
+                </header>
+
+                <main className="flex-1 overflow-auto p-6 pt-2 scrollbar-hide">
+                    <div className="max-w-6xl mx-auto h-full animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        {children}
+                    </div>
+                </main>
+            </div>
+        </BubbleBackground>
+    );
+}

@@ -1,0 +1,13 @@
+{
+  "$schema": "https://wails.io/schemas/config.v2.json",
+  "name": "SparkPrompt",
+  "outputfilename": "SparkPrompt",
+  "frontend:install": "bun install",
+  "frontend:build": "bun run skip-build",
+  "frontend:dev:watcher": "bun run dev",
+  "frontend:dev:serverUrl": "auto",
+  "author": {
+    "name": "jin",
+    "email": "946623679@qq.com"
+  }
+}

@@ -1,0 +1,183 @@
+{
+  "providers": {
+    "dashscope": {
+      "id": "dashscope",
+      "name": "Aliyun",
+      "apiKey": "useYourKey",
+      "baseUrl": "https://dashscope.aliyuncs.com",
+      "endpoint": "/api/v1/services/aigc/multimodal-generation/generation",
+      "models": [
+        "z-image-turbo",
+        "wan2.6-t2i",
+        "qwen-image-max"
+      ],
+      "defaultModel": "z-image-turbo",
+      "sizeOptions": {
+        "z-image-turbo": [
+          "1536*1536",
+          "1296*1728",
+          "1728*1296",
+          "1152*2048",
+          "864*2016",
+          "2048*1152",
+          "2016*864"
+        ],
+        "wan2.6-t2i": [
+          "1280*1280",
+          "1104*1472",
+          "1472*1104"
+        ],
+        "qwen-image-max": [
+          "1664*928",
+          "1472*1104",
+          "1328*1328",
+          "1104*1472",
+          "928*1664"
+        ]
+      },
+      "requestTemplate": {
+        "z-image-turbo": {
+          "input": {
+            "messages": [
+              {
+                "content": [
+                  {
+                    "text": "{{.Prompt}}"
+                  }
+                ],
+                "role": "user"
+              }
+            ]
+          },
+          "model": "z-image-turbo",
+          "parameters": {
+            "prompt_extend": false,
+            "size": "{{.Size}}"
+          }
+        },
+        "wan2.6-t2i": {
+          "input": {
+            "messages": [
+              {
+                "role": "user",
+                "content": [
+                  {
+                    "text": "{{.Prompt}}"
+                  }
+                ]
+              }
+            ]
+          },
+          "model": "wan2.6-t2i",
+          "parameters": {
+            "prompt_extend": true,
+            "watermark": false,
+            "n": 1,
+            "negative_prompt": "",
+            "size": "{{.Size}}"
+          }
+        },
+        "qwen-image-max": {
+          "input": {
+            "messages": [
+              {
+                "role": "user",
+                "content": [
+                  {
+                    "text": "{{.Prompt}}"
+                  }
+                ]
+              }
+            ]
+          },
+          "model": "qwen-image-max",
+          "parameters": {
+            "negative_prompt": "低分辨率,低画质,肢体畸形,手指畸形,画面过饱和,蜡像感,人脸无细节,过度光滑,画面具有AI感.构图混乱.文字模糊,扭曲",
+            "prompt_extend": true,
+            "watermark": false,
+            "size": "{{.Size}}"
+          }
+        }
+      },
+      "responseMapping": {
+        "successIndicator": "output",
+        "imagesPath": "output.choices[0].message.content",
+        "imageUrlField": "image",
+        "usagePath": "usage",
+        "widthField": "width",
+        "heightField": "height",
+        "errorCodePath": "code",
+        "errorMessagePath": "message",
+        "requestIdPath": "request_id"
+      }
+    },
+    "nanobanana": {
+      "id": "nanobanana",
+      "name": "Nanobanana",
+      "apiKey": "useYourKey",
+      "baseUrl": "https://generativelanguage.googleapis.com",
+      "endpoint": "/v1beta/models/{model}:generateContent",
+      "models": [
+        "gemini-2.5-flash-image",
+        "gemini-3-pro-image-preview"
+      ],
+      "defaultModel": "gemini-2.5-flash-image",
+      "sizeOptions": {
+        "gemini-2.5-flash-image": [
+          "1:1",
+          "3:4",
+          "4:3",
+          "9:16",
+          "16:9"
+        ],
+        "gemini-3-pro-image-preview": [
+          "1:1",
+          "3:4",
+          "4:3",
+          "9:16",
+          "16:9"
+        ]
+      },
+      "modelCapabilities": {
+        "gemini-2.5-flash-image": {
+          "supportsReferenceImage": true,
+          "maxReferenceImages": 3
+        },
+        "gemini-3-pro-image-preview": {
+          "supportsReferenceImage": true,
+          "maxReferenceImages": 14
+        }
+      },
+      "requestTemplate": {
+        "gemini-2.5-flash-image": {
+          "contents": [
+            {
+              "parts": "{{.ContentParts}}"
+            }
+          ],
+          "generationConfig": {
+            "imageConfig": {
+              "aspectRatio": "{{.Size}}"
+            }
+          }
+        },
+        "gemini-3-pro-image-preview": {
+          "contents": [
+            {
+              "parts": "{{.ContentParts}}"
+            }
+          ],
+          "generationConfig": {
+            "imageConfig": {
+              "aspectRatio": "{{.Size}}",
+              "imageSize": "2K"
+            }
+          }
+        }
+      },
+      "responseMapping": {}
+    }
+  },
+  "activeProvider": "dashscope",
+  "updatedAt": "2026-01-06T22:24:37.7723271+08:00"
+}
