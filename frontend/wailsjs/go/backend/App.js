@@ -14,6 +14,10 @@ export function DeleteBank(arg1) {
   return window['go']['backend']['App']['DeleteBank'](arg1);
 }
 
+export function DeleteCategory(arg1) {
+  return window['go']['backend']['App']['DeleteCategory'](arg1);
+}
+
 export function DeleteTemplate(arg1) {
   return window['go']['backend']['App']['DeleteTemplate'](arg1);
 }
@@ -24,6 +28,10 @@ export function DownloadImageAndSaveHistory(arg1, arg2, arg3, arg4, arg5, arg6) 
 
 export function EnsureBank(arg1, arg2) {
   return window['go']['backend']['App']['EnsureBank'](arg1, arg2);
+}
+
+export function EnsureCategory(arg1, arg2) {
+  return window['go']['backend']['App']['EnsureCategory'](arg1, arg2);
 }
 
 export function EnsureTemplate(arg1) {
@@ -72,6 +80,10 @@ export function SaveAIHistory(arg1) {
 
 export function SaveBanks(arg1) {
   return window['go']['backend']['App']['SaveBanks'](arg1);
+}
+
+export function SaveCategories(arg1) {
+  return window['go']['backend']['App']['SaveCategories'](arg1);
 }
 
 export function SaveImageFile(arg1, arg2) {

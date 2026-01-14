@@ -34,6 +34,22 @@ export namespace backend {
 	        this.options = source["options"];
 	    }
 	}
+	export class Category {
+	    id: string;
+	    label: Record<string, string>;
+	    color: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new Category(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	        this.label = source["label"];
+	        this.color = source["color"];
+	    }
+	}
 	export class ConfigRequest {
 	    provider: string;
 	    config: Record<string, any>;

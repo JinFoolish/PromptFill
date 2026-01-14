@@ -42,17 +42,11 @@ func (a *App) OnStartup(ctx context.Context) {
 	if err := os.MkdirAll(appDir, 0755); err != nil {
 		fmt.Printf("Warning: Failed to create app directory: %v\n", err)
 	}
-
-	// Ensure subdirectories exist
-	if err := os.MkdirAll(filepath.Join(appDir, "json"), 0755); err != nil {
-		fmt.Printf("Warning: Failed to create json directory: %v\n", err)
-	}
-
-	a.configPath = filepath.Join(appDir, "json", "config.json")
-	a.historyPath = filepath.Join(appDir, "json", "ai-history.json")
-	a.templatesPath = filepath.Join(appDir, "json", "templates.json")
-	a.banksPath = filepath.Join(appDir, "json", "banks.json")
-	a.categoriesPath = filepath.Join(appDir, "json", "categories.json")
+	a.configPath = filepath.Join(appDir, "config.json")
+	a.historyPath = filepath.Join(appDir, "ai-history.json")
+	a.templatesPath = filepath.Join(appDir, "templates.json")
+	a.banksPath = filepath.Join(appDir, "banks.json")
+	a.categoriesPath = filepath.Join(appDir, "categories.json")
 }
 
 // OnDomReady is called after front-end resources have been loaded

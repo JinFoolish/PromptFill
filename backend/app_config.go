@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"path/filepath"
 	"time"
+	"path/filepath"
 )
 
 // Configuration Management Methods
@@ -29,36 +29,6 @@ func (a *App) GetConfig() (*ConfigResponse, error) {
 		Providers:      providers,
 		ActiveProvider: config.ActiveProvider,
 	}, nil
-}
-
-// LoadCategories loads the category definitions
-func (a *App) LoadCategories() (CategoryMap, error) {
-	data, err := os.ReadFile(a.categoriesPath)
-	if err != nil {
-		if os.IsNotExist(err) {
-			// Fallback to embedded default categories
-			embeddedData, embedErr := defaultConfigFS.ReadFile("json/categories.json")
-			if embedErr != nil {
-				return make(CategoryMap), nil
-			}
-
-			// Ensure directory exists before writing
-			if err := os.MkdirAll(filepath.Dir(a.categoriesPath), 0755); err == nil {
-				// Write to disk for user customization
-				_ = os.WriteFile(a.categoriesPath, embeddedData, 0644)
-			}
-
-			data = embeddedData
-		} else {
-			return nil, fmt.Errorf("failed to read categories file: %w", err)
-		}
-	}
-
-	var categories CategoryMap
-	if err := json.Unmarshal(data, &categories); err != nil {
-		return make(CategoryMap), nil
-	}
-	return categories, nil
 }
 
 // SetConfig updates the configuration for a specific provider
@@ -118,27 +88,38 @@ func (a *App) GetProviders() (*ProvidersResponse, error) {
 
 // loadOrCreateConfig loads configuration from file
 func (a *App) loadOrCreateConfig() (*Configuration, error) {
-	// First try to load user config from executable directory
-	data, err := os.ReadFile(a.configPath)
-	if err == nil {
-		var config Configuration
-		if err := json.Unmarshal(data, &config); err == nil {
-			return &config, nil
-		}
-	}
+    // 1. 尝试从 %AppData% 路径读取
+    data, err := os.ReadFile(a.configPath)
+    
+    if err != nil {
+        if os.IsNotExist(err) {
+            // 2. 如果本地文件不存在，回退到嵌入的默认配置
+            // 注意：这里确认一下你的嵌入路径是 json/config.json 还是 json/ai-providers.json
+            embeddedData, embedErr := defaultConfigFS.ReadFile("json/ai-providers.json") 
+            if embedErr != nil {
+                return nil, fmt.Errorf("failed to read embedded config: %w", embedErr)
+            }
 
-	// If user config doesn't exist or is corrupted, load embedded default config
-	embeddedData, err := defaultConfigFS.ReadFile("json/ai-providers.json")
-	if err != nil {
-		return nil, fmt.Errorf("failed to read embedded config: %w", err)
-	}
+            // 3. 确保目录存在并将默认配置写入磁盘，以便用户后续自定义
+            if err := os.MkdirAll(filepath.Dir(a.configPath), 0755); err == nil {
+                _ = os.WriteFile(a.configPath, embeddedData, 0644)
+            }
 
-	var config Configuration
-	if err := json.Unmarshal(embeddedData, &config); err != nil {
-		return nil, fmt.Errorf("failed to parse embedded config: %w", err)
-	}
+            data = embeddedData
+        } else {
+            // 其他系统读取错误
+            return nil, fmt.Errorf("failed to read config file: %w", err)
+        }
+    }
 
-	return &config, nil
+    // 4. 解析 JSON 数据
+    var config Configuration
+    if err := json.Unmarshal(data, &config); err != nil {
+        // 如果解析失败（可能是文件损坏），返回错误或默认配置
+        return nil, fmt.Errorf("failed to parse config: %w", err)
+    }
+
+    return &config, nil
 }
 
 // saveConfig saves configuration to file

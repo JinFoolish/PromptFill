@@ -8,11 +8,15 @@ export function DeleteAIHistoryRecord(arg1:string):Promise<void>;
 
 export function DeleteBank(arg1:string):Promise<void>;
 
+export function DeleteCategory(arg1:string):Promise<void>;
+
 export function DeleteTemplate(arg1:string):Promise<void>;
 
 export function DownloadImageAndSaveHistory(arg1:string,arg2:string,arg3:string,arg4:string,arg5:string,arg6:Record<string, any>):Promise<string>;
 
 export function EnsureBank(arg1:string,arg2:backend.BankItem):Promise<void>;
+
+export function EnsureCategory(arg1:string,arg2:backend.Category):Promise<void>;
 
 export function EnsureTemplate(arg1:backend.Template):Promise<void>;
 
@@ -37,6 +41,8 @@ export function ReadImageFile(arg1:string):Promise<string>;
 export function SaveAIHistory(arg1:Array<backend.HistoryRecord>):Promise<void>;
 
 export function SaveBanks(arg1:backend.BankMap):Promise<void>;
+
+export function SaveCategories(arg1:backend.CategoryMap):Promise<void>;
 
 export function SaveImageFile(arg1:Array<number>,arg2:string):Promise<void>;
 

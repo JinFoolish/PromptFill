@@ -90,7 +90,17 @@ export const translations = {
         importBanks: "导入词库 (JSON)",
         importTemplates: "导入模板 (JSON)",
         importSuccess: "导入成功",
-        importFailed: "导入失败"
+        importFailed: "导入失败",
+        categoryManager: "分类管理",
+        newCategory: "新建分类",
+        editCategory: "编辑分类",
+        deleteCategory: "删除分类",
+        deleteCategoryConfirm: "确定要删除分类 '{key}' 吗？",
+        categoryKeyRequired: "必须填写分类 Key",
+        failedToSaveCategory: "保存分类失败",
+        failedToDeleteCategory: "删除分类失败",
+        categoryColor: "颜色",
+        manageCategories: "管理分类"
     },
     en: {
         back: "Back",
@@ -182,6 +192,16 @@ export const translations = {
         importBanks: "Import Banks",
         importTemplates: "Import Templates",
         importSuccess: "Imported successfully",
-        importFailed: "Import failed"
+        importFailed: "Import failed",
+        categoryManager: "Category Manager",
+        newCategory: "New Category",
+        editCategory: "Edit Category",
+        deleteCategory: "Delete Category",
+        deleteCategoryConfirm: "Are you sure you want to delete category '{key}'?",
+        categoryKeyRequired: "Category Key is required",
+        failedToSaveCategory: "Failed to save category",
+        failedToDeleteCategory: "Failed to delete category",
+        categoryColor: "Color",
+        manageCategories: "Manage Categories"
     }
 };

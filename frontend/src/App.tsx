@@ -170,17 +170,6 @@ function AppRoot() {
                 );
         }
     };
-
-    // If view is workstation, we want to hide the standard Layout wrapper or render differently?
-    // User requested "Layout on navigation bar" but Workstation has its own full screen feel usually.
-    // But keeping Layout wrapper preserves the sidebar/navbar if any.
-    // The previous implementation wrapped everything in <Layout>. Let's keep it.
-
-    // However, Workstation has its own "Back" button and specific header, so maybe we want it full screen?
-    // Let's render it OUTSIDE Layout if it's workstation, OR inside. 
-    // The previously agreed plan was "Workstation replaces GeneratorForm".
-    // GeneratorForm was inside Layout. So we keep it inside Layout.
-
     return (
         <Layout currentView={view} onNavigate={(v) => setView(v as ViewState)}>
             {renderContent()}
@@ -192,7 +181,6 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { Toaster } from "@/components/ui/sonner";
 
-// ... existing imports
 
 function App() {
     return (

@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 
-import { Plus, Trash2, Edit, Loader2, Save, Search, Settings2 } from "lucide-react";
+import { Plus, Trash2, Edit, Loader2, Save, Search, Settings2, Tag } from "lucide-react";
 import BlurFade from "@/components/ui/blur-fade";
 
 export function BankManager() {
@@ -27,6 +27,15 @@ export function BankManager() {
     const [loading, setLoading] = useState(false);
     const [open, setOpen] = useState(false);
     const [editingKey, setEditingKey] = useState<string | null>(null);
+    
+    // Category dialog state
+    const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
+    const [editingCategoryKey, setEditingCategoryKey] = useState<string | null>(null);
+    const [categoryFormKey, setCategoryFormKey] = useState("");
+    const [categoryFormData, setCategoryFormData] = useState({
+        label: { cn: "", en: "" },
+        color: "slate"
+    });
 
     // Filter state
     const [searchQuery, setSearchQuery] = useState("");
@@ -160,13 +169,85 @@ export function BankManager() {
         });
     };
 
+    // Category management functions
+    const handleCreateCategory = () => {
+        setEditingCategoryKey(null);
+        setCategoryFormKey("");
+        setCategoryFormData({
+            label: { cn: "", en: "" },
+            color: "slate"
+        });
+        setCategoryDialogOpen(true);
+    };
+
+    const handleEditCategory = (key: string) => {
+        const cat = categories[key];
+        if (!cat) return;
+        setEditingCategoryKey(key);
+        setCategoryFormKey(key);
+        setCategoryFormData({
+            label: { 
+                cn: cat.label.cn || "", 
+                en: cat.label.en || "" 
+            },
+            color: cat.color || "slate"
+        });
+        setCategoryDialogOpen(true);
+    };
+
+    const handleDeleteCategory = async (key: string) => {
+        if (!confirm(t.deleteCategoryConfirm.replace("{key}", key))) return;
+        try {
+            // @ts-ignore
+            await App.DeleteCategory(key);
+            await loadBanks();
+            toast.success(t.deleteCategory);
+        } catch (e) {
+            console.error("Failed to delete category", e);
+            toast.error(t.failedToDeleteCategory + ": " + e);
+        }
+    };
+
+    const handleSaveCategory = async () => {
+        if (!categoryFormKey) {
+            toast.warning(t.categoryKeyRequired);
+            return;
+        }
+        try {
+            const categoryData = {
+                id: categoryFormKey,
+                label: categoryFormData.label,
+                color: categoryFormData.color
+            };
+            // @ts-ignore
+            await App.EnsureCategory(categoryFormKey, categoryData);
+            setCategoryDialogOpen(false);
+            await loadBanks();
+        } catch (e) {
+            console.error("Failed to save category", e);
+            toast.error(t.failedToSaveCategory + ": " + e);
+        }
+    };
+
     const colorMap: { [key: string]: string } = {
         blue: "bg-blue-100 text-blue-700 border-blue-200 hover:bg-blue-100/80 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800",
-        amber: "bg-amber-100 text-amber-700 border-amber-200 hover:bg-amber-100/80 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800",
-        rose: "bg-rose-100 text-rose-700 border-rose-200 hover:bg-rose-100/80 dark:bg-rose-900/30 dark:text-rose-300 dark:border-rose-800",
+        sky: "bg-sky-100 text-sky-700 border-sky-200 hover:bg-sky-100/80 dark:bg-sky-900/30 dark:text-sky-300 dark:border-sky-800",
+        cyan: "bg-cyan-100 text-cyan-700 border-cyan-200 hover:bg-cyan-100/80 dark:bg-cyan-900/30 dark:text-cyan-300 dark:border-cyan-800",
         emerald: "bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-100/80 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800",
+        green: "bg-green-100 text-green-700 border-green-200 hover:bg-green-100/80 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800",
+        lime: "bg-lime-100 text-lime-700 border-lime-200 hover:bg-lime-100/80 dark:bg-lime-900/30 dark:text-lime-300 dark:border-lime-800",
+        amber: "bg-amber-100 text-amber-700 border-amber-200 hover:bg-amber-100/80 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800",
+        orange: "bg-orange-100 text-orange-700 border-orange-200 hover:bg-orange-100/80 dark:bg-orange-900/30 dark:text-orange-300 dark:border-orange-800",
+        yellow: "bg-yellow-100 text-yellow-700 border-yellow-200 hover:bg-yellow-100/80 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-800",
+        rose: "bg-rose-100 text-rose-700 border-rose-200 hover:bg-rose-100/80 dark:bg-rose-900/30 dark:text-rose-300 dark:border-rose-800",
+        pink: "bg-pink-100 text-pink-700 border-pink-200 hover:bg-pink-100/80 dark:bg-pink-900/30 dark:text-pink-300 dark:border-pink-800",
+        red: "bg-red-100 text-red-700 border-red-200 hover:bg-red-100/80 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800",
         violet: "bg-violet-100 text-violet-700 border-violet-200 hover:bg-violet-100/80 dark:bg-violet-900/30 dark:text-violet-300 dark:border-violet-800",
+        purple: "bg-purple-100 text-purple-700 border-purple-200 hover:bg-purple-100/80 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800",
+        indigo: "bg-indigo-100 text-indigo-700 border-indigo-200 hover:bg-indigo-100/80 dark:bg-indigo-900/30 dark:text-indigo-300 dark:border-indigo-800",
         slate: "bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-100/80 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700",
+        gray: "bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-100/80 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700",
+        zinc: "bg-zinc-100 text-zinc-700 border-zinc-200 hover:bg-zinc-100/80 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700",
         default: "bg-muted/50 text-foreground border-border hover:bg-muted"
     };
 
@@ -180,13 +261,13 @@ export function BankManager() {
 
     return (
         <div className="container mx-auto max-w-6xl space-y-8 p-6">
-            <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-6">
+            <div className="space-y-4">
                 <div>
                     <h1 className="text-2xl font-semibold tracking-tight">{t.vocabularyBanks}</h1>
                     <p className="text-muted-foreground text-sm mt-1">Manage reusable variables for your prompt templates.</p>
                 </div>
 
-                <div className="flex flex-1 gap-2 w-full xl:max-w-2xl xl:px-8">
+                <div className="flex items-center gap-2">
                     <div className="relative flex-1">
                         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                         <Input
@@ -207,11 +288,13 @@ export function BankManager() {
                             ))}
                         </SelectContent>
                     </Select>
+                    <Button onClick={handleCreateCategory} variant="outline" className="gap-2 shrink-0">
+                        <Tag className="h-4 w-4" /> {t.manageCategories}
+                    </Button>
+                    <Button onClick={handleCreate} className="gap-2 shrink-0">
+                        <Plus className="h-4 w-4" /> {t.newBank}
+                    </Button>
                 </div>
-
-                <Button onClick={handleCreate} className="gap-2 shrink-0">
-                    <Plus className="h-4 w-4" /> {t.newBank}
-                </Button>
             </div>
 
             {loading ? (
@@ -381,6 +464,163 @@ export function BankManager() {
                         <Button onClick={handleSave} className="gap-2">
                             <Save className="h-4 w-4" /> {t.saveBank}
                         </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Category Management Dialog */}
+            <Dialog open={categoryDialogOpen} onOpenChange={setCategoryDialogOpen}>
+                <DialogContent className="max-w-3xl max-h-[85vh] flex flex-col p-0 gap-0 overflow-hidden">
+                    <DialogHeader className="p-6 border-b bg-muted/10">
+                        <DialogTitle className="text-lg font-semibold tracking-tight">
+                            {t.categoryManager}
+                        </DialogTitle>
+                    </DialogHeader>
+
+                    <div className="flex-1 overflow-y-auto">
+                        <div className="p-6 space-y-6">
+                            {/* Create/Edit Category Form */}
+                            <Card className="border-2 border-dashed">
+                                <CardHeader className="pb-3">
+                                    <CardTitle className="text-sm font-semibold">
+                                        {editingCategoryKey ? t.editCategory : t.newCategory}
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent className="space-y-4">
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label className="text-xs text-muted-foreground">{t.uniqueKey}</Label>
+                                            <Input
+                                                value={categoryFormKey}
+                                                onChange={e => setCategoryFormKey(e.target.value)}
+                                                disabled={!!editingCategoryKey}
+                                                className="font-mono text-sm"
+                                                placeholder="e.g. emotion"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-xs text-muted-foreground">{t.categoryColor}</Label>
+                                            <Select
+                                                value={categoryFormData.color}
+                                                onValueChange={val => setCategoryFormData({ ...categoryFormData, color: val })}
+                                            >
+                                                <SelectTrigger>
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="blue">Blue</SelectItem>
+                                                    <SelectItem value="sky">Sky</SelectItem>
+                                                    <SelectItem value="cyan">Cyan</SelectItem>
+                                                    <SelectItem value="emerald">Emerald</SelectItem>
+                                                    <SelectItem value="green">Green</SelectItem>
+                                                    <SelectItem value="lime">Lime</SelectItem>
+                                                    <SelectItem value="amber">Amber</SelectItem>
+                                                    <SelectItem value="orange">Orange</SelectItem>
+                                                    <SelectItem value="yellow">Yellow</SelectItem>
+                                                    <SelectItem value="rose">Rose</SelectItem>
+                                                    <SelectItem value="pink">Pink</SelectItem>
+                                                    <SelectItem value="red">Red</SelectItem>
+                                                    <SelectItem value="violet">Violet</SelectItem>
+                                                    <SelectItem value="purple">Purple</SelectItem>
+                                                    <SelectItem value="indigo">Indigo</SelectItem>
+                                                    <SelectItem value="slate">Slate</SelectItem>
+                                                    <SelectItem value="gray">Gray</SelectItem>
+                                                    <SelectItem value="zinc">Zinc</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label className="text-xs text-muted-foreground">{t.labelCn}</Label>
+                                            <Input
+                                                value={categoryFormData.label.cn}
+                                                onChange={e => setCategoryFormData({
+                                                    ...categoryFormData,
+                                                    label: { ...categoryFormData.label, cn: e.target.value }
+                                                })}
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-xs text-muted-foreground">{t.labelEn}</Label>
+                                            <Input
+                                                value={categoryFormData.label.en}
+                                                onChange={e => setCategoryFormData({
+                                                    ...categoryFormData,
+                                                    label: { ...categoryFormData.label, en: e.target.value }
+                                                })}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-2 justify-end pt-2">
+                                        {editingCategoryKey && (
+                                            <Button
+                                                variant="ghost"
+                                                onClick={() => {
+                                                    setEditingCategoryKey(null);
+                                                    setCategoryFormKey("");
+                                                    setCategoryFormData({ label: { cn: "", en: "" }, color: "slate" });
+                                                }}
+                                            >
+                                                {t.cancel}
+                                            </Button>
+                                        )}
+                                        <Button onClick={handleSaveCategory} className="gap-2">
+                                            <Save className="h-4 w-4" /> {editingCategoryKey ? t.saveChanges : t.newCategory}
+                                        </Button>
+                                    </div>
+                                </CardContent>
+                            </Card>
+
+                            <Separator />
+
+                            {/* Existing Categories List */}
+                            <div className="space-y-3">
+                                <h3 className="text-sm font-semibold text-muted-foreground">{t.allCategories}</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    {Object.entries(categories).map(([key, cat]) => (
+                                        <Card key={key} className="group hover:shadow-md transition-all">
+                                            <CardContent className="p-4">
+                                                <div className="flex items-start justify-between gap-3">
+                                                    <div className="flex-1 space-y-2">
+                                                        <div className="flex items-center gap-2">
+                                                            <Badge variant="outline" className={`text-xs font-medium border ${getCategoryColor(key)}`}>
+                                                                {cat.label[language] || cat.label.en || key}
+                                                            </Badge>
+                                                        </div>
+                                                        <code className="text-[10px] bg-muted px-1.5 py-0.5 rounded text-muted-foreground block w-fit">
+                                                            {key}
+                                                        </code>
+                                                    </div>
+                                                    <div className="flex gap-1 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <Button
+                                                            size="icon"
+                                                            variant="ghost"
+                                                            className="h-7 w-7"
+                                                            onClick={() => handleEditCategory(key)}
+                                                        >
+                                                            <Edit className="h-3.5 w-3.5" />
+                                                        </Button>
+                                                        <Button
+                                                            size="icon"
+                                                            variant="ghost"
+                                                            className="h-7 w-7 text-destructive hover:text-destructive"
+                                                            onClick={() => handleDeleteCategory(key)}
+                                                        >
+                                                            <Trash2 className="h-3.5 w-3.5" />
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <DialogFooter className="p-4 border-t bg-muted/10">
+                        <Button variant="ghost" onClick={() => setCategoryDialogOpen(false)}>{t.cancel}</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

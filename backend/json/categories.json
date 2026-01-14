@@ -1,58 +1,10 @@
 {
-  "character": {
-    "id": "character",
+  "example": {
+    "id": "example",
     "label": {
-      "cn": "人物",
-      "en": "CHARACTER"
+      "cn": "示例",
+      "en": "EXAMPLE"
     },
     "color": "blue"
-  },
-  "item": {
-    "id": "item",
-    "label": {
-      "cn": "物品",
-      "en": "ITEM"
-    },
-    "color": "amber"
-  },
-  "action": {
-    "id": "action",
-    "label": {
-      "cn": "动作",
-      "en": "ACTION"
-    },
-    "color": "rose"
-  },
-  "location": {
-    "id": "location",
-    "label": {
-      "cn": "地点",
-      "en": "LOCATION"
-    },
-    "color": "emerald"
-  },
-  "visual": {
-    "id": "visual",
-    "label": {
-      "cn": "画面",
-      "en": "VISUALS"
-    },
-    "color": "violet"
-  },
-  "other": {
-    "id": "other",
-    "label": {
-      "cn": "其他",
-      "en": "OTHER"
-    },
-    "color": "slate"
-  },
-  "control": {
-    "id": "control",
-    "label": {
-      "cn": "控制",
-      "en": "CONTROL"
-    },
-    "color": "zinc"
   }
 }
