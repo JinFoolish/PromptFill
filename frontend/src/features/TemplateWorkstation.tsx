@@ -563,7 +563,7 @@ export function TemplateWorkstation({ template: initialTemplate, onBack, onUpdat
                                 key={displayLang} // Add key to force re-render when switching languages
                                 value={template.content[displayLang] || ""}
                                 onChange={e => setTemplate({ ...template, content: { ...template.content, [displayLang]: e.target.value } })}
-                                className="w-full h-full min-h-[500px] border-none focus-visible:ring-0 p-0 text-sm font-mono bg-transparent resize-none leading-relaxed"
+                                className="w-full h-full min-h-[500px] border-none focus-visible:ring-0 p-0 text-base font-mono bg-transparent resize-none leading-relaxed"
                                 placeholder={displayLang === 'cn' ? "在此编写您的提示词模版..." : "Write your prompt template here..."}
                             />
                         )}
@@ -572,8 +572,20 @@ export function TemplateWorkstation({ template: initialTemplate, onBack, onUpdat
 
                 <div className="flex-shrink-0 border-t border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
                     <div className="px-4 py-3 flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            {/* Info text removed as it is now duplicated in header */}
+                        <div className="flex items-center gap-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-9 gap-2 text-xs"
+                                onClick={() => {
+                                    const prompt = getResolvedPrompt();
+                                    navigator.clipboard.writeText(prompt);
+                                    toast.success(t.promptCopied);
+                                }}
+                            >
+                                <Copy className="w-3.5 h-3.5" />
+                                {t.copyPrompt}
+                            </Button>
                         </div>
 
                         <div className="flex items-center gap-3">
