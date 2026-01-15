@@ -324,7 +324,7 @@ export function TemplateWorkstation({ template: initialTemplate, onBack, onUpdat
         const lines = content.split('\n');
 
         return (
-            <div className="prose prose-sm dark:prose-invert max-w-none font-sans leading-relaxed text-foreground">
+            <div className="prose prose-lg dark:prose-invert max-w-none font-sans leading-loose text-foreground">
                 {lines.map((line, lineIdx) => {
                     // Check for headers
                     if (line.startsWith('# ')) {
@@ -579,7 +579,7 @@ export function TemplateWorkstation({ template: initialTemplate, onBack, onUpdat
                                 key={displayLang} // Add key to force re-render when switching languages
                                 value={template.content[displayLang] || ""}
                                 onChange={e => setTemplate({ ...template, content: { ...template.content, [displayLang]: e.target.value } })}
-                                className="w-full h-full min-h-[500px] border-none focus-visible:ring-0 p-0 text-base font-mono bg-transparent resize-none leading-relaxed"
+                                className="w-full h-full min-h-[500px] border-none focus-visible:ring-0 p-0 text-2xl font-mono bg-transparent resize-none leading-loose"
                                 placeholder={displayLang === 'cn' ? "在此编写您的提示词模版..." : "Write your prompt template here..."}
                             />
                         )}
