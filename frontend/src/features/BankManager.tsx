@@ -27,7 +27,7 @@ export function BankManager() {
     const [loading, setLoading] = useState(false);
     const [open, setOpen] = useState(false);
     const [editingKey, setEditingKey] = useState<string | null>(null);
-    
+
     // Category dialog state
     const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
     const [editingCategoryKey, setEditingCategoryKey] = useState<string | null>(null);
@@ -75,11 +75,21 @@ export function BankManager() {
 
         if (searchQuery) {
             const q = searchQuery.toLowerCase();
-            result = result.filter(({ key, item }) =>
-                key.toLowerCase().includes(q) ||
-                (item.label.cn && item.label.cn.toLowerCase().includes(q)) ||
-                (item.label.en && item.label.en.toLowerCase().includes(q))
-            );
+            result = result.filter(({ key, item }) => {
+                const categoryLabel = getCategoryLabel(item.category).toLowerCase();
+                const hasMatchingOption = item.options.some(opt =>
+                    (opt.cn && opt.cn.toLowerCase().includes(q)) ||
+                    (opt.en && opt.en.toLowerCase().includes(q))
+                );
+
+                return (
+                    key.toLowerCase().includes(q) ||
+                    (item.label.cn && item.label.cn.toLowerCase().includes(q)) ||
+                    (item.label.en && item.label.en.toLowerCase().includes(q)) ||
+                    categoryLabel.includes(q) ||
+                    hasMatchingOption
+                );
+            });
         }
 
         if (selectedCategory !== "all") {
@@ -87,7 +97,7 @@ export function BankManager() {
         }
 
         setFilteredBanks(result);
-    }, [banks, searchQuery, selectedCategory]);
+    }, [banks, searchQuery, selectedCategory, categories]); // Added categories to dependency array for accurate search
 
     // Use defined categories, verify which ones are actually used
     const usedCategories = Array.from(new Set(Object.values(banks).map(b => b.category || "other"))).sort();
@@ -186,9 +196,9 @@ export function BankManager() {
         setEditingCategoryKey(key);
         setCategoryFormKey(key);
         setCategoryFormData({
-            label: { 
-                cn: cat.label.cn || "", 
-                en: cat.label.en || "" 
+            label: {
+                cn: cat.label.cn || "",
+                en: cat.label.en || ""
             },
             color: cat.color || "slate"
         });
@@ -281,7 +291,7 @@ export function BankManager() {
                         <SelectTrigger className="w-[160px] bg-muted/40">
                             <SelectValue placeholder={t.category} />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="max-h-[300px]">
                             <SelectItem value="all">{t.allCategories}</SelectItem>
                             {usedCategories.map(catId => (
                                 <SelectItem key={catId} value={catId}>{getCategoryLabel(catId)}</SelectItem>
