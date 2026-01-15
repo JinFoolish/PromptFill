@@ -100,7 +100,8 @@ export const translations = {
         failedToSaveCategory: "保存分类失败",
         failedToDeleteCategory: "删除分类失败",
         categoryColor: "颜色",
-        manageCategories: "管理分类"
+        manageCategories: "管理分类",
+        uploadCover: "上传封面"
     },
     en: {
         back: "Back",
@@ -202,6 +203,7 @@ export const translations = {
         failedToSaveCategory: "Failed to save category",
         failedToDeleteCategory: "Failed to delete category",
         categoryColor: "Color",
-        manageCategories: "Manage Categories"
+        manageCategories: "Manage Categories",
+        uploadCover: "Upload Cover"
     }
 };

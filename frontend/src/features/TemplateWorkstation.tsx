@@ -414,6 +414,31 @@ export function TemplateWorkstation({ template: initialTemplate, onBack, onUpdat
         );
     };
 
+    const handleUploadCover = async () => {
+        setIsSettingCover(true);
+        try {
+            // @ts-ignore
+            const paths = await App.SelectReferenceImages(false) as string[];
+            if (paths && paths.length > 0) {
+                const imageUrl = paths[0];
+                // @ts-ignore
+                const savedPath = await App.SetTemplateCover(template.id, imageUrl);
+
+                const updatedTemplate = { ...template, imageUrl: savedPath };
+                setTemplate(updatedTemplate);
+                if (onUpdate) onUpdate(updatedTemplate);
+
+                setCoverSetSuccess(true);
+                toast.success(t.setAsCoverSuccess);
+            }
+        } catch (e) {
+            console.error(e);
+            toast.error(t.setAsCoverFailed);
+        } finally {
+            setIsSettingCover(false);
+        }
+    };
+
     return (
         <div className={`h-full flex flex-col bg-background/50 backdrop-blur-sm overflow-hidden shadow-sm ${className ? className : 'rounded-xl border border-border/50'}`}>
             <header className="h-14 flex items-center justify-between px-4 border-b border-border/40 bg-background/95 sticky top-0 z-10">
@@ -564,6 +589,16 @@ export function TemplateWorkstation({ template: initialTemplate, onBack, onUpdat
                 <div className="flex-shrink-0 border-t border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
                     <div className="px-4 py-3 flex items-center justify-between">
                         <div className="flex items-center gap-2">
+                            <Button
+                                variant="secondary"
+                                size="sm"
+                                className="h-9 gap-2 text-xs"
+                                onClick={handleUploadCover}
+                                disabled={isSettingCover}
+                            >
+                                <ImageIcon className="w-3.5 h-3.5" />
+                                {t.uploadCover}
+                            </Button>
                             <Button
                                 variant="outline"
                                 size="sm"
